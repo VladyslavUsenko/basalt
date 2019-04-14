@@ -1,0 +1,76 @@
+image: vladyslavusenko/b_image:latest
+
+compile:
+  stage: build
+  variables:
+    CXX_MARCH: 'corei7-avx'
+  before_script:
+    - mkdir -p ccache
+    - export CCACHE_BASEDIR=${PWD}
+    - export CCACHE_DIR=${PWD}/ccache
+  cache:
+    paths:
+    - ccache/
+  script:
+    - ./scripts/update_submodules.sh
+    - mkdir build
+    - cd build
+    - cmake .. -DCMAKE_BUILD_TYPE=Release -DCXX_MARCH=${CXX_MARCH} -DCMAKE_INSTALL_PREFIX=/usr/
+    - make -j3
+    - make package
+    - cd test/
+    - ctest -V
+    - cd ../../
+    - mkdir deb_bionic
+    - cp build/*.deb deb_bionic/
+  artifacts:
+    paths:
+    - deb_bionic/*.deb
+    expire_in: 1 week
+
+compile_16_04:
+  stage: build
+  before_script:
+    - mkdir -p ccache
+    - export CCACHE_BASEDIR=${PWD}
+    - export CCACHE_DIR=${PWD}/ccache
+  cache:
+    paths:
+    - ccache/
+  script:
+    - ./scripts/update_submodules.sh
+    - mkdir build
+    - cd build
+    - cmake .. -DCMAKE_BUILD_TYPE=Release -DCXX_MARCH=${CXX_MARCH} -DCMAKE_INSTALL_PREFIX=/usr/
+    - make -j3
+    - make package
+    - cd test/
+    - ctest -V
+    - cd ../../
+    - mkdir deb_xenial
+    - cp build/*.deb deb_xenial/
+  artifacts:
+    paths:
+    - deb_xenial/*.deb
+    expire_in: 1 week
+  only:
+    - master
+  image: vladyslavusenko/b_image_xenial:latest
+
+deploy:
+  stage: deploy
+  before_script:
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+  variables:
+    GIT_STRATEGY: none
+  only:
+    - master
+  script:
+    - scp deb_xenial/*.deb $REPOSITORY_URL/xenial/    
+    - scp deb_bionic/*.deb $REPOSITORY_URL/bionic/
+

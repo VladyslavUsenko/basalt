@@ -1,0 +1,21 @@
+[submodule "thirdparty/CLI11"]
+	path = thirdparty/CLI11
+	url = https://github.com/CLIUtils/CLI11.git
+[submodule "thirdparty/opengv"]
+	path = thirdparty/opengv
+	url = https://github.com/laurentkneip/opengv.git
+[submodule "thirdparty/Pangolin"]
+	path = thirdparty/Pangolin
+	url = https://github.com/stevenlovegrove/Pangolin.git
+[submodule "thirdparty/ros_comm"]
+	path = thirdparty/ros/ros_comm
+	url = https://github.com/ros/ros_comm.git
+[submodule "thirdparty/roscpp_core"]
+	path = thirdparty/ros/roscpp_core
+	url = https://github.com/ros/roscpp_core.git
+[submodule "thirdparty/console_bridge"]
+	path = thirdparty/ros/console_bridge
+	url = https://github.com/ros/console_bridge.git
+[submodule "thirdparty/basalt-headers"]
+	path = thirdparty/basalt-headers
+	url = https://gitlab.com/VladyslavUsenko/basalt-headers.git
