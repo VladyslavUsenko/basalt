@@ -8,6 +8,7 @@ This project contains tools for:
 * Visual-inertial odometry and mapping.
 * Simulated environment to test different components of the system.
 
+Some reusable components of the system are availble as a separate [header-only library](https://gitlab.com/VladyslavUsenko/basalt-headers).
 
 ## Related Publications
 Visual-Inertial Odometry and Mapping:
@@ -40,7 +41,7 @@ sudo apt-get update
 sudo apt-get install basalt
 ```
 ### Source installation for Ubuntu 18.04 and MacOS 10.14 Mojave
-Clone the source code for the project
+Clone the source code for the project and build it. For MacOS you should have [Homebrew](https://brew.sh/) installed.
 ```
 git clone --recursive https://gitlab.com/VladyslavUsenko/basalt.git
 cd basalt
@@ -50,7 +51,7 @@ cd build
 cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
 make -j8
 ```
-NOTE: It is possible to compile the code on Ubuntu 16.04, but you need to install cmake-3.10 and gcc-7. See corresponding [Dockerfile](docker/b_image_xenial/Dockerfile) as an example.
+NOTE: It is possible to compile the code on Ubuntu 16.04, but you need to install cmake-3.10 or higher and gcc-7. See corresponding [Dockerfile](docker/b_image_xenial/Dockerfile) as an example.
 
 ## Usage
 * [Camera, IMU and Mocap calibration.](doc/Calibration.md)
