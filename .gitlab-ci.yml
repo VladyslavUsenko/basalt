@@ -1,5 +1,11 @@
 image: vladyslavusenko/b_image:latest
 
+stages:
+  - build
+  - test
+  - test_results
+  - deploy
+
 compile:
   stage: build
   variables:
@@ -26,10 +32,13 @@ compile:
   artifacts:
     paths:
     - deb_bionic/*.deb
+    - scripts/eval_full/*
     expire_in: 1 week
 
 compile_16_04:
   stage: build
+  variables:
+    CXX_MARCH: 'corei7-avx'
   before_script:
     - mkdir -p ccache
     - export CCACHE_BASEDIR=${PWD}
@@ -56,6 +65,42 @@ compile_16_04:
   only:
     - master
   image: vladyslavusenko/b_image_xenial:latest
+
+
+eval_euroc:
+  stage: test
+  parallel: 10
+  tags: 
+    - euroc-eval
+  variables:
+    GIT_STRATEGY: none
+  only:
+    - master
+  artifacts:
+    paths:
+    - scripts/eval_full/eval_results/*
+    expire_in: 1 week
+  script:
+    - dpkg -i deb_bionic/*.deb
+    - cd scripts/eval_full
+    - ./run_evaluations.sh
+
+gen_results_euroc:
+  stage: test_results
+  variables:
+    GIT_STRATEGY: none
+  when: on_success
+  only:
+    - master
+  artifacts:
+    paths:
+    - euroc_results.txt
+  script:
+    - cd scripts/eval_full
+    - ./gen_results.py eval_results > euroc_results.txt
+    - cat euroc_results.txt
+    - mv euroc_results.txt ../../
+
 
 deploy:
   stage: deploy
