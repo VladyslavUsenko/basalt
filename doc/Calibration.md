@@ -40,7 +40,7 @@ The buttons in the GUI are located in the order which you should follow to calib
 You can also control the process using the following buttons:
 * `show_frame` slider to switch between the frames in the sequence.
 * `show_corners` toggles the visibility of the detected corners shown in red.
-* `show_corners_rejected` toggles the visibility of rejected corners.
+* `show_corners_rejected` toggles the visibility of rejected corners. Works only when `show_corners` is enabled.
 * `show_init_reproj` shows the initial reprojections computed by the `init_cam_poses` step.
 * `show_opt` shows reprojected corners with the current estimate of the intrinsics and poses.
 * `show_vign` toggles the visibility of the points used for vignetting estimation. The points are distributed across white areas of the pattern.
@@ -76,7 +76,8 @@ You can also control the visualization using the following buttons:
 * `show_data` toggles the visibility of raw data containted in the dataset.
 * `show_accel` shows accelerometer data.
 * `show_gyro` shows gyroscope data.
-* `show_pos` shows the position data.
+* `show_pos` shows spline position for `show_spline` and positions generated from camera pose initialization transformed into IMU coordinate frame for `show_data`.
+* `show_rot_error` shows the rotation error between spline and camera pose initializations transformed into IMU coordinate frame.
 * `show_mocap` shows the mocap marker position transformed to the IMU frame.
 * `show_mocap_rot_error` shows rotation between the spline and Mocap measurements.
 * `show_mocap_rot_vel` shows the rotation velocity computed from the Mocap.
