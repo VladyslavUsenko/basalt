@@ -33,7 +33,6 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
 #include <basalt/io/marg_data_io.h>
 
 #include <pangolin/image/image_io.h>
@@ -122,6 +121,9 @@ MargDataSaver::MargDataSaver(const std::string& path) {
 MargDataLoader::MargDataLoader() : out_marg_queue(nullptr) {}
 
 void MargDataLoader::start(const std::string& path) {
+  if (!fs::exists(path))
+    std::cerr << "No marg. data found in " << path << std::endl;
+
   auto func = [&, path]() {
     std::string img_path = path + "/images/";
 
