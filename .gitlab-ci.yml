@@ -15,6 +15,7 @@ compile:
     - export CCACHE_BASEDIR=${PWD}
     - export CCACHE_DIR=${PWD}/ccache
   cache:
+    key: bionic
     paths:
     - ccache/
   script:
@@ -44,6 +45,7 @@ compile_16_04:
     - export CCACHE_BASEDIR=${PWD}
     - export CCACHE_DIR=${PWD}/ccache
   cache:
+    key: xenial
     paths:
     - ccache/
   script:
