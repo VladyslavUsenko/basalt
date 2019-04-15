@@ -382,7 +382,7 @@ void findInliersRansac(const KeypointsData& kd1, const KeypointsData& kd2,
   // run ransac
   ransac.sac_model_ = relposeproblem_ptr;
   ransac.threshold_ = ransac_thresh;
-  ransac.max_iterations_ = 25;
+  ransac.max_iterations_ = 100;
   ransac.computeModel();
 
   // do non-linear refinement and add more inliers
