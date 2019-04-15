@@ -689,7 +689,7 @@ void CamImuCalib::saveCalib() {
   if (calib_opt) {
     calib_opt->saveCalib(cache_path);
 
-    std::cout << "Saved calibration in " << cache_path << "/calibration.json"
+    std::cout << "Saved calibration in " << cache_path << "calibration.json"
               << std::endl;
   }
 }
