@@ -2,7 +2,6 @@
 
 import os
 import sys
-import numpy as np
 
 
 datasets = ['MH_01_easy', 'MH_02_easy', 'MH_03_medium', 'MH_04_difficult',
@@ -20,14 +19,16 @@ out_dir = sys.argv[1]
 for key in datasets:
     fname = out_dir + '/vio_' + key
     if os.path.isfile(fname): 
-        res = round(float(np.loadtxt(fname)), 3)
+        with open(fname, 'r') as f:
+            res = round(float(f.read()), 3)
         results_vio.append(float(res))
     else:
         results_vio.append(float('Inf'))
     
     fname = out_dir + '/mapper_' + key
     if os.path.isfile(fname): 
-        res = round(float(np.loadtxt(fname)), 3)
+        with open(fname, 'r') as f:
+            res = round(float(f.read()), 3)
         results_mapping.append(float(res))
     else:
         results_mapping.append(float('Inf'))
