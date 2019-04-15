@@ -646,7 +646,7 @@ void CamCalib::saveCalib() {
   if (calib_opt) {
     calib_opt->saveCalib(cache_path, vio_dataset->get_mocap_to_imu_offset_ns());
 
-    std::cout << "Saved calibration in " << cache_path << "/calibration.json"
+    std::cout << "Saved calibration in " << cache_path << "calibration.json"
               << std::endl;
   }
 }
