@@ -26,7 +26,7 @@ The command line options have the following meaning:
 After that, you should see the calibration GUI:
 ![tumvi_cam_calib](doc/img/tumvi_cam_calib.png)
 
-The buttons in the GUI are located in the order which you should follow to calibrate the camera:
+The buttons in the GUI are located in the order which you should follow to calibrate the camera. After pressing a button the system will print the output to the command line:
 * `load_dataset` loads the dataset.
 * `detect_corners` starts corner detection in the backround thread. Since it is the most time consuming part of the calibration process, the detected corners are cached and loaded if you run the executable again pointing to the same result folder path.
 * `init_cam_intr` computes an initial guess for camera intrinsics.

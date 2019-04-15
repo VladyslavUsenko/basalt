@@ -37,6 +37,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <basalt/io/dataset_io.h>
 
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+
 namespace basalt {
 
 class EurocVioDataset : public VioDataset {
@@ -124,6 +127,9 @@ class EurocIO : public DatasetIoInterface {
   EurocIO() {}
 
   void read(const std::string &path) {
+    if (!fs::exists(path))
+      std::cerr << "No dataset found in " << path << std::endl;
+
     data.reset(new EurocVioDataset);
 
     data->num_cams = 2;

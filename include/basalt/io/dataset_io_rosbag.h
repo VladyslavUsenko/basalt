@@ -51,6 +51,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/Imu.h>
 
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+
 namespace basalt {
 
 class RosbagVioDataset : public VioDataset {
@@ -154,6 +157,9 @@ class RosbagIO : public DatasetIoInterface {
   RosbagIO(bool with_images) : with_images(with_images) {}
 
   void read(const std::string &path) {
+    if (!fs::exists(path))
+      std::cerr << "No dataset found in " << path << std::endl;
+
     data.reset(new RosbagVioDataset);
 
     data->bag.reset(new rosbag::Bag);
