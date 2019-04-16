@@ -12,7 +12,7 @@ Some reusable components of the system are availble as a separate [header-only l
 
 ## Related Publications
 Visual-Inertial Odometry and Mapping:
-* **Visual-Inertial Mapping with Non-Linear Factor Recovery**, V. Usenko, N. Demmel, D. Schubert, J. Stückler, D. Cremers, In [[arXiv:]](https://arxiv.org/abs/).
+* **Visual-Inertial Mapping with Non-Linear Factor Recovery**, V. Usenko, N. Demmel, D. Schubert, J. Stückler, D. Cremers, In [[arXiv:1904.06504]](https://arxiv.org/abs/1904.06504).
 
 Calibration (explains implemented camera models):
 * **The Double Sphere Camera Model**, V. Usenko and N. Demmel and D. Cremers, In 2018 International Conference on 3D Vision (3DV), [[DOI:10.1109/3DV.2018.00069]](https://doi.org/10.1109/3DV.2018.00069), [[arXiv:1807.08957]](https://arxiv.org/abs/1807.08957).
