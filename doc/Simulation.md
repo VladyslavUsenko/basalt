@@ -19,16 +19,16 @@ This opens the GUI and runs the sequence.
 ![SIM_VIO](doc/img/SIM_VIO.png)
 
 The buttons in the GUI have the following meaning:
-* `show_obs` toggles the visibility the ground-truth landmarks in the image view.
-* `show_noisy` toggles the visibility the noisy landmarks in the image view.
-* `show_vio` toggles the visibility the landmarks estimated by VIO in the image view.
+* `show_obs` toggles the visibility of the ground-truth landmarks in the image view.
+* `show_obs_noisy` toggles the visibility of the noisy landmarks in the image view.
+* `show_obs_vio` toggles the visibility of the landmarks estimated by VIO in the image view.
 * `show_ids` toggles the IDs of the landmarks.
-* `show_accel` shows noisy accelerometer measurements generated from ground truth spline.
-* `show_gyro` shows noisy gyroscope measurements generated from ground truth spline.
+* `show_accel` shows noisy accelerometer measurements generated from the ground-truth spline.
+* `show_gyro` shows noisy gyroscope measurements generated from the ground-truth spline.
 * `show_gt_...` shows ground truth position, velocity and biases.
 * `show_est_...` shows VIO estimates of the position, velocity and biases.
 * `next_step` proceeds to next frame.
-* `continue` plays the sequence.
+* `continue_btn` plays the sequence.
 * `align_button` performs SE(3) alignment with ground-truth trajectory and prints the RMS ATE to the console.
 
 

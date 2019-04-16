@@ -24,24 +24,25 @@ The command line options have the following meaning:
 * `--dataset-path` path to the dataset.
 * `--dataset-type` type of the datset. Currently only `bag` and `euroc` formats of the datasets are supported.
 * `--cam-calib` path to camera calibration file. Check [calibration instructions](doc/Calibration.md) to see how the calibration was generated.
+* `--config-path` path to the configuration file.
 * `--marg-data` folder where the data from keyframe marginalization will be stored. This data can be later used for visual-inertial mapping.
 * `--show-gui` enables or disables GUI.
 
-This opens the GUI and runs the sequence. The processing happens in the background as fast as possible, and the visualization results are saved in GUI and can be analysed offline.
+This opens the GUI and runs the sequence. The processing happens in the background as fast as possible, and the visualization results are saved in the GUI and can be analysed offline.
 ![MH_05_VIO](doc/img/MH_05_VIO.png)
 
 The buttons in the GUI have the following meaning:
-* `show_obs` toggles the visibility the tracked landmarks in the image view.
+* `show_obs` toggles the visibility of the tracked landmarks in the image view.
 * `show_ids` toggles the IDs of the points.
 * `show_est_pos` shows the plot of the estimated position.
 * `show_est_vel` shows the plot of the estimated velocity.
 * `show_est_bg` shows the plot of the estimated gyro bias.
 * `show_est_ba` shows the plot of the estimated accel bias.
-* `show_ge` shows ground-truth trajectory in the 3D view.
+* `show_gt` shows ground-truth trajectory in the 3D view.
 
-By default the system starts with `continue_fast` enabled. This option visualizes the latest processed frame until the end of the sequence. Alternatively, the `continue_btn` visualizes every frame without skipping. If both options are disabled the system shows the frame that is selected with `show_frame` slider and user can move forward and backward with `next_step` and `prev_step` buttons. The `follow` button changes between the static camera and the camera attached to the current frame.
+By default the system starts with `continue_fast` enabled. This option visualizes the latest processed frame until the end of the sequence. Alternatively, the `continue_btn` visualizes every frame without skipping. If both options are disabled the system shows the frame that is selected with the `show_frame` slider and the user can move forward and backward with `next_step` and `prev_step` buttons. The `follow` button changes between the static camera and the camera attached to the current frame.
 
-For evaluation the button `align_svd` is used. It aligns the GT trajectory with the current estimate with SE(3) transformation and prints the transformation and the root-mean-squared absolute trajectory error (RMS ATE).
+For evaluation the button `align_svd` is used. It aligns the GT trajectory with the current estimate using an SE(3) transformation and prints the transformation and the root-mean-squared absolute trajectory error (RMS ATE).
 
 ### Visual-inertial mapping
 To run the mapping tool execute the following command:
@@ -67,12 +68,15 @@ The workflow for the mapping is the following:
 * `detect` detect the keypoints in the keyframe images.
 * `match` run the geometric 2D to 2D matching between image frames.
 * `tracks` build tracks from 2D matches and triangulate the points.
-* `optimize` run the optimization
+* `optimize` run the optimization.
 * `align_svd` align ground-truth trajectory in SE(3) and print the transformation and the error.
 
-For more systematic evaulation see the evaluation scripts in `scripts/eval_full` folder.
+The `num_opt_iter` slider controls the maximum number of iterations executed when pressing `optimize`.
 
-**NOTE: It appears that only the datasets in ASL Dataset Format (`euroc` dataset type in our notation) contain ground truth that is time-aligned to the IMU and camera images. It is located in `state_groundtruth_estimate0` folder. Bag files have raw Mocap measurements that are not time aligned and should not be used for evaluations.**
+
+For more systematic evaluation see the evaluation scripts in the `scripts/eval_full` folder.
+
+**NOTE: It appears that only the datasets in ASL Dataset Format (`euroc` dataset type in our notation) contain ground truth that is time-aligned to the IMU and camera images. It is located in the `state_groundtruth_estimate0` folder. Bag files have raw Mocap measurements that are not time aligned and should not be used for evaluations.**
 
 
 

@@ -700,7 +700,7 @@ void CamImuCalib::saveMocapCalib() {
                               vio_dataset->get_mocap_to_imu_offset_ns());
 
     std::cout << "Saved Mocap calibration in " << cache_path
-              << "/mocap_calibration.json" << std::endl;
+              << "mocap_calibration.json" << std::endl;
   }
 }
 
