@@ -28,8 +28,8 @@ The buttons in the GUI have the following meaning:
 * `show_gt_...` shows ground truth position, velocity and biases.
 * `show_est_...` shows VIO estimates of the position, velocity and biases.
 * `next_step` proceeds to next frame.
-* `continue_btn` plays the sequence.
-* `align_button` performs SE(3) alignment with ground-truth trajectory and prints the RMS ATE to the console.
+* `continue` plays the sequence.
+* `align_svd` performs SE(3) alignment with ground-truth trajectory and prints the RMS ATE to the console.
 
 
 ### Visual-inertial mapping simulator
@@ -46,5 +46,6 @@ The system processes the marginalization data and extracts the non-linear factor
 * `rand_inc` applies a random increment to all frames of the system. If you run the `optimize` until convergence afterwards, and press `align_svd` the alignment transformation should only contain the rotation around Z axis.
 * `rand_yaw` applies an increment in yaw to all poses. This should not change the error of the optimization once is have converged.
 * `setup_points` triangulates the points and adds them to optimization. You should optimize the system again after adding the points.
+* `align_svd` performs SE(3) alignment with ground-truth trajectory and prints the RMS ATE to the console.
 
 For comparison we also provide the `basalt_mapper_sim_naive` executable that has the same parameters. It runs a global bundle-adjustment on keyframe data and inserts pre-integrated IMU measurements between keyframes. This executable is included for comparison only.

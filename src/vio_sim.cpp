@@ -162,9 +162,9 @@ using Button = pangolin::Var<std::function<void(void)>>;
 
 Button next_step_btn("ui.next_step", &next_step);
 
-pangolin::Var<bool> continue_btn("ui.continue_btn", true, false, true);
+pangolin::Var<bool> continue_btn("ui.continue", true, false, true);
 
-Button align_step_btn("ui.align_button", &alignButton);
+Button align_step_btn("ui.align_svd", &alignButton);
 
 int main(int argc, char** argv) {
   srand(1);

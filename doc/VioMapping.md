@@ -40,7 +40,7 @@ The buttons in the GUI have the following meaning:
 * `show_est_ba` shows the plot of the estimated accel bias.
 * `show_gt` shows ground-truth trajectory in the 3D view.
 
-By default the system starts with `continue_fast` enabled. This option visualizes the latest processed frame until the end of the sequence. Alternatively, the `continue_btn` visualizes every frame without skipping. If both options are disabled the system shows the frame that is selected with the `show_frame` slider and the user can move forward and backward with `next_step` and `prev_step` buttons. The `follow` button changes between the static camera and the camera attached to the current frame.
+By default the system starts with `continue_fast` enabled. This option visualizes the latest processed frame until the end of the sequence. Alternatively, the `continue` visualizes every frame without skipping. If both options are disabled the system shows the frame that is selected with the `show_frame` slider and the user can move forward and backward with `next_step` and `prev_step` buttons. The `follow` button changes between the static camera and the camera attached to the current frame.
 
 For evaluation the button `align_svd` is used. It aligns the GT trajectory with the current estimate using an SE(3) transformation and prints the transformation and the root-mean-squared absolute trajectory error (RMS ATE).
 
@@ -74,7 +74,7 @@ The workflow for the mapping is the following:
 The `num_opt_iter` slider controls the maximum number of iterations executed when pressing `optimize`.
 
 
-For more systematic evaluation see the evaluation scripts in the `scripts/eval_full` folder.
+For more systematic evaluation see the evaluation scripts in the [scripts/eval_full](scripts/eval_full) folder.
 
 **NOTE: It appears that only the datasets in ASL Dataset Format (`euroc` dataset type in our notation) contain ground truth that is time-aligned to the IMU and camera images. It is located in the `state_groundtruth_estimate0` folder. Bag files have raw Mocap measurements that are not time aligned and should not be used for evaluations.**
 
