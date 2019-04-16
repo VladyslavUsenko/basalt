@@ -35,7 +35,7 @@ The buttons in the GUI are located in the order which you should follow to calib
 * `init_opt` initializes optimization and shows the projected points given the current calibration and camera poses.
 * `optimize` runs an iteration of the optimization and visualizes the result. You should press this button until the error printed in the console output stops decreasing and the optimization converges.
 * `save_calib` saves the current calibration as `calibration.json` in the result folder.
-* `compute_vign` **(Experimental)** computes a radially-symmetric vignetting for the cameras. For the algorithm to work, **the calibration pattern should be static (and camera moving around it) and have a constant lighting throughout the calibration sequence**. If you run `compute_vign` you should press `save_calib` afterwards. The png images with vignetting will also be stored in the result folder.
+* `compute_vign` **(Experimental)** computes a radially-symmetric vignetting for the cameras. For the algorithm to work, **the calibration pattern should be static (camera moving around it) and have a constant lighting throughout the calibration sequence**. If you run `compute_vign` you should press `save_calib` afterwards. The png images with vignetting will also be stored in the result folder.
 
 You can also control the process using the following buttons:
 * `show_frame` slider to switch between the frames in the sequence.
