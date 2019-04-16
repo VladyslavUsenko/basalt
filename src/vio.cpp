@@ -95,7 +95,7 @@ pangolin::Var<bool> show_gt("ui.show_gt", true, false, true);
 Button next_step_btn("ui.next_step", &next_step);
 Button prev_step_btn("ui.prev_step", &prev_step);
 
-pangolin::Var<bool> continue_btn("ui.continue_btn", false, false, true);
+pangolin::Var<bool> continue_btn("ui.continue", false, false, true);
 pangolin::Var<bool> continue_fast("ui.continue_fast", true, false, true);
 
 Button align_svd_btn("ui.align_svd", &alignButton);
