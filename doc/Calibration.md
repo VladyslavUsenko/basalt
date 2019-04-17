@@ -24,7 +24,7 @@ The command line options have the following meaning:
 * `--cam-types` camera models for the image streams in the dataset. For more detais see [arXiv:1807.08957](https://arxiv.org/abs/1807.08957).
 
 After that, you should see the calibration GUI:
-![tumvi_cam_calib](doc/img/tumvi_cam_calib.png)
+![tumvi_cam_calib](/doc/img/tumvi_cam_calib.png)
 
 The buttons in the GUI are located in the order which you should follow to calibrate the camera. After pressing a button the system will print the output to the command line:
 * `load_dataset` loads the dataset.
@@ -59,7 +59,7 @@ The command line options for the IMU noise are continous-time and defined as in 
 * `--gyro-bias-std` gyroscope random walk.
 * `--accel-bias-std` accelerometer random walk.
 
-![tumvi_imu_calib](doc/img/tumvi_imu_calib.png)
+![tumvi_imu_calib](/doc/img/tumvi_imu_calib.png)
 
 The buttons in the GUI are located in the order which you need to follow to calibrate the camera-IMU setup:
 * `load_dataset`, `detect_corners`, `init_cam_poses` same as above.
@@ -108,11 +108,11 @@ Run the camera calibration:
 ```
 basalt_calibrate --dataset-path ~/euroc_calib_data/cam_april.bag --dataset-type bag --result-path ~/euroc_calib_result/ --cam-types ds ds
 ```
-![euroc_cam_calib](doc/img/euroc_cam_calib.png)
+![euroc_cam_calib](/doc/img/euroc_cam_calib.png)
 
 ### Camera + IMU calibration
 After calibrating the camera you can run the camera + IMU calibration. The result-path should point to the same folder as before:
 ```
 basalt_calibrate_imu --dataset-path ~/euroc_calib_data/imu_april.bag --dataset-type bag --result-path ~/euroc_calib_result/ --gyro-noise-std 0.000282 --accel-noise-std 0.016 --gyro-bias-std 0.0001 --accel-bias-std 0.001
 ```
-![euroc_imu_calib](doc/img/euroc_imu_calib.png)
+![euroc_imu_calib](/doc/img/euroc_imu_calib.png)
