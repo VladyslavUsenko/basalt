@@ -2,7 +2,7 @@
 
 We demonstrate the usage of the system with the `MH_05_difficult` sequence of the [EuRoC dataset](https://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets) as an example.
 
-**Note:** The path to calibration and configuration files used here works for the APT installation. If you compile from source specify the appropriate path to the files in [data folder](data/).
+**Note:** The path to calibration and configuration files used here works for the APT installation. If you compile from source specify the appropriate path to the files in [data folder](/data/).
 
 Download the sequence from the dataset and extract it. 
 ```
@@ -29,7 +29,7 @@ The command line options have the following meaning:
 * `--show-gui` enables or disables GUI.
 
 This opens the GUI and runs the sequence. The processing happens in the background as fast as possible, and the visualization results are saved in the GUI and can be analysed offline.
-![MH_05_VIO](doc/img/MH_05_VIO.png)
+![MH_05_VIO](/doc/img/MH_05_VIO.png)
 
 The buttons in the GUI have the following meaning:
 * `show_obs` toggles the visibility of the tracked landmarks in the image view.
@@ -52,7 +52,7 @@ basalt_mapper --cam-calib /usr/etc/basalt/euroc_ds_calib.json --marg-data euroc_
 Here `--marg-data` is the folder with the results from VIO and `--vocabulary` is the path to DBoW3 vocabulary.
 
 This opens the GUI and extracts non-linear factors from the marginalization data.
-![MH_05_MAPPING](doc/img/MH_05_MAPPING.png)
+![MH_05_MAPPING](/doc/img/MH_05_MAPPING.png)
 
 The buttons in the GUI have the following meaning:
 * `show_frame1`, `show_cam1`, `show_frame2`, `show_cam2` allows you to assign images to image view 1 and 2 from different timestamps and cameras.
@@ -74,7 +74,7 @@ The workflow for the mapping is the following:
 The `num_opt_iter` slider controls the maximum number of iterations executed when pressing `optimize`.
 
 
-For more systematic evaluation see the evaluation scripts in the [scripts/eval_full](scripts/eval_full) folder.
+For more systematic evaluation see the evaluation scripts in the [scripts/eval_full](/scripts/eval_full) folder.
 
 **NOTE: It appears that only the datasets in ASL Dataset Format (`euroc` dataset type in our notation) contain ground truth that is time-aligned to the IMU and camera images. It is located in the `state_groundtruth_estimate0` folder. Bag files have raw Mocap measurements that are not time aligned and should not be used for evaluations.**
 
@@ -87,7 +87,7 @@ basalt_opt_flow --dataset-path MH_05_difficult/ --cam-calib /usr/etc/basalt/euro
 ```
 
 This will run the GUI and print an average track length after the dataset is processed.
-![MH_05_OPT_FLOW](doc/img/MH_05_OPT_FLOW.png)
+![MH_05_OPT_FLOW](/doc/img/MH_05_OPT_FLOW.png)
 
 
 ## TUM-VI dataset
@@ -107,11 +107,11 @@ To run the visual-inertial odometry execute the following command in `tumvi_data
 ```
 basalt_vio --dataset-path dataset-magistrale1_512_16/ --cam-calib /usr/etc/basalt/tumvi_512_ds_calib.json --dataset-type euroc --config-path /usr/etc/basalt/tumvi_512_config.json --marg-data tumvi_marg_data --show-gui 1 
 ```
-![magistrale1_vio](doc/img/magistrale1_vio.png)
+![magistrale1_vio](/doc/img/magistrale1_vio.png)
 
 ### Visual-inertial mapping
 To run the mapping tool execute the following command:
 ```
 basalt_mapper --cam-calib /usr/etc/basalt/tumvi_512_ds_calib.json --marg-data tumvi_marg_data --vocabulary /usr/etc/basalt/orbvoc.dbow3
 ```
-![magistrale1_mapping](doc/img/magistrale1_mapping.png)
+![magistrale1_mapping](/doc/img/magistrale1_mapping.png)

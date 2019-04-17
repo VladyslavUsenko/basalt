@@ -2,7 +2,7 @@
 
 For better evaluation of the system we use the simulated environment where the optical flow and IMU data is generated from the ground truth by adding noise.
 
-**Note:** The path to calibration and configuration files used here works for the APT installation. If you compile from source specify the appropriate path to the files in [data folder](data/).
+**Note:** The path to calibration and configuration files used here works for the APT installation. If you compile from source specify the appropriate path to the files in [data folder](/data/).
 
 
 ### Visual-inertial odometry simulator
@@ -16,7 +16,7 @@ The command line options have the following meaning:
 * `--show-gui` enables or disables GUI.
 
 This opens the GUI and runs the sequence.
-![SIM_VIO](doc/img/SIM_VIO.png)
+![SIM_VIO](/doc/img/SIM_VIO.png)
 
 The buttons in the GUI have the following meaning:
 * `show_obs` toggles the visibility of the ground-truth landmarks in the image view.
@@ -39,7 +39,7 @@ basalt_mapper_sim --cam-calib /usr/etc/basalt/euroc_ds_calib.json --marg-data si
 The command line arguments are the same as above.
 
 This opens the GUI where the map can be processed.
-![SIM_MAPPER](doc/img/SIM_MAPPER.png)
+![SIM_MAPPER](/doc/img/SIM_MAPPER.png)
 
 The system processes the marginalization data and extracts the non-linear factors from them. Roll-pitch and relative-pose factors are initially added to the system. One way to verify that they result in gravity-aligned map is the following
 * `optimize` runs the optimization
