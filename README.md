@@ -1,3 +1,5 @@
+[![pipeline status](https://gitlab.com/VladyslavUsenko/basalt/badges/master/pipeline.svg)](https://gitlab.com/VladyslavUsenko/basalt/commits/master)
+
 ## Basalt
 For more information see https://vision.in.tum.de/research/vslam/basalt
 
