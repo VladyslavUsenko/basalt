@@ -190,7 +190,7 @@ install(TARGETS basalt_calibrate basalt_calibrate_imu basalt_vio_sim basalt_mapp
 )
 
 file(GLOB CONFIG_FILES "${CMAKE_CURRENT_SOURCE_DIR}/data/*.json")
-INSTALL(FILES ${CONFIG_FILES} ${CMAKE_CURRENT_SOURCE_DIR}/data/orbvoc.dbow3
+INSTALL(FILES ${CONFIG_FILES} ${CMAKE_CURRENT_SOURCE_DIR}/data/basalt-data/orbvoc.dbow3
       DESTINATION ${CMAKE_INSTALL_PREFIX}/etc/basalt
 )
 
