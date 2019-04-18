@@ -126,6 +126,6 @@ deploy:
   only:
     - master
   script:
-    - scp deb_xenial/*.deb $REPOSITORY_URL/xenial/    
-    - scp deb_bionic/*.deb $REPOSITORY_URL/bionic/
+    - scp $SCP_FLAGS deb_xenial/*.deb $REPOSITORY_URL/xenial/    
+    - scp $SCP_FLAGS deb_bionic/*.deb $REPOSITORY_URL/bionic/
 
