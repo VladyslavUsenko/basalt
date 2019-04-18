@@ -96,6 +96,8 @@ gen_results_euroc:
   variables:
     GIT_STRATEGY: none
   when: on_success
+  tags: 
+    - docker
   only:
     - master
   artifacts:
@@ -110,6 +112,8 @@ gen_results_euroc:
 
 deploy:
   stage: deploy
+  tags: 
+    - docker
   before_script:
     - eval $(ssh-agent -s)
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
