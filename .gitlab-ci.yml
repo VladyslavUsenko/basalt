@@ -14,6 +14,8 @@ compile:
     - mkdir -p ccache
     - export CCACHE_BASEDIR=${PWD}
     - export CCACHE_DIR=${PWD}/ccache
+  tags: 
+    - docker
   cache:
     key: bionic
     paths:
@@ -44,6 +46,8 @@ compile_16_04:
     - mkdir -p ccache
     - export CCACHE_BASEDIR=${PWD}
     - export CCACHE_DIR=${PWD}/ccache
+  tags: 
+    - docker
   cache:
     key: xenial
     paths:
@@ -73,7 +77,7 @@ eval_euroc:
   stage: test
   parallel: 10
   tags: 
-    - euroc-eval
+    - dataset-eval
   variables:
     GIT_STRATEGY: none
   only:
