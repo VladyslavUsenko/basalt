@@ -22,10 +22,11 @@ stages:
     - mkdir -p ccache
     - export CCACHE_BASEDIR=${PWD}
     - export CCACHE_DIR=${PWD}/ccache
+    - ccache -s
   cache:
     paths:
     - ccache/
-    key: ${CACHE_KEY}
+    key: ${CI_JOB_NAME}
 
 # template for build & unit test & make deb configurations
 .compile_test_package_template: &compile_test_package_definition
@@ -95,7 +96,6 @@ bionic-release-compile:
   variables:
     CXX_MARCH: 'corei7-avx'
     DEB_DIR: deb_bionic
-    CACHE_KEY: bionic-release
   artifacts:
     paths:
     - deb_bionic/*.deb
@@ -109,7 +109,6 @@ xenial-release-compile:
   variables:
     CXX_MARCH: 'corei7-avx'
     DEB_DIR: deb_xenial
-    CACHE_KEY: xenial-release
   artifacts:
     paths:
     - deb_xenial/*.deb
@@ -120,14 +119,12 @@ bionic-debug-compile:
   <<: *compile_test_package_definition
   variables:
     BUILD_TYPE: Debug
-    CACHE_KEY: bionic-debug
 
 bionic-relwithdebinfo-compile:
   <<: *prepare_docker_definition
   <<: *compile_test_package_definition
   variables:
     BUILD_TYPE: RelWithDebInfo
-    CACHE_KEY: bionic-relwithdebinfo 
 
 elcapitan-relwithdebinfo-compile:
   <<: *compile_test_definition
