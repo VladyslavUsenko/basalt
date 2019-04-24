@@ -120,7 +120,7 @@ double alignButton();
 void setup_points();
 
 constexpr int UI_WIDTH = 200;
-constexpr int NUM_FRAMES = 500;
+//constexpr int NUM_FRAMES = 500;
 
 basalt::Calibration<double> calib;
 
