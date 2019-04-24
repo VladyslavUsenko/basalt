@@ -137,8 +137,6 @@ elcapitan-relwithdebinfo-compile:
 
 # check if clang-format would make any changes
 clang-format:
-  # TODO: add clang-format version >= 8 to "vladyslavusenko/b_image"
-  image: nikolausdemmel/ubuntu-dev-dbatk:16.04
   tags:
     - docker
   stage: build
