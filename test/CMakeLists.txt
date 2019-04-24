@@ -22,7 +22,7 @@ enable_testing()
 
 include(GoogleTest)
 
-gtest_discover_tests(test_image DISCOVERY_TIMEOUT 30)
-gtest_discover_tests(test_spline_opt DISCOVERY_TIMEOUT 30)
-gtest_discover_tests(test_vio DISCOVERY_TIMEOUT 30)
-gtest_discover_tests(test_nfr DISCOVERY_TIMEOUT 30)
+gtest_discover_tests(test_image DISCOVERY_TIMEOUT 60)
+gtest_discover_tests(test_spline_opt DISCOVERY_TIMEOUT 60)
+gtest_discover_tests(test_vio DISCOVERY_TIMEOUT 60)
+gtest_discover_tests(test_nfr DISCOVERY_TIMEOUT 60)
