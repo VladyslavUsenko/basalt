@@ -47,10 +47,7 @@
 #include <basalt/utils/common_types.h>
 #include <basalt/utils/union_find.h>
 
-
 namespace basalt {
-
-
 
 /// TrackBuild class creates feature tracks from matches
 struct TrackBuilder {
@@ -222,4 +219,4 @@ bool GetSharedTracks(const TimeCamId& image_id, const FeatureTracks& all_tracks,
   return !track_ids.empty();
 }
 
-}
+}  // namespace basalt

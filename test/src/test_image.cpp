@@ -27,14 +27,15 @@ TEST(Pattern, ImageInterp) {
 
   // std::cerr << "vg\n" << vg << std::endl;
 
-  test_jacobian("d_val_d_p", J,
-                [&](const Eigen::Vector2d &x) {
-                  Eigen::Matrix<double, 1, 1> res;
-                  Eigen::Vector2d p1 = offset + x;
-                  res[0] = img.interpGrad(p1)[0];
-                  return res;
-                },
-                Eigen::Vector2d::Zero(), 1.0);
+  test_jacobian(
+      "d_val_d_p", J,
+      [&](const Eigen::Vector2d &x) {
+        Eigen::Matrix<double, 1, 1> res;
+        Eigen::Vector2d p1 = offset + x;
+        res[0] = img.interpGrad(p1)[0];
+        return res;
+      },
+      Eigen::Vector2d::Zero(), 1.0);
 }
 
 TEST(Image, ImageInterpolate) {

@@ -33,8 +33,6 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
-
 #include <basalt/vi_estimator/ba_base.h>
 
 #include <tbb/parallel_for.h>
@@ -354,7 +352,6 @@ void BundleAdjustmentBase::linearizeHelper(
             }
           }
         }
-
       });
 
   for (const auto& rld : rld_vec) error += rld.error;
@@ -522,4 +519,4 @@ void BundleAdjustmentBase::marginalizeHelper(Eigen::MatrixXd& abs_H,
   abs_H.resize(0, 0);
   abs_b.resize(0);
 }
-}
+}  // namespace basalt

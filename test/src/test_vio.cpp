@@ -372,37 +372,37 @@ TEST(PreIntegrationTestSuite, LinearizePointsTest) {
   {
     Sophus::Vector6d x0;
     x0.setZero();
-    test_jacobian("d_res_d_xi", d_res_d_xi,
-                  [&](const Sophus::Vector6d& x) {
-                    Eigen::Matrix4d T_t_h_new =
-                        (Sophus::expd(x) * T_t_h_sophus).matrix();
+    test_jacobian(
+        "d_res_d_xi", d_res_d_xi,
+        [&](const Sophus::Vector6d& x) {
+          Eigen::Matrix4d T_t_h_new = (Sophus::expd(x) * T_t_h_sophus).matrix();
 
-                    Eigen::Vector2d res;
-                    basalt::KeypointVioEstimator::linearizePoint(
-                        kpt_obs, kpt_pos, T_t_h_new, cam, res);
+          Eigen::Vector2d res;
+          basalt::KeypointVioEstimator::linearizePoint(kpt_obs, kpt_pos,
+                                                       T_t_h_new, cam, res);
 
-                    return res;
-                  },
-                  x0);
+          return res;
+        },
+        x0);
   }
 
   {
     Eigen::Vector3d x0;
     x0.setZero();
-    test_jacobian("d_res_d_p", d_res_d_p,
-                  [&](const Eigen::Vector3d& x) {
-                    basalt::KeypointVioEstimator::KeypointPosition kpt_pos_new =
-                        kpt_pos;
+    test_jacobian(
+        "d_res_d_p", d_res_d_p,
+        [&](const Eigen::Vector3d& x) {
+          basalt::KeypointVioEstimator::KeypointPosition kpt_pos_new = kpt_pos;
 
-                    kpt_pos_new.dir += x.head<2>();
-                    kpt_pos_new.id += x[2];
+          kpt_pos_new.dir += x.head<2>();
+          kpt_pos_new.id += x[2];
 
-                    Eigen::Vector2d res;
-                    basalt::KeypointVioEstimator::linearizePoint(
-                        kpt_obs, kpt_pos_new, T_t_h, cam, res);
+          Eigen::Vector2d res;
+          basalt::KeypointVioEstimator::linearizePoint(kpt_obs, kpt_pos_new,
+                                                       T_t_h, cam, res);
 
-                    return res;
-                  },
-                  x0);
+          return res;
+        },
+        x0);
   }
 }

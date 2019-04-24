@@ -34,29 +34,29 @@ TEST(PreIntegrationTestSuite, RelPoseTest) {
   {
     Sophus::Vector6d x0;
     x0.setZero();
-    test_jacobian("d_res_d_T_w_i", d_res_d_T_w_i,
-                  [&](const Sophus::Vector6d& x) {
-                    auto T_w_i_new = T_w_i;
-                    basalt::PoseState::incPose(x, T_w_i_new);
+    test_jacobian(
+        "d_res_d_T_w_i", d_res_d_T_w_i,
+        [&](const Sophus::Vector6d& x) {
+          auto T_w_i_new = T_w_i;
+          basalt::PoseState::incPose(x, T_w_i_new);
 
-                    return basalt::relPoseError(T_i_j, T_w_i_new, T_w_j);
-
-                  },
-                  x0);
+          return basalt::relPoseError(T_i_j, T_w_i_new, T_w_j);
+        },
+        x0);
   }
 
   {
     Sophus::Vector6d x0;
     x0.setZero();
-    test_jacobian("d_res_d_T_w_j", d_res_d_T_w_j,
-                  [&](const Sophus::Vector6d& x) {
-                    auto T_w_j_new = T_w_j;
-                    basalt::PoseState::incPose(x, T_w_j_new);
+    test_jacobian(
+        "d_res_d_T_w_j", d_res_d_T_w_j,
+        [&](const Sophus::Vector6d& x) {
+          auto T_w_j_new = T_w_j;
+          basalt::PoseState::incPose(x, T_w_j_new);
 
-                    return basalt::relPoseError(T_i_j, T_w_i, T_w_j_new);
-
-                  },
-                  x0);
+          return basalt::relPoseError(T_i_j, T_w_i, T_w_j_new);
+        },
+        x0);
   }
 }
 
@@ -71,15 +71,15 @@ TEST(PreIntegrationTestSuite, AbsPositionTest) {
   {
     Sophus::Vector6d x0;
     x0.setZero();
-    test_jacobian("d_res_d_T_w_i", d_res_d_T_w_i,
-                  [&](const Sophus::Vector6d& x) {
-                    auto T_w_i_new = T_w_i;
-                    basalt::PoseState::incPose(x, T_w_i_new);
+    test_jacobian(
+        "d_res_d_T_w_i", d_res_d_T_w_i,
+        [&](const Sophus::Vector6d& x) {
+          auto T_w_i_new = T_w_i;
+          basalt::PoseState::incPose(x, T_w_i_new);
 
-                    return basalt::absPositionError(T_w_i_new, pos);
-
-                  },
-                  x0);
+          return basalt::absPositionError(T_w_i_new, pos);
+        },
+        x0);
   }
 }
 
@@ -97,17 +97,17 @@ TEST(PreIntegrationTestSuite, YawTest) {
   {
     Sophus::Vector6d x0;
     x0.setZero();
-    test_jacobian("d_res_d_T_w_i", d_res_d_T_w_i,
-                  [&](const Sophus::Vector6d& x) {
-                    auto T_w_i_new = T_w_i;
-                    basalt::PoseState::incPose(x, T_w_i_new);
+    test_jacobian(
+        "d_res_d_T_w_i", d_res_d_T_w_i,
+        [&](const Sophus::Vector6d& x) {
+          auto T_w_i_new = T_w_i;
+          basalt::PoseState::incPose(x, T_w_i_new);
 
-                    double res = basalt::yawError(T_w_i_new, yaw_dir_body);
+          double res = basalt::yawError(T_w_i_new, yaw_dir_body);
 
-                    return Eigen::Matrix<double, 1, 1>(res);
-
-                  },
-                  x0);
+          return Eigen::Matrix<double, 1, 1>(res);
+        },
+        x0);
   }
 }
 
@@ -124,14 +124,14 @@ TEST(PreIntegrationTestSuite, RollPitchTest) {
   {
     Sophus::Vector6d x0;
     x0.setZero();
-    test_jacobian("d_res_d_T_w_i", d_res_d_T_w_i,
-                  [&](const Sophus::Vector6d& x) {
-                    auto T_w_i_new = T_w_i;
-                    basalt::PoseState::incPose(x, T_w_i_new);
+    test_jacobian(
+        "d_res_d_T_w_i", d_res_d_T_w_i,
+        [&](const Sophus::Vector6d& x) {
+          auto T_w_i_new = T_w_i;
+          basalt::PoseState::incPose(x, T_w_i_new);
 
-                    return basalt::rollPitchError(T_w_i_new, R_w_i);
-
-                  },
-                  x0);
+          return basalt::rollPitchError(T_w_i_new, R_w_i);
+        },
+        x0);
   }
 }

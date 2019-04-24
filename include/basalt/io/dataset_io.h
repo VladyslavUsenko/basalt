@@ -179,8 +179,9 @@ template <class Archive, class _Scalar, int _Rows, int _Cols, int _Options,
 inline
     typename std::enable_if<_Rows == Eigen::Dynamic || _Cols == Eigen::Dynamic,
                             void>::type
-    load(Archive &ar, Eigen::Matrix<_Scalar, _Rows, _Cols, _Options, _MaxRows,
-                                    _MaxCols> &matrix) {
+    load(Archive &ar,
+         Eigen::Matrix<_Scalar, _Rows, _Cols, _Options, _MaxRows, _MaxCols>
+             &matrix) {
   std::int32_t rows;
   std::int32_t cols;
   ar(rows);

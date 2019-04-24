@@ -117,4 +117,4 @@ inline Sophus::Vector2d rollPitchError(
 
   return res.head<2>();
 }
-}
+}  // namespace basalt

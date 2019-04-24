@@ -1,6 +1,7 @@
 ---
-Language:        Cpp
-BasedOnStyle:  Google
-IndentWidth:     2
+Language:       Cpp
+BasedOnStyle:   Google
+IndentWidth:    2
+IncludeBlocks:  Preserve
 ...
 

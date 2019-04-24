@@ -33,7 +33,6 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
 #include <algorithm>
 #include <chrono>
 #include <iostream>
@@ -120,7 +119,7 @@ double alignButton();
 void setup_points();
 
 constexpr int UI_WIDTH = 200;
-//constexpr int NUM_FRAMES = 500;
+// constexpr int NUM_FRAMES = 500;
 
 basalt::Calibration<double> calib;
 

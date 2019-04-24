@@ -238,7 +238,7 @@ using ImageProjections = std::map<TimeCamId, ImageProjection>;
 /// inlier projections indexed per track
 using TrackProjections =
     std::unordered_map<TrackId, std::map<TimeCamId, ProjectedLandmarkConstPtr>>;
-}
+}  // namespace basalt
 
 namespace cereal {
 
@@ -251,4 +251,4 @@ template <class Archive>
 void serialize(Archive& ar, basalt::MatchData& c) {
   ar(c.T_i_j, c.matches, c.inliers);
 }
-}
+}  // namespace cereal

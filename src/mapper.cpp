@@ -323,7 +323,7 @@ int main(int argc, char** argv) {
       std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
   } else {
-    //optimize();
+    // optimize();
     detect();
     match();
     tracks();

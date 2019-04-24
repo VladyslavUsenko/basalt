@@ -33,7 +33,6 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
 #include <algorithm>
 #include <chrono>
 #include <iostream>
@@ -541,8 +540,8 @@ void load_data(const std::string& calib_path) {
   if (os.is_open()) {
     cereal::JSONInputArchive archive(os);
     archive(calib);
-    std::cout << "Loaded camera with " << calib.intrinsics.size()
-              << " cameras" << std::endl;
+    std::cout << "Loaded camera with " << calib.intrinsics.size() << " cameras"
+              << std::endl;
 
   } else {
     std::cerr << "could not load camera calibration " << calib_path
@@ -595,9 +594,9 @@ void compute_projections() {
 void gen_data() {
   for (size_t i = 0; i < calib.intrinsics.size(); i++) {
     images.emplace_back();
-    images.back() = pangolin::TypedImage(
-        calib.resolution[i][0], calib.resolution[i][1],
-        pangolin::PixelFormatFromString("GRAY8"));
+    images.back() =
+        pangolin::TypedImage(calib.resolution[i][0], calib.resolution[i][1],
+                             pangolin::PixelFormatFromString("GRAY8"));
 
     images.back().Fill(200);
   }
