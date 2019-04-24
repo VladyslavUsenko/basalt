@@ -25,6 +25,7 @@ stages:
   cache:
     paths:
     - ccache/
+    key: ${CACHE_KEY}
 
 # template for build & unit test & make deb configurations
 .compile_test_package_template: &compile_test_package_definition
@@ -91,11 +92,10 @@ stages:
 bionic-release-compile:
   <<: *prepare_docker_definition
   <<: *compile_test_package_definition
-  cache:
-    key: bionic-release
   variables:
     CXX_MARCH: 'corei7-avx'
     DEB_DIR: deb_bionic
+    CACHE_KEY: bionic-release
   artifacts:
     paths:
     - deb_bionic/*.deb
@@ -106,11 +106,10 @@ xenial-release-compile:
   <<: *prepare_docker_definition
   <<: *compile_test_package_definition
   image: vladyslavusenko/b_image_xenial:latest
-  cache:
-    key: xenial-release
   variables:
     CXX_MARCH: 'corei7-avx'
     DEB_DIR: deb_xenial
+    CACHE_KEY: xenial-release
   artifacts:
     paths:
     - deb_xenial/*.deb
@@ -119,18 +118,16 @@ xenial-release-compile:
 bionic-debug-compile:
   <<: *prepare_docker_definition
   <<: *compile_test_package_definition
-  cache:
-    key: bionic-debug
   variables:
     BUILD_TYPE: Debug
+    CACHE_KEY: bionic-debug
 
 bionic-relwithdebinfo-compile:
   <<: *prepare_docker_definition
   <<: *compile_test_package_definition
-  cache:
-    key: bionic-relwithdebinfo
   variables:
     BUILD_TYPE: RelWithDebInfo
+    CACHE_KEY: bionic-relwithdebinfo 
 
 elcapitan-relwithdebinfo-compile:
   <<: *compile_test_definition
