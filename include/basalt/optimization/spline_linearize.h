@@ -135,9 +135,9 @@ struct LinearizeSplineOpt : public LinearizeBase<Scalar> {
       // std::cout << "time " << time << std::endl;
       // std::cout << "sline.minTime() " << spline.minTime() << std::endl;
 
-      BASALT_ASSERT_STREAM(time_ns >= spline->minTimeNs(),
-                           "time " << time_ns << " spline.minTimeNs() "
-                                   << spline->minTimeNs());
+      BASALT_ASSERT_STREAM(
+          time_ns >= spline->minTimeNs(),
+          "time " << time_ns << " spline.minTimeNs() " << spline->minTimeNs());
 
       // Residual from current value of spline
       Vector3 residual_pos =
@@ -207,12 +207,12 @@ struct LinearizeSplineOpt : public LinearizeBase<Scalar> {
       //      std::cout << "time " << t << std::endl;
       //      std::cout << "sline.minTime() " << spline.minTime() << std::endl;
 
-      BASALT_ASSERT_STREAM(t >= spline->minTimeNs(),
-                           "t " << t << " spline.minTime() "
-                                << spline->minTimeNs());
-      BASALT_ASSERT_STREAM(t <= spline->maxTimeNs(),
-                           "t " << t << " spline.maxTime() "
-                                << spline->maxTimeNs());
+      BASALT_ASSERT_STREAM(
+          t >= spline->minTimeNs(),
+          "t " << t << " spline.minTime() " << spline->minTimeNs());
+      BASALT_ASSERT_STREAM(
+          t <= spline->maxTimeNs(),
+          "t " << t << " spline.maxTime() " << spline->maxTimeNs());
 
       Vector3 residual = spline->accelResidual(
           t, pm.data, this->common_data.calibration->calib_accel_bias,
@@ -255,8 +255,9 @@ struct LinearizeSplineOpt : public LinearizeBase<Scalar> {
           BASALT_ASSERT(start_j < opt_size);
 
           accum.template addH<POSE_SIZE, POSE_SIZE>(
-              start_i, start_j, accel_var_inv * J.d_val_d_knot[i].transpose() *
-                                    J.d_val_d_knot[j]);
+              start_i, start_j,
+              accel_var_inv * J.d_val_d_knot[i].transpose() *
+                  J.d_val_d_knot[j]);
         }
         accum.template addH<ACCEL_BIAS_SIZE, POSE_SIZE>(
             start_bias, start_i,
@@ -497,9 +498,9 @@ struct LinearizeSplineOpt : public LinearizeBase<Scalar> {
       if (time_ns < spline->minTimeNs() || time_ns >= spline->maxTimeNs())
         continue;
 
-      BASALT_ASSERT_STREAM(time_ns >= spline->minTimeNs(),
-                           "time " << time_ns << " spline.minTimeNs() "
-                                   << spline->minTimeNs());
+      BASALT_ASSERT_STREAM(
+          time_ns >= spline->minTimeNs(),
+          "time " << time_ns << " spline.minTimeNs() " << spline->minTimeNs());
 
       const SE3 T_moc_w = this->common_data.mocap_calibration->T_moc_w;
       const SE3 T_i_mark = this->common_data.mocap_calibration->T_i_mark;
@@ -563,9 +564,9 @@ struct LinearizeSplineOpt : public LinearizeBase<Scalar> {
                          d_res_d_T_w_i.transpose() * residual);
 
         accum.template addH<POSE_SIZE, POSE_SIZE>(
-            start_T_moc_w, start_i, mocap_var_inv *
-                                        d_res_d_T_moc_w.transpose() *
-                                        d_res_d_T_w_i * J_pose.d_val_d_knot[i]);
+            start_T_moc_w, start_i,
+            mocap_var_inv * d_res_d_T_moc_w.transpose() * d_res_d_T_w_i *
+                J_pose.d_val_d_knot[i]);
 
         accum.template addH<POSE_SIZE, POSE_SIZE>(
             start_T_i_mark, start_i,

@@ -43,13 +43,11 @@ struct SimObservations {
   std::vector<int> id;
 };
 
-}
+}  // namespace basalt
 
 namespace cereal {
 template <class Archive>
 void serialize(Archive& ar, basalt::SimObservations& c) {
   ar(c.pos, c.id);
 }
-}
-
-
+}  // namespace cereal

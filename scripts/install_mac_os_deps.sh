@@ -1,4 +1,15 @@
 #!/bin/sh
 
-brew install clang-format tbb glew eigen ccache 
-brew install --with-toolchain llvm
+brew install \
+     boost \
+     opencv \
+     cmake \
+     pkgconfig \
+     lz4 \
+     clang-format \
+     tbb \
+     glew \
+     eigen \
+     ccache
+
+brew install llvm

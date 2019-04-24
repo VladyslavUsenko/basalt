@@ -33,7 +33,6 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
 #include <basalt/io/dataset_io.h>
 #include <basalt/io/dataset_io_euroc.h>
 #include <basalt/io/dataset_io_rosbag.h>

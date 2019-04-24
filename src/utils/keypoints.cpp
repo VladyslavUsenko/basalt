@@ -128,7 +128,7 @@ const static char pattern_31_y_b[256] = {
     -11};
 
 void detectKeypointsMapping(const basalt::Image<const uint16_t>& img_raw,
-                      KeypointsData& kd, int num_features) {
+                            KeypointsData& kd, int num_features) {
   cv::Mat image(img_raw.h, img_raw.w, CV_8U);
 
   uint8_t* dst = image.ptr();

@@ -84,4 +84,4 @@ class VignetteEstimator {
   std::vector<double> irradiance;
   std::vector<basalt::RdSpline<1, SPLINE_N>> vign_param;
 };
-}
+}  // namespace basalt

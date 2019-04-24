@@ -174,6 +174,7 @@ class BundleAdjustmentBase {
 
     if (d_res_d_p) {
       Eigen::Matrix<double, 4, 3> Jpp;
+      Jpp.setZero();
       Jpp.block<3, 2>(0, 0) = T_t_h.topLeftCorner<3, 4>() * Jup;
       Jpp.col(2) = T_t_h.col(3);
 
@@ -215,6 +216,7 @@ class BundleAdjustmentBase {
 
     if (d_res_d_p) {
       Eigen::Matrix<double, 4, 3> Jpp;
+      Jpp.setZero();
       Jpp.block<4, 2>(0, 0) = Jup;
       Jpp.col(2).setZero();
 
@@ -284,28 +286,32 @@ class BundleAdjustmentBase {
           continue;
 
         accum.template addH<POSE_SIZE, POSE_SIZE>(
-            abs_h_idx, abs_h_idx, rld.d_rel_d_h[i].transpose() *
-                                      rel_H.block<POSE_SIZE, POSE_SIZE>(
-                                          POSE_SIZE * i, POSE_SIZE * j) *
-                                      rld.d_rel_d_h[j]);
+            abs_h_idx, abs_h_idx,
+            rld.d_rel_d_h[i].transpose() *
+                rel_H.block<POSE_SIZE, POSE_SIZE>(POSE_SIZE * i,
+                                                  POSE_SIZE * j) *
+                rld.d_rel_d_h[j]);
 
         accum.template addH<POSE_SIZE, POSE_SIZE>(
-            abs_ti_idx, abs_h_idx, rld.d_rel_d_t[i].transpose() *
-                                       rel_H.block<POSE_SIZE, POSE_SIZE>(
-                                           POSE_SIZE * i, POSE_SIZE * j) *
-                                       rld.d_rel_d_h[j]);
+            abs_ti_idx, abs_h_idx,
+            rld.d_rel_d_t[i].transpose() *
+                rel_H.block<POSE_SIZE, POSE_SIZE>(POSE_SIZE * i,
+                                                  POSE_SIZE * j) *
+                rld.d_rel_d_h[j]);
 
         accum.template addH<POSE_SIZE, POSE_SIZE>(
-            abs_h_idx, abs_tj_idx, rld.d_rel_d_h[i].transpose() *
-                                       rel_H.block<POSE_SIZE, POSE_SIZE>(
-                                           POSE_SIZE * i, POSE_SIZE * j) *
-                                       rld.d_rel_d_t[j]);
+            abs_h_idx, abs_tj_idx,
+            rld.d_rel_d_h[i].transpose() *
+                rel_H.block<POSE_SIZE, POSE_SIZE>(POSE_SIZE * i,
+                                                  POSE_SIZE * j) *
+                rld.d_rel_d_t[j]);
 
         accum.template addH<POSE_SIZE, POSE_SIZE>(
-            abs_ti_idx, abs_tj_idx, rld.d_rel_d_t[i].transpose() *
-                                        rel_H.block<POSE_SIZE, POSE_SIZE>(
-                                            POSE_SIZE * i, POSE_SIZE * j) *
-                                        rld.d_rel_d_t[j]);
+            abs_ti_idx, abs_tj_idx,
+            rld.d_rel_d_t[i].transpose() *
+                rel_H.block<POSE_SIZE, POSE_SIZE>(POSE_SIZE * i,
+                                                  POSE_SIZE * j) *
+                rld.d_rel_d_t[j]);
       }
     }
   }
@@ -369,4 +375,4 @@ class BundleAdjustmentBase {
 
   basalt::Calibration<double> calib;
 };
-}
+}  // namespace basalt

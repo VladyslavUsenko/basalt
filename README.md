@@ -42,7 +42,7 @@ Update the Ubuntu package index and install Basalt:
 sudo apt-get update
 sudo apt-get install basalt
 ```
-### Source installation for Ubuntu 18.04 and MacOS 10.14 Mojave
+### Source installation for Ubuntu 18.04 and MacOS >= 10.11 El Capitan
 Clone the source code for the project and build it. For MacOS you should have [Homebrew](https://brew.sh/) installed.
 ```
 git clone --recursive https://gitlab.com/VladyslavUsenko/basalt.git

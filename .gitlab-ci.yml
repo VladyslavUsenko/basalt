@@ -1,83 +1,168 @@
 image: vladyslavusenko/b_image:latest
 
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+  BUILD_TYPE: Release
+  CXX_MARCH: native
+  CMAKE_INSTALL_PREFIX: /usr/
+  DEB_DIR: deb
+
 stages:
   - build
   - test
-  - test_results
+  - eval
+  - eval_results
   - deploy
 
-compile:
-  stage: build
-  variables:
-    CXX_MARCH: 'corei7-avx'
+# template for docker builds with ccache
+.prepare_docker_template: &prepare_docker_definition
+  tags:
+    - docker
   before_script:
     - mkdir -p ccache
     - export CCACHE_BASEDIR=${PWD}
     - export CCACHE_DIR=${PWD}/ccache
-  tags: 
-    - docker
   cache:
-    key: bionic
     paths:
     - ccache/
+    key: ${CACHE_KEY}
+
+# template for build & unit test & make deb configurations
+.compile_test_package_template: &compile_test_package_definition
+  stage: build
   script:
-    - ./scripts/update_submodules.sh
     - mkdir build
     - cd build
-    - cmake .. -DCMAKE_BUILD_TYPE=Release -DCXX_MARCH=${CXX_MARCH} -DCMAKE_INSTALL_PREFIX=/usr/
+    - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCXX_MARCH=${CXX_MARCH} -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
     - make -j3
+    - ctest
     - make package
-    - cd test/
-    - ctest -V
-    - cd ../../
-    - mkdir deb_bionic
-    - cp build/*.deb deb_bionic/
+    - cd ..
+    - mkdir $DEB_DIR
+    - mv build/*.deb $DEB_DIR/
+    - dpkg -i $DEB_DIR/*.deb
+    # smoke test to see if all executables at least start up
+    - basalt_calibrate --help
+    - basalt_calibrate_imu --help
+    - basalt_mapper --help
+    - basalt_mapper_sim --help
+    - basalt_mapper_sim_naive --help
+    - basalt_opt_flow --help
+    - basalt_vio --help
+    - basalt_vio_sim --help
+
+# template for build & unit test configurations (no deb)
+.compile_test_template: &compile_test_definition
+  stage: build
+  script:
+    - mkdir build
+    - cd build
+    - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCXX_MARCH=${CXX_MARCH} -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+    - make -j3
+    - ctest
+    # smoke test to see if all executables at least start up
+    - ./basalt_calibrate --help
+    - ./basalt_calibrate_imu --help
+    - ./basalt_mapper --help
+    - ./basalt_mapper_sim --help
+    - ./basalt_mapper_sim_naive --help
+    - ./basalt_opt_flow --help
+    - ./basalt_vio --help
+    - ./basalt_vio_sim --help
+
+# template to test debian
+.test_deb_template: &test_deb_definition
+  stage: test
+  tags:
+    - docker
+  variables:
+    GIT_STRATEGY: none
+  script:
+    - dpkg -i $DEB_DIR/*.deb
+    # smoke test to see if all executables at least start up
+    - basalt_calibrate --help
+    - basalt_calibrate_imu --help
+    - basalt_mapper --help
+    - basalt_mapper_sim --help
+    - basalt_mapper_sim_naive --help
+    - basalt_opt_flow --help
+    - basalt_vio --help
+    - basalt_vio_sim --help
+
+bionic-release-compile:
+  <<: *prepare_docker_definition
+  <<: *compile_test_package_definition
+  variables:
+    CXX_MARCH: 'corei7-avx'
+    DEB_DIR: deb_bionic
+    CACHE_KEY: bionic-release
   artifacts:
     paths:
     - deb_bionic/*.deb
     - scripts/eval_full/*
     expire_in: 1 week
 
-compile_16_04:
-  stage: build
+xenial-release-compile:
+  <<: *prepare_docker_definition
+  <<: *compile_test_package_definition
+  image: vladyslavusenko/b_image_xenial:latest
   variables:
     CXX_MARCH: 'corei7-avx'
-  before_script:
-    - mkdir -p ccache
-    - export CCACHE_BASEDIR=${PWD}
-    - export CCACHE_DIR=${PWD}/ccache
-  tags: 
-    - docker
-  cache:
-    key: xenial
-    paths:
-    - ccache/
-  script:
-    - ./scripts/update_submodules.sh
-    - mkdir build
-    - cd build
-    - cmake .. -DCMAKE_BUILD_TYPE=Release -DCXX_MARCH=${CXX_MARCH} -DCMAKE_INSTALL_PREFIX=/usr/
-    - make -j3
-    - make package
-    - cd test/
-    - ctest -V
-    - cd ../../
-    - mkdir deb_xenial
-    - cp build/*.deb deb_xenial/
+    DEB_DIR: deb_xenial
+    CACHE_KEY: xenial-release
   artifacts:
     paths:
     - deb_xenial/*.deb
     expire_in: 1 week
-  only:
-    - master
+
+bionic-debug-compile:
+  <<: *prepare_docker_definition
+  <<: *compile_test_package_definition
+  variables:
+    BUILD_TYPE: Debug
+    CACHE_KEY: bionic-debug
+
+bionic-relwithdebinfo-compile:
+  <<: *prepare_docker_definition
+  <<: *compile_test_package_definition
+  variables:
+    BUILD_TYPE: RelWithDebInfo
+    CACHE_KEY: bionic-relwithdebinfo 
+
+elcapitan-relwithdebinfo-compile:
+  <<: *compile_test_definition
+  tags: [macos, "10.11"]
+  variables:
+    BUILD_TYPE: RelWithDebInfo
+
+# check if clang-format would make any changes
+clang-format:
+  tags:
+    - docker
+  stage: build
+  variables:
+    GIT_SUBMODULE_STRATEGY: none
+  script:
+    - ./scripts/clang-format-all.sh
+    # check if any files are now modified and error if yes
+    - (if git diff --name-only --diff-filter=M | grep '\..pp$'; then echo $'\n    Some files are not properly formatted. You can use "./scripts/clang-format-all.sh".\n'; git diff --diff-filter=M; false; fi)
+
+bionic-test:
+  <<: *test_deb_definition
+  variables:
+    DEB_DIR: deb_bionic
+
+xenial-test:
+  <<: *test_deb_definition
   image: vladyslavusenko/b_image_xenial:latest
+  variables:
+    DEB_DIR: deb_xenial
 
-
+# evaluate on EuRoC sequences
 eval_euroc:
-  stage: test
+  stage: eval
   parallel: 10
-  tags: 
-    - dataset-eval
+  tags: [docker, dataset-eval]
   variables:
     GIT_STRATEGY: none
   only:
@@ -91,13 +176,14 @@ eval_euroc:
     - cd scripts/eval_full
     - ./run_evaluations.sh
 
+# aggregate results for all EuRoC sequences
 gen_results_euroc:
-  stage: test_results
+  stage: eval_results
   variables:
     GIT_STRATEGY: none
-  when: on_success
   tags: 
     - docker
+  when: on_success
   only:
     - master
   artifacts:
@@ -109,11 +195,15 @@ gen_results_euroc:
     - cat euroc_results.txt
     - mv euroc_results.txt ../../
 
-
+# deploy deb packages
 deploy:
   stage: deploy
+  variables:
+    GIT_STRATEGY: none
   tags: 
     - docker
+  only:
+    - master
   before_script:
     - eval $(ssh-agent -s)
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
@@ -121,10 +211,6 @@ deploy:
     - chmod 700 ~/.ssh
     - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
     - chmod 644 ~/.ssh/known_hosts
-  variables:
-    GIT_STRATEGY: none
-  only:
-    - master
   script:
     - scp $SCP_FLAGS deb_xenial/*.deb $REPOSITORY_URL/xenial/    
     - scp $SCP_FLAGS deb_bionic/*.deb $REPOSITORY_URL/bionic/
