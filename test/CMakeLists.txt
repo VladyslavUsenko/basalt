@@ -1,31 +1,28 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.10)
 
-find_package(TBB REQUIRED)
-include_directories(${TBB_INCLUDE_DIR})
-
-set(GTEST_MAIN_LIBRARY gtest_main)
-set(GTEST_LIBRARY gtest)
-
+# Note: add_subdirectory(googletest ...) is called in basalt-headers
 
 include_directories(../thirdparty/basalt-headers/test/include)
 
 
 add_executable(test_image src/test_image.cpp)
-target_link_libraries(test_image ${GTEST_LIBRARY} ${GTEST_MAIN_LIBRARY} ${OpenCV_LIBS} basalt)
+target_link_libraries(test_image gtest gtest_main basalt)
 
 add_executable(test_spline_opt src/test_spline_opt.cpp)
-target_link_libraries(test_spline_opt ${GTEST_LIBRARY} ${GTEST_MAIN_LIBRARY} ${TBB_LIBRARIES} opengv basalt)
+target_link_libraries(test_spline_opt gtest gtest_main basalt)
 
 add_executable(test_vio src/test_vio.cpp)
-target_link_libraries(test_vio ${GTEST_LIBRARY} ${GTEST_MAIN_LIBRARY} ${TBB_LIBRARIES} opengv basalt)
+target_link_libraries(test_vio gtest gtest_main basalt)
 
 add_executable(test_nfr src/test_nfr.cpp)
-target_link_libraries(test_nfr ${GTEST_LIBRARY} ${GTEST_MAIN_LIBRARY} ${TBB_LIBRARIES} opengv basalt)
+target_link_libraries(test_nfr gtest gtest_main basalt)
 
 
 enable_testing()
 
-add_test(test_image test_image COMMAND Test)
-add_test(test_spline_opt test_spline_opt COMMAND Test)
-add_test(test_vio test_vio COMMAND Test)
-add_test(test_nfr test_nfr COMMAND Test)
+include(GoogleTest)
+
+gtest_discover_tests(test_image DISCOVERY_TIMEOUT 30)
+gtest_discover_tests(test_spline_opt DISCOVERY_TIMEOUT 30)
+gtest_discover_tests(test_vio DISCOVERY_TIMEOUT 30)
+gtest_discover_tests(test_nfr DISCOVERY_TIMEOUT 30)
