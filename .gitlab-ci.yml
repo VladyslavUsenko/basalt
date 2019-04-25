@@ -76,8 +76,6 @@ stages:
   stage: test
   tags:
     - docker
-  variables:
-    GIT_STRATEGY: none
   script:
     - dpkg -i $DEB_DIR/*.deb
     # smoke test to see if all executables at least start up
@@ -148,12 +146,14 @@ bionic-test:
   <<: *test_deb_definition
   variables:
     DEB_DIR: deb_bionic
+    GIT_STRATEGY: none
 
 xenial-test:
   <<: *test_deb_definition
   image: vladyslavusenko/b_image_xenial:latest
   variables:
     DEB_DIR: deb_xenial
+    GIT_STRATEGY: none
 
 # evaluate on EuRoC sequences
 eval_euroc:
