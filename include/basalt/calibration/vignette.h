@@ -51,6 +51,7 @@ class VignetteEstimator {
 
   VignetteEstimator(const VioDatasetPtr &vio_dataset,
                     const Eigen::vector<Eigen::Vector2d> &optical_centers,
+                    const Eigen::vector<Eigen::Vector2i> &resolutions,
                     const std::map<TimeCamId, Eigen::vector<Eigen::Vector3d>>
                         &reprojected_vignette,
                     const AprilGrid &april_grid);
@@ -77,6 +78,7 @@ class VignetteEstimator {
  private:
   const VioDatasetPtr vio_dataset;
   Eigen::vector<Eigen::Vector2d> optical_centers;
+  Eigen::vector<Eigen::Vector2i> resolutions;
   std::map<TimeCamId, Eigen::vector<Eigen::Vector3d>> reprojected_vignette;
   const AprilGrid &april_grid;
 

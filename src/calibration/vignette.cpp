@@ -40,11 +40,13 @@ namespace basalt {
 VignetteEstimator::VignetteEstimator(
     const VioDatasetPtr &vio_dataset,
     const Eigen::vector<Eigen::Vector2d> &optical_centers,
+    const Eigen::vector<Eigen::Vector2i> &resolutions,
     const std::map<TimeCamId, Eigen::vector<Eigen::Vector3d>>
         &reprojected_vignette,
     const AprilGrid &april_grid)
     : vio_dataset(vio_dataset),
       optical_centers(optical_centers),
+      resolutions(resolutions),
       reprojected_vignette(reprojected_vignette),
       april_grid(april_grid),
       vign_param(vio_dataset->get_num_cams(),
@@ -278,9 +280,8 @@ void VignetteEstimator::compute_data_log(pangolin::DataLog &vign_data_log) {
 
 void VignetteEstimator::save_vign_png(const std::string &path) {
   for (size_t k = 0; k < vio_dataset->get_num_cams(); k++) {
-    auto img =
-        vio_dataset->get_image_data(vio_dataset->get_image_timestamps()[0])[0];
-    pangolin::ManagedImage<uint16_t> vign_img(img.img->w, img.img->h);
+    pangolin::ManagedImage<uint16_t> vign_img(resolutions[k][0],
+                                              resolutions[k][1]);
     vign_img.Fill(0);
 
     Eigen::Vector2d oc = optical_centers[k];

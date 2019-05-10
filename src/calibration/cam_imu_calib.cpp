@@ -435,20 +435,23 @@ void CamImuCalib::initOptimization() {
     int64_t timestamp_ns = vio_dataset->get_image_timestamps()[j];
 
     TimeCamId tcid = std::make_pair(timestamp_ns, 0);
-    const CalibInitPoseData &cp = calib_init_poses.at(tcid);
+    const auto cp_it = calib_init_poses.find(tcid);
 
-    calib_opt->addPoseMeasurement(
-        timestamp_ns, cp.T_a_c * calib_opt->getCamT_i_c(0).inverse());
+    if (cp_it != calib_init_poses.end()) {
+      calib_opt->addPoseMeasurement(
+          timestamp_ns,
+          cp_it->second.T_a_c * calib_opt->getCamT_i_c(0).inverse());
 
-    if (!g_initialized) {
-      for (size_t i = 0;
-           i < vio_dataset->get_accel_data().size() && !g_initialized; i++) {
-        const basalt::AccelData &ad = vio_dataset->get_accel_data()[i];
-        if (std::abs(ad.timestamp_ns - timestamp_ns) < 3000000) {
-          g_a_init = cp.T_a_c.so3() * ad.data;
-          g_initialized = true;
-          std::cout << "g_a initialized with " << g_a_init.transpose()
-                    << std::endl;
+      if (!g_initialized) {
+        for (size_t i = 0;
+             i < vio_dataset->get_accel_data().size() && !g_initialized; i++) {
+          const basalt::AccelData &ad = vio_dataset->get_accel_data()[i];
+          if (std::abs(ad.timestamp_ns - timestamp_ns) < 3000000) {
+            g_a_init = cp_it->second.T_a_c.so3() * ad.data;
+            g_initialized = true;
+            std::cout << "g_a initialized with " << g_a_init.transpose()
+                      << std::endl;
+          }
         }
       }
     }
@@ -795,7 +798,8 @@ void CamImuCalib::drawImageOverlay(pangolin::View &v, size_t cam_id) {
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
       if (reprojected_corners.find(tcid) != reprojected_corners.end()) {
-        if (calib_corners.at(tcid).corner_ids.size() >= MIN_CORNERS) {
+        if (calib_corners.count(tcid) > 0 &&
+            calib_corners.at(tcid).corner_ids.size() >= MIN_CORNERS) {
           const auto &rc = reprojected_corners.at(tcid);
 
           for (size_t i = 0; i < rc.size(); i++) {

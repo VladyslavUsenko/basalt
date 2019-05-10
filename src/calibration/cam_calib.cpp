@@ -172,7 +172,8 @@ void CamCalib::computeVign() {
     }
   }
 
-  VignetteEstimator ve(vio_dataset, optical_centers, reprojected_vignette2,
+  VignetteEstimator ve(vio_dataset, optical_centers,
+                       calib_opt->calib->resolution, reprojected_vignette2,
                        april_grid);
 
   ve.optimize();
@@ -353,8 +354,25 @@ void CamCalib::initCamIntrinsics() {
 
   // set resolution
   {
-    int64_t t_ns = vio_dataset->get_image_timestamps()[1];
-    const auto img_data = vio_dataset->get_image_data(t_ns);
+    size_t img_idx = 1;
+    int64_t t_ns = vio_dataset->get_image_timestamps()[img_idx];
+    auto img_data = vio_dataset->get_image_data(t_ns);
+
+    // Find the frame with all valid images
+    while (img_idx < vio_dataset->get_image_timestamps().size()) {
+      bool img_data_valid = true;
+      for (size_t i = 0; i < vio_dataset->get_num_cams(); i++) {
+        if (!img_data[i].img.get()) img_data_valid = false;
+      }
+
+      if (!img_data_valid) {
+        img_idx++;
+        int64_t t_ns_new = vio_dataset->get_image_timestamps()[img_idx];
+        img_data = vio_dataset->get_image_data(t_ns_new);
+      } else {
+        break;
+      }
+    }
 
     Eigen::vector<Eigen::Vector2i> res;
 
@@ -481,11 +499,17 @@ void CamCalib::initOptimization() {
   for (size_t j = 0; j < vio_dataset->get_image_timestamps().size(); ++j) {
     int64_t timestamp_ns = vio_dataset->get_image_timestamps()[j];
 
-    TimeCamId tcid = std::make_pair(timestamp_ns, 0);
-    const CalibInitPoseData &cp = calib_init_poses.at(tcid);
+    for (size_t cam_id = 0; cam_id < calib_opt->calib->T_i_c.size(); cam_id++) {
+      TimeCamId tcid = std::make_pair(timestamp_ns, cam_id);
+      const auto cp_it = calib_init_poses.find(tcid);
 
-    calib_opt->addPoseMeasurement(
-        timestamp_ns, cp.T_a_c * calib_opt->calib->T_i_c[0].inverse());
+      if (cp_it != calib_init_poses.end()) {
+        calib_opt->addPoseMeasurement(
+            timestamp_ns,
+            cp_it->second.T_a_c * calib_opt->calib->T_i_c[cam_id].inverse());
+        break;
+      }
+    }
   }
 
   calib_opt->init();
@@ -742,7 +766,8 @@ void CamCalib::drawImageOverlay(pangolin::View &v, size_t cam_id) {
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
       if (reprojected_corners.find(tcid) != reprojected_corners.end()) {
-        if (calib_corners.at(tcid).corner_ids.size() >= MIN_CORNERS) {
+        if (calib_corners.count(tcid) > 0 &&
+            calib_corners.at(tcid).corner_ids.size() >= MIN_CORNERS) {
           const auto &rc = reprojected_corners.at(tcid);
 
           for (size_t i = 0; i < rc.size(); i++) {
@@ -764,7 +789,8 @@ void CamCalib::drawImageOverlay(pangolin::View &v, size_t cam_id) {
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
       if (reprojected_vignette.find(tcid) != reprojected_vignette.end()) {
-        if (calib_corners.at(tcid).corner_ids.size() >= MIN_CORNERS) {
+        if (calib_corners.count(tcid) > 0 &&
+            calib_corners.at(tcid).corner_ids.size() >= MIN_CORNERS) {
           const auto &rc = reprojected_vignette.at(tcid);
 
           bool has_errors = false;
