@@ -15,6 +15,10 @@
 # Copyright (c) 2009 Benoit Jacob <jacob.benoit.1@gmail.com>
 # Redistribution and use is allowed according to the terms of the 2-clause BSD license.
 
+# Adaptations (c) Nikolaus Demmel 2019
+# - pass NO_DEFAULT_PATH --> only works when passing exact HINTS
+
+
 if(NOT Eigen3_FIND_VERSION)
   if(NOT Eigen3_FIND_VERSION_MAJOR)
     set(Eigen3_FIND_VERSION_MAJOR 2)
@@ -63,12 +67,7 @@ else (EIGEN3_INCLUDE_DIR)
 
   find_path(EIGEN3_INCLUDE_DIR NAMES signature_of_eigen3_matrix_library
       HINTS ${EIGEN_INCLUDE_DIR_HINTS}
-      PATHS
-      /usr/local/include
-      /opt/local/include
-      ${CMAKE_INSTALL_PREFIX}/include
-      ${KDE4_INCLUDE_DIR}
-      PATH_SUFFIXES eigen3 eigen
+      NO_DEFAULT_PATH
     )
 
   if(EIGEN3_INCLUDE_DIR)

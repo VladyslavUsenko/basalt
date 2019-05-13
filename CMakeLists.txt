@@ -167,7 +167,7 @@ set(CMAKE_CXX_FLAGS "${BASALT_CXX_FLAGS} -march=${CXX_MARCH} ${BASALT_PASSED_CXX
 
 
 set(EIGEN_INCLUDE_DIR_HINTS ${EIGEN_ROOT})
-find_package(Eigen3 3.3.7 REQUIRED)
+find_package(Eigen3 3.3.7 EXACT REQUIRED MODULE)
 include_directories(${EIGEN3_INCLUDE_DIR})
 message(STATUS "Found Eigen headers in: ${EIGEN3_INCLUDE_DIR}")
 if(NOT EIGEN3_INCLUDE_DIR MATCHES "^${EIGEN_ROOT}")
