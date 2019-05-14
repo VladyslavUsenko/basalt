@@ -122,8 +122,8 @@ class CamCalib {
 
   std::shared_ptr<PosesOptimization> calib_opt;
 
-  std::map<TimeCamId, Eigen::vector<Eigen::Vector2d>> reprojected_corners;
-  std::map<TimeCamId, Eigen::vector<Eigen::Vector2d>> reprojected_vignette;
+  std::map<TimeCamId, ProjectedCornerData> reprojected_corners;
+  std::map<TimeCamId, ProjectedCornerData> reprojected_vignette;
   std::map<TimeCamId, std::vector<double>> reprojected_vignette_error;
 
   std::string dataset_path;
@@ -155,11 +155,19 @@ class CamCalib {
   pangolin::Var<bool> opt_intr;
 
   std::shared_ptr<pangolin::Plotter> vign_plotter;
+  std::shared_ptr<pangolin::Plotter> polar_plotter;
+  std::shared_ptr<pangolin::Plotter> azimuth_plotter;
+
+  std::vector<pangolin::Colour> cam_colors;
+
   pangolin::View *img_view_display;
 
   std::vector<std::shared_ptr<pangolin::ImageView>> img_view;
 
   pangolin::DataLog vign_data_log;
+
+  std::vector<std::shared_ptr<pangolin::DataLog>> polar_data_log,
+      azimuth_data_log;
 };
 
 }  // namespace basalt

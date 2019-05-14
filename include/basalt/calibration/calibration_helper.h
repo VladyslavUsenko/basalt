@@ -51,6 +51,13 @@ struct CalibCornerData {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
+struct ProjectedCornerData {
+  Eigen::vector<Eigen::Vector2d> corners_proj;
+  std::vector<bool> corners_proj_success;
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+};
+
 struct CalibInitPoseData {
   Sophus::SE3d T_a_c;
   size_t num_inliers;

@@ -122,7 +122,7 @@ class CamImuCalib {
 
   std::shared_ptr<SplineOptimization<5, double>> calib_opt;
 
-  std::map<TimeCamId, Eigen::vector<Eigen::Vector2d>> reprojected_corners;
+  std::map<TimeCamId, ProjectedCornerData> reprojected_corners;
 
   std::string dataset_path;
   std::string dataset_type;
