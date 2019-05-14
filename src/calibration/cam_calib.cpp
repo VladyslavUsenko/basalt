@@ -74,6 +74,11 @@ CamCalib::CamCalib(const std::string &dataset_path,
   if (!fs::exists(cache_path)) {
     fs::create_directory(cache_path);
   }
+
+  pangolin::ColourWheel cw;
+  for (int i = 0; i < 20; i++) {
+    cam_colors.emplace_back(cw.GetUniqueColour());
+  }
 }
 
 CamCalib::~CamCalib() {
@@ -85,20 +90,34 @@ CamCalib::~CamCalib() {
 void CamCalib::initGui() {
   pangolin::CreateWindowAndBind("Main", 1600, 1000);
 
+  pangolin::CreatePanel("ui").SetBounds(0.0, 1.0, 0.0,
+                                        pangolin::Attach::Pix(UI_WIDTH));
+
   img_view_display =
       &pangolin::CreateDisplay()
            .SetBounds(0.5, 1.0, pangolin::Attach::Pix(UI_WIDTH), 1.0)
            .SetLayout(pangolin::LayoutEqual);
 
   pangolin::View &vign_plot_display =
-      pangolin::CreateDisplay().SetBounds(0.0, 0.5, 0.7, 1.0);
-
-  pangolin::CreatePanel("ui").SetBounds(0.0, 1.0, 0.0,
-                                        pangolin::Attach::Pix(UI_WIDTH));
+      pangolin::CreateDisplay().SetBounds(0.0, 0.5, 0.72, 1.0);
 
   vign_plotter.reset(new pangolin::Plotter(&vign_data_log, 0.0, 1000.0, 0.0,
                                            1.0, 0.01f, 0.01f));
   vign_plot_display.AddDisplay(*vign_plotter);
+
+  pangolin::View &polar_error_display = pangolin::CreateDisplay().SetBounds(
+      0.0, 0.5, pangolin::Attach::Pix(UI_WIDTH), 0.43);
+
+  polar_plotter.reset(
+      new pangolin::Plotter(nullptr, 0.0, 120.0, 0.0, 1.0, 0.01f, 0.01f));
+  polar_error_display.AddDisplay(*polar_plotter);
+
+  pangolin::View &azimuthal_plot_display =
+      pangolin::CreateDisplay().SetBounds(0.0, 0.5, 0.45, 0.7);
+
+  azimuth_plotter.reset(
+      new pangolin::Plotter(nullptr, -180.0, 180.0, 0.0, 1.0, 0.01f, 0.01f));
+  azimuthal_plot_display.AddDisplay(*azimuth_plotter);
 
   pangolin::Var<std::function<void(void)>> load_dataset(
       "ui.load_dataset", std::bind(&CamCalib::loadDataset, this));
@@ -150,19 +169,19 @@ void CamCalib::computeVign() {
 
       if (it != reprojected_vignette.end() && img_vec[j].img.get()) {
         Eigen::vector<Eigen::Vector3d> rv;
-        rv.resize(it->second.size());
+        rv.resize(it->second.corners_proj.size());
 
-        for (size_t k = 0; k < it->second.size(); k++) {
-          Eigen::Vector2d pos = it->second[k];
+        for (size_t k = 0; k < it->second.corners_proj.size(); k++) {
+          Eigen::Vector2d pos = it->second.corners_proj[k];
 
           rv[k].head<2>() = pos;
 
-          if (img_vec[j].img->InBounds(pos[0], pos[1], 1)) {
+          if (img_vec[j].img->InBounds(pos[0], pos[1], 1) &&
+              it->second.corners_proj_success[k]) {
             double val = img_vec[j].img->interp(pos);
             val /= std::numeric_limits<uint16_t>::max();
             rv[k][2] = val;
           } else {
-            // invalid projection
             rv[k][2] = -1;
           }
         }
@@ -186,8 +205,7 @@ void CamCalib::computeVign() {
 
     for (size_t i = 0; i < calib_opt->calib->intrinsics.size(); i++) {
       vign_plotter->AddSeries("$i", "$" + std::to_string(2 * i),
-                              pangolin::DrawingModeLine,
-                              pangolin::Colour::Unspecified(),
+                              pangolin::DrawingModeLine, cam_colors[i],
                               "vignette camera " + std::to_string(i));
     }
 
@@ -251,13 +269,32 @@ void CamCalib::computeProjections() {
 
   if (!calib_opt.get() || !vio_dataset.get()) return;
 
+  constexpr int ANGLE_BIN_SIZE = 2;
+  std::vector<Eigen::Matrix<double, 180 / ANGLE_BIN_SIZE, 1>> polar_sum(
+      calib_opt->calib->intrinsics.size());
+  std::vector<Eigen::Matrix<int, 180 / ANGLE_BIN_SIZE, 1>> polar_num(
+      calib_opt->calib->intrinsics.size());
+
+  std::vector<Eigen::Matrix<double, 360 / ANGLE_BIN_SIZE, 1>> azimuth_sum(
+      calib_opt->calib->intrinsics.size());
+  std::vector<Eigen::Matrix<int, 360 / ANGLE_BIN_SIZE, 1>> azimuth_num(
+      calib_opt->calib->intrinsics.size());
+
+  for (size_t i = 0; i < calib_opt->calib->intrinsics.size(); i++) {
+    polar_sum[i].setZero();
+    polar_num[i].setZero();
+    azimuth_sum[i].setZero();
+    azimuth_num[i].setZero();
+  }
+
   for (size_t j = 0; j < vio_dataset->get_image_timestamps().size(); ++j) {
     int64_t timestamp_ns = vio_dataset->get_image_timestamps()[j];
 
     for (size_t i = 0; i < calib_opt->calib->intrinsics.size(); i++) {
       TimeCamId tcid = std::make_pair(timestamp_ns, i);
 
-      Eigen::vector<Eigen::Vector2d> rc, rv;
+      ProjectedCornerData rc, rv;
+      Eigen::vector<Eigen::Vector2d> polar_azimuthal_angle;
 
       Sophus::SE3d T_c_w_ =
           (calib_opt->getT_w_i(timestamp_ns) * calib_opt->calib->T_i_c[i])
@@ -265,20 +302,87 @@ void CamCalib::computeProjections() {
 
       Eigen::Matrix4d T_c_w = T_c_w_.matrix();
 
-      rc.resize(april_grid.aprilgrid_corner_pos_3d.size());
-      rv.resize(april_grid.aprilgrid_vignette_pos_3d.size());
-
-      std::vector<bool> rc_success, rv_success;
+      calib_opt->calib->intrinsics[i].project(
+          april_grid.aprilgrid_corner_pos_3d, T_c_w, rc.corners_proj,
+          rc.corners_proj_success, polar_azimuthal_angle);
 
       calib_opt->calib->intrinsics[i].project(
-          april_grid.aprilgrid_corner_pos_3d, T_c_w, rc, rc_success);
-
-      calib_opt->calib->intrinsics[i].project(
-          april_grid.aprilgrid_vignette_pos_3d, T_c_w, rv, rv_success);
+          april_grid.aprilgrid_vignette_pos_3d, T_c_w, rv.corners_proj,
+          rv.corners_proj_success);
 
       reprojected_corners.emplace(tcid, rc);
       reprojected_vignette.emplace(tcid, rv);
+
+      // Compute reprojection histogrames over polar and azimuth angle
+      auto it = calib_corners.find(tcid);
+      if (it != calib_corners.end()) {
+        for (size_t k = 0; k < it->second.corners.size(); k++) {
+          size_t id = it->second.corner_ids[k];
+
+          if (rc.corners_proj_success[id]) {
+            double error = (it->second.corners[k] - rc.corners_proj[id]).norm();
+
+            size_t polar_bin =
+                180 * polar_azimuthal_angle[id][0] / (M_PI * ANGLE_BIN_SIZE);
+
+            polar_sum[tcid.second][polar_bin] += error;
+            polar_num[tcid.second][polar_bin] += 1;
+
+            size_t azimuth_bin =
+                180 / ANGLE_BIN_SIZE + (180.0 * polar_azimuthal_angle[id][1]) /
+                                           (M_PI * ANGLE_BIN_SIZE);
+
+            azimuth_sum[tcid.second][azimuth_bin] += error;
+            azimuth_num[tcid.second][azimuth_bin] += 1;
+          }
+        }
+      }
     }
+  }
+
+  while (polar_data_log.size() < calib_opt->calib->intrinsics.size()) {
+    polar_data_log.emplace_back(new pangolin::DataLog);
+  }
+
+  while (azimuth_data_log.size() < calib_opt->calib->intrinsics.size()) {
+    azimuth_data_log.emplace_back(new pangolin::DataLog);
+  }
+
+  constexpr int MIN_POINTS_HIST = 3;
+  polar_plotter->ClearSeries();
+  azimuth_plotter->ClearSeries();
+
+  for (size_t c = 0; c < calib_opt->calib->intrinsics.size(); c++) {
+    polar_data_log[c]->Clear();
+    azimuth_data_log[c]->Clear();
+
+    for (int i = 0; i < polar_sum[c].rows(); i++) {
+      if (polar_num[c][i] > MIN_POINTS_HIST) {
+        double x_coord = ANGLE_BIN_SIZE * i + ANGLE_BIN_SIZE / 2.0;
+        double mean_reproj = polar_sum[c][i] / polar_num[c][i];
+
+        polar_data_log[c]->Log(x_coord, mean_reproj);
+      }
+    }
+
+    polar_plotter->AddSeries(
+        "$0", "$1", pangolin::DrawingModeLine, cam_colors[c],
+        "mean error(pix) vs polar angle(deg) for cam" + std::to_string(c),
+        polar_data_log[c].get());
+
+    for (int i = 0; i < azimuth_sum[c].rows(); i++) {
+      if (azimuth_num[c][i] > MIN_POINTS_HIST) {
+        double x_coord = ANGLE_BIN_SIZE * i + ANGLE_BIN_SIZE / 2.0 - 180.0;
+        double mean_reproj = azimuth_sum[c][i] / azimuth_num[c][i];
+
+        azimuth_data_log[c]->Log(x_coord, mean_reproj);
+      }
+    }
+
+    azimuth_plotter->AddSeries(
+        "$0", "$1", pangolin::DrawingModeLine, cam_colors[c],
+        "mean error(pix) vs azimuth angle(deg) for cam" + std::to_string(c),
+        azimuth_data_log[c].get());
   }
 }
 
@@ -770,8 +874,10 @@ void CamCalib::drawImageOverlay(pangolin::View &v, size_t cam_id) {
             calib_corners.at(tcid).corner_ids.size() >= MIN_CORNERS) {
           const auto &rc = reprojected_corners.at(tcid);
 
-          for (size_t i = 0; i < rc.size(); i++) {
-            Eigen::Vector2d c = rc[i];
+          for (size_t i = 0; i < rc.corners_proj.size(); i++) {
+            if (!rc.corners_proj_success[i]) continue;
+
+            Eigen::Vector2d c = rc.corners_proj[i];
             pangolin::glDrawCirclePerimeter(c[0], c[1], 3.0);
 
             if (show_ids) pangolin::GlFont::I().Text("%d", i).Draw(c[0], c[1]);
@@ -797,8 +903,10 @@ void CamCalib::drawImageOverlay(pangolin::View &v, size_t cam_id) {
           auto it = reprojected_vignette_error.find(tcid);
           if (it != reprojected_vignette_error.end()) has_errors = true;
 
-          for (size_t i = 0; i < rc.size(); i++) {
-            Eigen::Vector2d c = rc[i].head<2>();
+          for (size_t i = 0; i < rc.corners_proj.size(); i++) {
+            if (!rc.corners_proj_success[i]) continue;
+
+            Eigen::Vector2d c = rc.corners_proj[i].head<2>();
             pangolin::glDrawCirclePerimeter(c[0], c[1], 3.0);
 
             if (show_ids) {

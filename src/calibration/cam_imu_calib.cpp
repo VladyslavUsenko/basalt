@@ -206,7 +206,7 @@ void CamImuCalib::computeProjections() {
     for (size_t i = 0; i < calib_opt->calib->intrinsics.size(); i++) {
       TimeCamId tcid = std::make_pair(timestamp_ns, i);
 
-      Eigen::vector<Eigen::Vector2d> rc;
+      ProjectedCornerData rc;
 
       Sophus::SE3d T_c_w_ = (calib_opt->getT_w_i(timestamp_corrected_ns) *
                              calib_opt->getCamT_i_c(i))
@@ -214,11 +214,10 @@ void CamImuCalib::computeProjections() {
 
       Eigen::Matrix4d T_c_w = T_c_w_.matrix();
 
-      rc.resize(april_grid.aprilgrid_corner_pos_3d.size());
-
       std::vector<bool> proj_success;
       calib_opt->calib->intrinsics[i].project(
-          april_grid.aprilgrid_corner_pos_3d, T_c_w, rc, proj_success);
+          april_grid.aprilgrid_corner_pos_3d, T_c_w, rc.corners_proj,
+          rc.corners_proj_success);
 
       reprojected_corners.emplace(tcid, rc);
     }
@@ -802,8 +801,10 @@ void CamImuCalib::drawImageOverlay(pangolin::View &v, size_t cam_id) {
             calib_corners.at(tcid).corner_ids.size() >= MIN_CORNERS) {
           const auto &rc = reprojected_corners.at(tcid);
 
-          for (size_t i = 0; i < rc.size(); i++) {
-            Eigen::Vector2d c = rc[i];
+          for (size_t i = 0; i < rc.corners_proj.size(); i++) {
+            if (!rc.corners_proj_success[i]) continue;
+
+            Eigen::Vector2d c = rc.corners_proj[i];
             pangolin::glDrawCirclePerimeter(c[0], c[1], 3.0);
 
             if (show_ids) pangolin::GlFont::I().Text("%d", i).Draw(c[0], c[1]);
