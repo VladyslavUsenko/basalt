@@ -110,9 +110,11 @@ if(APPLE)
   set(CMAKE_FIND_FRAMEWORK LAST)
 
   # use brewed llvm's libc++
-  add_compile_options("-nostdinc++")
-  include_directories("/usr/local/opt/llvm/include/c++/v1")
+  # Note: the suffix "/../v1" for the include path is needed to work around a recent cmake issue:
+  # https://gitlab.kitware.com/cmake/cmake/issues/19251#note_571030
+  include_directories("/usr/local/opt/llvm/include/c++/v1/../v1")
   link_directories("/usr/local/opt/llvm/lib")
+  add_compile_options("-nostdinc++")
   set(STD_CXX_FS c++fs)
 
   if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -167,7 +169,7 @@ set(CMAKE_CXX_FLAGS "${BASALT_CXX_FLAGS} -march=${CXX_MARCH} ${BASALT_PASSED_CXX
 
 
 set(EIGEN_INCLUDE_DIR_HINTS ${EIGEN_ROOT})
-find_package(Eigen3 3.3.7 REQUIRED)
+find_package(Eigen3 3.3.7 EXACT REQUIRED MODULE)
 include_directories(${EIGEN3_INCLUDE_DIR})
 message(STATUS "Found Eigen headers in: ${EIGEN3_INCLUDE_DIR}")
 if(NOT EIGEN3_INCLUDE_DIR MATCHES "^${EIGEN_ROOT}")
