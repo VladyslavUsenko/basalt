@@ -1,7 +1,6 @@
 cmake-build*
 .idea
 CMakeLists.txt.user
-build
-thirdparty/build-*
+build*
 scripts/eval/eval_*
 scripts/eval_full/eval_*
