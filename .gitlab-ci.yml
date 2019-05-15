@@ -195,6 +195,7 @@ gen_results_euroc:
 # deploy deb packages
 deploy:
   stage: deploy
+  when: manual
   variables:
     GIT_STRATEGY: none
   tags: 
