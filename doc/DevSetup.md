@@ -49,5 +49,7 @@ git clone --recursive https://gitlab.com/VladyslavUsenko/basalt.git
 
 After that, in QtCreator open to the `CMakeLists.txt` in the `basalt` folder and configure the project with `Release with Debug Info` configuration. The build directory should point to `/<your_installation_path>/basalt/build`.
 
+![qt_creator_configure_project](/doc/img/qt_creator_configure_project.png)
+
 Finally, you should be able to build and run the project.
 
