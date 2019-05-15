@@ -140,7 +140,7 @@ clang-format:
   script:
     - ./scripts/clang-format-all.sh
     # check if any files are now modified and error if yes
-    - (if [ -n "`git diff --name-only --diff-filter=M`" ]; then echo $'\n    Some files are not properly formatted. You can use "./scripts/clang-format-all.sh".\n'; git diff --diff-filter=M; false; fi)
+    - (if [ -n "`git diff --name-only --diff-filter=M --ignore-submodules`" ]; then echo $'\n    Some files are not properly formatted. You can use "./scripts/clang-format-all.sh".\n'; git diff --diff-filter=M; false; fi)
 
 bionic-test:
   <<: *test_deb_definition
