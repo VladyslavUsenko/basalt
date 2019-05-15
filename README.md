@@ -60,6 +60,9 @@ NOTE: It is possible to compile the code on Ubuntu 16.04, but you need to instal
 * [Visual-inertial odometry and mapping.](doc/VioMapping.md)
 * [Simulation tools to test different components of the system.](doc/Simulation.md)
 
+## Development
+* [Development environment setup.](doc/DevSetup.md)
+
 ## Licence
 The code is provided under a BSD 3-clause license. See the LICENSE file for details.
 Note also the different licenses of thirdparty submodules.
