@@ -104,6 +104,8 @@ xenial-release-compile:
   <<: *prepare_docker_definition
   <<: *compile_test_package_definition
   image: vladyslavusenko/b_image_xenial:latest
+  only:
+    - master
   variables:
     CXX_MARCH: 'corei7-avx'
     DEB_DIR: deb_xenial
@@ -115,18 +117,24 @@ xenial-release-compile:
 bionic-debug-compile:
   <<: *prepare_docker_definition
   <<: *compile_test_package_definition
+  only:
+    - master
   variables:
     BUILD_TYPE: Debug
 
 bionic-relwithdebinfo-compile:
   <<: *prepare_docker_definition
   <<: *compile_test_package_definition
+  only:
+    - master
   variables:
     BUILD_TYPE: RelWithDebInfo
 
 elcapitan-relwithdebinfo-compile:
   <<: *compile_test_definition
   tags: [macos, "10.11"]
+  only:
+    - master
   variables:
     BUILD_TYPE: RelWithDebInfo
 
@@ -151,6 +159,8 @@ bionic-test:
 xenial-test:
   <<: *test_deb_definition
   image: vladyslavusenko/b_image_xenial:latest
+  only:
+    - master
   variables:
     DEB_DIR: deb_xenial
     GIT_STRATEGY: none
