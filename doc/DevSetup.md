@@ -7,6 +7,7 @@ On **Ubuntu 18.04** run the following commands to install clang-format-8
 ```
 wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add -
 sudo sh -c 'echo "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-8 main" > /etc/apt/sources.list.d/llvm8.list'
+sudo apt-get update
 sudo apt-get install clang-format-8
 ```
 
@@ -25,8 +26,7 @@ chmod +x qt-creator-opensource-linux-x86_64-4.9.0.run
 
 On **MacOS** run:
 ```
-wget https://download.qt.io/official_releases/qtcreator/4.9/4.9.0/qt-creator-opensource-mac-x86_64-4.9.0.dmg
-open qt-creator-opensource-mac-x86_64-4.9.0.dmg
+brew cask install qt-creator
 ```
 
 After installation, go to `Help` -> `About plugins...` in the menu and enable Beautifier plugin (formats the code automatically on save):
