@@ -91,6 +91,8 @@ stages:
 bionic-release-compile:
   <<: *prepare_docker_definition
   <<: *compile_test_package_definition
+  only:
+    - master
   variables:
     CXX_MARCH: 'corei7-avx'
     DEB_DIR: deb_bionic
@@ -125,14 +127,20 @@ bionic-debug-compile:
 bionic-relwithdebinfo-compile:
   <<: *prepare_docker_definition
   <<: *compile_test_package_definition
-  only:
-    - master
   variables:
     BUILD_TYPE: RelWithDebInfo
 
 elcapitan-relwithdebinfo-compile:
   <<: *compile_test_definition
   tags: [macos, "10.11"]
+  only:
+    - master
+  variables:
+    BUILD_TYPE: RelWithDebInfo
+
+mojave-relwithdebinfo-compile:
+  <<: *compile_test_definition
+  tags: [macos, "10.14"]
   only:
     - master
   variables:
@@ -152,6 +160,8 @@ clang-format:
 
 bionic-test:
   <<: *test_deb_definition
+  only:
+    - master
   variables:
     DEB_DIR: deb_bionic
     GIT_STRATEGY: none
