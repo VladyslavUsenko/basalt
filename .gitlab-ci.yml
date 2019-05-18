@@ -141,8 +141,8 @@ elcapitan-relwithdebinfo-compile:
 mojave-relwithdebinfo-compile:
   <<: *compile_test_definition
   tags: [macos, "10.14"]
-#  only:
-#    - master
+  only:
+    - master
   variables:
     BUILD_TYPE: RelWithDebInfo
 
