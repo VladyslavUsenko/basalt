@@ -138,6 +138,14 @@ elcapitan-relwithdebinfo-compile:
   variables:
     BUILD_TYPE: RelWithDebInfo
 
+mojave-relwithdebinfo-compile:
+  <<: *compile_test_definition
+  tags: [macos, "10.14"]
+#  only:
+#    - master
+  variables:
+    BUILD_TYPE: RelWithDebInfo
+
 # check if clang-format would make any changes
 clang-format:
   tags:
