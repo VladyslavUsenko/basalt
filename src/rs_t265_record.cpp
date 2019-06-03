@@ -68,14 +68,23 @@ void image_save_worker() {
 
   while (!stop_workers) {
     if (image_save_queue.try_pop(img)) {
+#if CV_VERSION_MAJOR >= 3
       std::string filename = dataset_folder + "mav0/cam" +
                              std::to_string(img->cam_id) + "/data/" +
                              std::to_string(img->timestamp) + ".webp";
 
       std::vector<int> compression_params = {cv::IMWRITE_WEBP_QUALITY,
                                              webp_quality};
-
       cv::imwrite(filename, img->image, compression_params);
+#else
+      std::string filename = dataset_folder + "mav0/cam" +
+                             std::to_string(img->cam_id) + "/data/" +
+                             std::to_string(img->timestamp) + ".jpg";
+
+      std::vector<int> compression_params = {cv::IMWRITE_JPEG_QUALITY,
+                                             webp_quality};
+      cv::imwrite(filename, img->image, compression_params);
+#endif
     } else {
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
