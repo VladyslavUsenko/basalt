@@ -35,6 +35,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <basalt/calibration/vignette.h>
 
+#include <opencv2/highgui.hpp>
+
 namespace basalt {
 
 VignetteEstimator::VignetteEstimator(
@@ -280,8 +282,7 @@ void VignetteEstimator::compute_data_log(pangolin::DataLog &vign_data_log) {
 
 void VignetteEstimator::save_vign_png(const std::string &path) {
   for (size_t k = 0; k < vio_dataset->get_num_cams(); k++) {
-    pangolin::ManagedImage<uint16_t> vign_img(resolutions[k][0],
-                                              resolutions[k][1]);
+    ManagedImage<uint16_t> vign_img(resolutions[k][0], resolutions[k][1]);
     vign_img.Fill(0);
 
     Eigen::Vector2d oc = optical_centers[k];
@@ -298,9 +299,12 @@ void VignetteEstimator::save_vign_png(const std::string &path) {
       }
     }
 
-    pangolin::SaveImage(vign_img.UnsafeReinterpret<uint8_t>(),
-                        pangolin::PixelFormatFromString("GRAY16LE"),
-                        path + "/vingette_" + std::to_string(k) + ".png");
+    //    pangolin::SaveImage(vign_img.UnsafeReinterpret<uint8_t>(),
+    //                        pangolin::PixelFormatFromString("GRAY16LE"),
+    //                        path + "/vingette_" + std::to_string(k) + ".png");
+
+    cv::Mat img(vign_img.h, vign_img.w, CV_16U, vign_img.ptr);
+    cv::imwrite(path + "/vingette_" + std::to_string(k) + ".png", img);
   }
 }
 }  // namespace basalt

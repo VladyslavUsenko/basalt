@@ -64,8 +64,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <basalt/camera/generic_camera.hpp>
 #include <basalt/camera/stereographic_param.hpp>
 
-#include <pangolin/image/image_io.h>
-
 namespace basalt {
 
 inline bool file_exists(const std::string &name) {

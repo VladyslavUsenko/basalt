@@ -40,6 +40,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
 
+#include <opencv2/highgui.hpp>
+
 namespace basalt {
 
 class EurocVioDataset : public VioDataset {
@@ -62,6 +64,8 @@ class EurocVioDataset : public VioDataset {
   Eigen::vector<Sophus::SE3d> gt_pose_data;  // TODO: change to eigen aligned
 
   int64_t mocap_to_imu_offset_ns;
+
+  std::vector<std::unordered_map<int64_t, double>> exposure_times;
 
  public:
   ~EurocVioDataset(){};
@@ -90,26 +94,45 @@ class EurocVioDataset : public VioDataset {
           path + folder[i] + "data/" + image_path[t_ns];
 
       if (file_exists(full_image_path)) {
-        pangolin::TypedImage img = pangolin::LoadImage(full_image_path);
+        cv::Mat img = cv::imread(full_image_path, cv::IMREAD_UNCHANGED);
 
-        if (img.fmt.bpp == 8) {
-          res[i].img.reset(new ManagedImage<uint16_t>(img.w, img.h));
+        if (img.type() == CV_8UC1) {
+          res[i].img.reset(new ManagedImage<uint16_t>(img.cols, img.rows));
 
-          const uint8_t *data_in = img.ptr;
+          const uint8_t *data_in = img.ptr();
           uint16_t *data_out = res[i].img->ptr;
 
-          for (size_t i = 0; i < img.size(); i++) {
+          size_t full_size = img.cols * img.rows;
+          for (size_t i = 0; i < full_size; i++) {
             int val = data_in[i];
             val = val << 8;
             data_out[i] = val;
           }
-        } else if (img.fmt.bpp == 16) {
-          res[i].img.reset(new ManagedImage<uint16_t>(img.w, img.h));
-          std::memcpy(res[i].img->ptr, img.ptr, img.size() * sizeof(uint16_t));
+        } else if (img.type() == CV_8UC3) {
+          res[i].img.reset(new ManagedImage<uint16_t>(img.cols, img.rows));
+
+          const uint8_t *data_in = img.ptr();
+          uint16_t *data_out = res[i].img->ptr;
+
+          size_t full_size = img.cols * img.rows;
+          for (size_t i = 0; i < full_size; i++) {
+            int val = data_in[i * 3];
+            val = val << 8;
+            data_out[i] = val;
+          }
+        } else if (img.type() == CV_16UC1) {
+          res[i].img.reset(new ManagedImage<uint16_t>(img.cols, img.rows));
+          std::memcpy(res[i].img->ptr, img.ptr(),
+                      img.cols * img.rows * sizeof(uint16_t));
 
         } else {
-          std::cerr << "img.fmt.bpp " << img.fmt.bpp << std::endl;
+          std::cerr << "img.fmt.bpp " << img.type() << std::endl;
           std::abort();
+        }
+
+        auto exp_it = exposure_times[i].find(t_ns);
+        if (exp_it != exposure_times[i].end()) {
+          res[i].exposure = exp_it->second;
         }
       }
     }
@@ -144,6 +167,16 @@ class EurocIO : public DatasetIoInterface {
     } else if (file_exists(path + "/mav0/mocap0/data.csv")) {
       read_gt_data_pose(path + "/mav0/mocap0/");
     }
+
+    data->exposure_times.resize(data->num_cams);
+    if (file_exists(path + "/mav0/cam0/exposure.csv")) {
+      std::cout << "Loading exposure times for cam0" << std::endl;
+      read_exposure(path + "/mav0/cam0/", data->exposure_times[0]);
+    }
+    if (file_exists(path + "/mav0/cam1/exposure.csv")) {
+      std::cout << "Loading exposure times for cam1" << std::endl;
+      read_exposure(path + "/mav0/cam1/", data->exposure_times[1]);
+    }
   }
 
   void reset() { data.reset(); }
@@ -151,6 +184,27 @@ class EurocIO : public DatasetIoInterface {
   VioDatasetPtr get_data() { return data; }
 
  private:
+  void read_exposure(const std::string &path,
+                     std::unordered_map<int64_t, double> &exposure_data) {
+    exposure_data.clear();
+
+    std::ifstream f(path + "exposure.csv");
+    std::string line;
+    while (std::getline(f, line)) {
+      if (line[0] == '#') continue;
+
+      std::stringstream ss(line);
+
+      char tmp;
+      int64_t timestamp, exposure_int;
+      Eigen::Vector3d gyro, accel;
+
+      ss >> timestamp >> tmp >> exposure_int;
+
+      exposure_data[timestamp] = exposure_int * 1e-9;
+    }
+  }
+
   void read_image_timestamps(const std::string &path) {
     std::ifstream f(path + "data.csv");
     std::string line;

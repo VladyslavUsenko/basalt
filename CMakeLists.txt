@@ -179,7 +179,7 @@ endif()
 find_package(TBB REQUIRED)
 include_directories(${TBB_INCLUDE_DIR})
 
-find_package(OpenCV REQUIRED core imgproc calib3d)
+find_package(OpenCV REQUIRED core imgproc calib3d highgui)
 include_directories(${OpenCV_INCLUDE_DIR})
 message(STATUS "Found OpenCV headers in: ${OpenCV_INCLUDE_DIR}")
 message(STATUS "Found OpenCV_LIBS: ${OpenCV_LIBS}")
@@ -243,6 +243,13 @@ target_link_libraries(basalt_opt_flow basalt)
 
 add_executable(basalt_vio src/vio.cpp)
 target_link_libraries(basalt_vio basalt)
+
+find_package(realsense2 QUIET)
+if(realsense2_FOUND)
+  add_executable(basalt_rs_t265_record src/rs_t265_record.cpp)
+  target_link_libraries(basalt_rs_t265_record basalt realsense2::realsense2 ${OpenCV_LIBS})
+endif()
+
 
 
 install(TARGETS basalt_calibrate basalt_calibrate_imu basalt_vio_sim basalt_mapper_sim basalt_mapper_sim_naive basalt_mapper basalt_opt_flow basalt_vio basalt

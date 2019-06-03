@@ -20,6 +20,6 @@ include_directories(../basalt-headers/thirdparty/Sophus)
 add_library(apriltag STATIC ${APRILTAG_SRCS} src/apriltag.cpp)
 
 target_include_directories(apriltag PUBLIC include)
-target_link_libraries(apriltag PUBLIC ${OpenCV_LIBS} pangolin)
+target_link_libraries(apriltag PUBLIC ${OpenCV_LIBS})
 
 
