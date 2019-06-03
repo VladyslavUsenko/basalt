@@ -66,11 +66,24 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <memory>
 
-#include <pangolin/image/image.h>
-#include <pangolin/image/managed_image.h>
-#include <pangolin/image/typed_image.h>
+#include <basalt/utils/assert.h>
+
+// Renamed Pangoling defines to avoid clash
+#define BASALT_HOST_DEVICE
+#define BASALT_EXTENSION_IMAGE
+#ifdef BASALT_ENABLE_BOUNDS_CHECKS
+#define BASALT_BOUNDS_ASSERT(...) BASALT_ASSERT(##__VA_ARGS__)
+#else
+#define BASALT_BOUNDS_ASSERT(...) ((void)0)
+#endif
 
 namespace basalt {
+
+template <typename T>
+struct CopyObject {
+  CopyObject(const T& obj) : obj(obj) {}
+  const T& obj;
+};
 
 inline void PitchedCopy(char* dst, unsigned int dst_pitch_bytes,
                         const char* src, unsigned int src_pitch_bytes,
@@ -93,42 +106,37 @@ struct Image {
   inline Image(T* ptr, size_t w, size_t h, size_t pitch)
       : pitch(pitch), ptr(ptr), w(w), h(h) {}
 
-  PANGO_HOST_DEVICE inline size_t SizeBytes() const { return pitch * h; }
+  BASALT_HOST_DEVICE inline size_t SizeBytes() const { return pitch * h; }
 
-  PANGO_HOST_DEVICE inline size_t Area() const { return w * h; }
+  BASALT_HOST_DEVICE inline size_t Area() const { return w * h; }
 
-  PANGO_HOST_DEVICE inline bool IsValid() const { return ptr != 0; }
+  BASALT_HOST_DEVICE inline bool IsValid() const { return ptr != 0; }
 
-  PANGO_HOST_DEVICE inline bool IsContiguous() const {
+  BASALT_HOST_DEVICE inline bool IsContiguous() const {
     return w * sizeof(T) == pitch;
-  }
-
-  pangolin::Image<T> toPangoImage() {
-    pangolin::Image<T> img(ptr, w, h, pitch);
-    return img;
   }
 
   //////////////////////////////////////////////////////
   // Iterators
   //////////////////////////////////////////////////////
 
-  PANGO_HOST_DEVICE inline T* begin() { return ptr; }
+  BASALT_HOST_DEVICE inline T* begin() { return ptr; }
 
-  PANGO_HOST_DEVICE inline T* end() { return RowPtr(h - 1) + w; }
+  BASALT_HOST_DEVICE inline T* end() { return RowPtr(h - 1) + w; }
 
-  PANGO_HOST_DEVICE inline const T* begin() const { return ptr; }
+  BASALT_HOST_DEVICE inline const T* begin() const { return ptr; }
 
-  PANGO_HOST_DEVICE inline const T* end() const { return RowPtr(h - 1) + w; }
+  BASALT_HOST_DEVICE inline const T* end() const { return RowPtr(h - 1) + w; }
 
-  PANGO_HOST_DEVICE inline size_t size() const { return w * h; }
+  BASALT_HOST_DEVICE inline size_t size() const { return w * h; }
 
   //////////////////////////////////////////////////////
   // Image transforms
   //////////////////////////////////////////////////////
 
   template <typename UnaryOperation>
-  PANGO_HOST_DEVICE inline void Transform(UnaryOperation unary_op) {
-    PANGO_ASSERT(IsValid());
+  BASALT_HOST_DEVICE inline void Transform(UnaryOperation unary_op) {
+    BASALT_ASSERT(IsValid());
 
     for (size_t y = 0; y < h; ++y) {
       T* el = RowPtr(y);
@@ -139,32 +147,32 @@ struct Image {
     }
   }
 
-  PANGO_HOST_DEVICE inline void Fill(const T& val) {
+  BASALT_HOST_DEVICE inline void Fill(const T& val) {
     Transform([&](const T&) { return val; });
   }
 
-  PANGO_HOST_DEVICE inline void Replace(const T& oldval, const T& newval) {
+  BASALT_HOST_DEVICE inline void Replace(const T& oldval, const T& newval) {
     Transform([&](const T& val) { return (val == oldval) ? newval : val; });
   }
 
   inline void Memset(unsigned char v = 0) {
-    PANGO_ASSERT(IsValid());
+    BASALT_ASSERT(IsValid());
     if (IsContiguous()) {
-      ::pangolin::Memset((char*)ptr, v, pitch * h);
+      std::memset((char*)ptr, v, pitch * h);
     } else {
       for (size_t y = 0; y < h; ++y) {
-        ::pangolin::Memset((char*)RowPtr(y), v, pitch);
+        std::memset((char*)RowPtr(y), v, pitch);
       }
     }
   }
 
   inline void CopyFrom(const Image<T>& img) {
     if (IsValid() && img.IsValid()) {
-      PANGO_ASSERT(w >= img.w && h >= img.h);
+      BASALT_ASSERT(w >= img.w && h >= img.h);
       PitchedCopy((char*)ptr, pitch, (char*)img.ptr, img.pitch,
                   std::min(img.w, w) * sizeof(T), std::min(img.h, h));
     } else if (img.IsValid() != IsValid()) {
-      PANGO_ASSERT(false && "Cannot copy from / to an unasigned image.");
+      BASALT_ASSERT(false && "Cannot copy from / to an unasigned image.");
     }
   }
 
@@ -173,9 +181,9 @@ struct Image {
   //////////////////////////////////////////////////////
 
   template <typename BinaryOperation>
-  PANGO_HOST_DEVICE inline T Accumulate(const T init,
-                                        BinaryOperation binary_op) {
-    PANGO_ASSERT(IsValid());
+  BASALT_HOST_DEVICE inline T Accumulate(const T init,
+                                         BinaryOperation binary_op) {
+    BASALT_ASSERT(IsValid());
 
     T val = init;
     for (size_t y = 0; y < h; ++y) {
@@ -189,7 +197,7 @@ struct Image {
   }
 
   std::pair<T, T> MinMax() const {
-    PANGO_ASSERT(IsValid());
+    BASALT_ASSERT(IsValid());
 
     std::pair<T, T> minmax(std::numeric_limits<T>::max(),
                            std::numeric_limits<T>::lowest());
@@ -220,43 +228,43 @@ struct Image {
   // Direct Pixel Access
   //////////////////////////////////////////////////////
 
-  PANGO_HOST_DEVICE inline T* RowPtr(size_t y) {
+  BASALT_HOST_DEVICE inline T* RowPtr(size_t y) {
     return (T*)((unsigned char*)(ptr) + y * pitch);
   }
 
-  PANGO_HOST_DEVICE inline const T* RowPtr(size_t y) const {
+  BASALT_HOST_DEVICE inline const T* RowPtr(size_t y) const {
     return (T*)((unsigned char*)(ptr) + y * pitch);
   }
 
-  PANGO_HOST_DEVICE inline T& operator()(size_t x, size_t y) {
-    PANGO_BOUNDS_ASSERT(InBounds(x, y));
+  BASALT_HOST_DEVICE inline T& operator()(size_t x, size_t y) {
+    BASALT_BOUNDS_ASSERT(InBounds(x, y));
     return RowPtr(y)[x];
   }
 
-  PANGO_HOST_DEVICE inline const T& operator()(size_t x, size_t y) const {
-    PANGO_BOUNDS_ASSERT(InBounds(x, y));
+  BASALT_HOST_DEVICE inline const T& operator()(size_t x, size_t y) const {
+    BASALT_BOUNDS_ASSERT(InBounds(x, y));
     return RowPtr(y)[x];
   }
 
   template <typename TVec>
-  PANGO_HOST_DEVICE inline T& operator()(const TVec& p) {
-    PANGO_BOUNDS_ASSERT(InBounds(p[0], p[1]));
+  BASALT_HOST_DEVICE inline T& operator()(const TVec& p) {
+    BASALT_BOUNDS_ASSERT(InBounds(p[0], p[1]));
     return RowPtr(p[1])[p[0]];
   }
 
   template <typename TVec>
-  PANGO_HOST_DEVICE inline const T& operator()(const TVec& p) const {
-    PANGO_BOUNDS_ASSERT(InBounds(p[0], p[1]));
+  BASALT_HOST_DEVICE inline const T& operator()(const TVec& p) const {
+    BASALT_BOUNDS_ASSERT(InBounds(p[0], p[1]));
     return RowPtr(p[1])[p[0]];
   }
 
-  PANGO_HOST_DEVICE inline T& operator[](size_t ix) {
-    PANGO_BOUNDS_ASSERT(InImage(ptr + ix));
+  BASALT_HOST_DEVICE inline T& operator[](size_t ix) {
+    BASALT_BOUNDS_ASSERT(InImage(ptr + ix));
     return ptr[ix];
   }
 
-  PANGO_HOST_DEVICE inline const T& operator[](size_t ix) const {
-    PANGO_BOUNDS_ASSERT(InImage(ptr + ix));
+  BASALT_HOST_DEVICE inline const T& operator[](size_t ix) const {
+    BASALT_BOUNDS_ASSERT(InImage(ptr + ix));
     return ptr[ix];
   }
 
@@ -346,21 +354,22 @@ struct Image {
   // Bounds Checking
   //////////////////////////////////////////////////////
 
-  PANGO_HOST_DEVICE
+  BASALT_HOST_DEVICE
   bool InImage(const T* ptest) const {
     return ptr <= ptest && ptest < RowPtr(h);
   }
 
-  PANGO_HOST_DEVICE inline bool InBounds(int x, int y) const {
+  BASALT_HOST_DEVICE inline bool InBounds(int x, int y) const {
     return 0 <= x && x < (int)w && 0 <= y && y < (int)h;
   }
 
-  PANGO_HOST_DEVICE inline bool InBounds(float x, float y, float border) const {
+  BASALT_HOST_DEVICE inline bool InBounds(float x, float y,
+                                          float border) const {
     return border <= x && x < (w - border) && border <= y && y < (h - border);
   }
 
   template <typename TVec, typename TBorder>
-  PANGO_HOST_DEVICE inline bool InBounds(
+  BASALT_HOST_DEVICE inline bool InBounds(
       const TVec& p, const TBorder border = (TBorder)0) const {
     return border <= p[0] && p[0] < ((int)w - border) && border <= p[1] &&
            p[1] < ((int)h - border);
@@ -370,24 +379,24 @@ struct Image {
   // Obtain slices / subimages
   //////////////////////////////////////////////////////
 
-  PANGO_HOST_DEVICE inline const Image<const T> SubImage(size_t x, size_t y,
-                                                         size_t width,
-                                                         size_t height) const {
-    PANGO_ASSERT((x + width) <= w && (y + height) <= h);
+  BASALT_HOST_DEVICE inline const Image<const T> SubImage(size_t x, size_t y,
+                                                          size_t width,
+                                                          size_t height) const {
+    BASALT_ASSERT((x + width) <= w && (y + height) <= h);
     return Image<const T>(RowPtr(y) + x, width, height, pitch);
   }
 
-  PANGO_HOST_DEVICE inline Image<T> SubImage(size_t x, size_t y, size_t width,
-                                             size_t height) {
-    PANGO_ASSERT((x + width) <= w && (y + height) <= h);
+  BASALT_HOST_DEVICE inline Image<T> SubImage(size_t x, size_t y, size_t width,
+                                              size_t height) {
+    BASALT_ASSERT((x + width) <= w && (y + height) <= h);
     return Image<T>(RowPtr(y) + x, width, height, pitch);
   }
 
-  PANGO_HOST_DEVICE inline Image<T> Row(int y) const {
+  BASALT_HOST_DEVICE inline Image<T> Row(int y) const {
     return SubImage(0, y, w, 1);
   }
 
-  PANGO_HOST_DEVICE inline Image<T> Col(int x) const {
+  BASALT_HOST_DEVICE inline Image<T> Col(int x) const {
     return SubImage(x, 0, 1, h);
   }
 
@@ -396,15 +405,15 @@ struct Image {
   //////////////////////////////////////////////////////
 
   template <typename TRecast>
-  PANGO_HOST_DEVICE inline Image<TRecast> Reinterpret() const {
-    PANGO_ASSERT(sizeof(TRecast) == sizeof(T),
-                 "sizeof(TRecast) must match sizeof(T): % != %",
-                 sizeof(TRecast), sizeof(T));
+  BASALT_HOST_DEVICE inline Image<TRecast> Reinterpret() const {
+    BASALT_ASSERT_STREAM(sizeof(TRecast) == sizeof(T),
+                         "sizeof(TRecast) must match sizeof(T): "
+                             << sizeof(TRecast) << " != " << sizeof(T));
     return UnsafeReinterpret<TRecast>();
   }
 
   template <typename TRecast>
-  PANGO_HOST_DEVICE inline Image<TRecast> UnsafeReinterpret() const {
+  BASALT_HOST_DEVICE inline Image<TRecast> UnsafeReinterpret() const {
     return Image<TRecast>((TRecast*)ptr, w, h, pitch);
   }
 
@@ -444,7 +453,7 @@ struct Image {
   size_t w;
   size_t h;
 
-  PANGO_EXTENSION_IMAGE
+  BASALT_EXTENSION_IMAGE
 };
 
 template <class T>
@@ -491,30 +500,15 @@ class ManagedImage : public Image<T> {
     img.ptr = nullptr;
   }
 
-  // Move constructor
-  inline ManagedImage(pangolin::ManagedImage<T, Allocator>&& img) {
-    *this = std::move(img);
-  }
-
-  // Move asignment
-  inline void operator=(pangolin::ManagedImage<T, Allocator>&& img) {
-    Deallocate();
-    Image<T>::pitch = img.pitch;
-    Image<T>::ptr = img.ptr;
-    Image<T>::w = img.w;
-    Image<T>::h = img.h;
-    img.ptr = nullptr;
-  }
-
   // Explicit copy constructor
   template <typename TOther>
-  ManagedImage(const pangolin::CopyObject<TOther>& other) {
+  ManagedImage(const CopyObject<TOther>& other) {
     CopyFrom(other.obj);
   }
 
   // Explicit copy assignment
   template <typename TOther>
-  void operator=(const pangolin::CopyObject<TOther>& other) {
+  void operator=(const CopyObject<TOther>& other) {
     CopyFrom(other.obj);
   }
 
@@ -677,8 +671,6 @@ class ManagedImagePyr {
     return Eigen::Matrix<S, 2, 1>(x, y);
   }
 
-  inline pangolin::Image<T> toPangoImage() { return image.toPangoImage(); }
-
  private:
   inline Image<T> lvl_internal(size_t lvl) {
     size_t x = (lvl == 0) ? 0 : orig_w;
@@ -692,20 +684,5 @@ class ManagedImagePyr {
   size_t orig_w;
   ManagedImage<T> image;
 };
-
-inline void rgb_to_gray(const pangolin::TypedImage& rgb,
-                        basalt::ManagedImage<uint8_t>& gray) {
-  gray.Reinitialise(rgb.w, rgb.h);
-
-  for (size_t x = 0; x < rgb.w; x++) {
-    for (size_t y = 0; y < rgb.h; y++) {
-      double val = 0.2989 * (double)rgb(3 * x + 0, y) +
-                   0.5870 * (double)rgb(3 * x + 1, y) +
-                   0.1140 * (double)rgb(3 * x + 2, y);
-
-      gray(x, y) = val;
-    }
-  }
-}
 
 }  // namespace basalt

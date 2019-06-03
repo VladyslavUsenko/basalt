@@ -180,6 +180,11 @@ void CamCalib::computeVign() {
               it->second.corners_proj_success[k]) {
             double val = img_vec[j].img->interp(pos);
             val /= std::numeric_limits<uint16_t>::max();
+
+            if (img_vec[j].exposure > 0) {
+              val *= 0.001 / img_vec[j].exposure;  // bring to common exposure
+            }
+
             rv[k][2] = val;
           } else {
             rv[k][2] = -1;

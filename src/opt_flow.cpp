@@ -244,14 +244,15 @@ int main(int argc, char** argv) {
 
         for (size_t cam_id = 0; cam_id < calib.intrinsics.size(); cam_id++) {
           if (img_vec[cam_id].img.get()) {
-            auto img = img_vec[cam_id].img->toPangoImage();
+            auto img = img_vec[cam_id].img;
 
             pangolin::GlPixFormat fmt;
             fmt.glformat = GL_LUMINANCE;
             fmt.gltype = GL_UNSIGNED_SHORT;
             fmt.scalable_internal_format = GL_LUMINANCE16;
 
-            img_view[cam_id]->SetImage(img.ptr, img.w, img.h, img.pitch, fmt);
+            img_view[cam_id]->SetImage(img->ptr, img->w, img->h, img->pitch,
+                                       fmt);
           } else {
             img_view[cam_id]->Clear();
           }

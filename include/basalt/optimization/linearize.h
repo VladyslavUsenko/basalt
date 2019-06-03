@@ -40,8 +40,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <basalt/calibration/calibration.hpp>
 #include <basalt/camera/stereographic_param.hpp>
 
-#include <pangolin/image/managed_image.h>
-
 #include <tbb/tbb.h>
 
 namespace basalt {
