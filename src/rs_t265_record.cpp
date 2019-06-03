@@ -68,7 +68,7 @@ void image_save_worker() {
 
   while (!stop_workers) {
     if (image_save_queue.try_pop(img)) {
-#if CV_VERSION_MAJOR >= 3
+#if CV_MAJOR_VERSION >= 3
       std::string filename = dataset_folder + "mav0/cam" +
                              std::to_string(img->cam_id) + "/data/" +
                              std::to_string(img->timestamp) + ".webp";
