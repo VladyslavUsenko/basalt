@@ -140,7 +140,6 @@ Button align_btn("ui.aling_svd", &alignButton);
 pangolin::OpenGlRenderState camera;
 
 std::string marg_data_path;
-std::string vocabulary;
 
 int main(int argc, char** argv) {
   bool show_gui = true;
@@ -159,8 +158,6 @@ int main(int argc, char** argv) {
       ->required();
 
   app.add_option("--config-path", config_path, "Path to config file.");
-
-  app.add_option("--vocabulary", vocabulary, "Path to vocabulary.")->required();
 
   app.add_option("--result-path", result_path, "Path to config file.");
 
@@ -537,7 +534,7 @@ void load_data(const std::string& calib_path, const std::string& cache_path) {
     }
   }
 
-  nrf_mapper.reset(new basalt::NfrMapper(calib, vio_config, vocabulary));
+  nrf_mapper.reset(new basalt::NfrMapper(calib, vio_config));
 
   basalt::MargDataLoader mdl;
   tbb::concurrent_bounded_queue<basalt::MargData::Ptr> marg_queue;

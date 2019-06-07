@@ -48,6 +48,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace basalt {
 
+/// ids for 2D features detected in images
+using FeatureId = int;
+
 /// identifies a frame of multiple images (stereo pair)
 using FrameId = int64_t;
 
@@ -61,8 +64,9 @@ inline std::ostream& operator<<(std::ostream& os, const TimeCamId& tcid) {
   return os;
 }
 
-/// ids for 2D features detected in images
-using FeatureId = int;
+constexpr static const size_t FEATURE_HASH_MAX_SIZE = 32;
+using FeatureHash = std::bitset<FEATURE_HASH_MAX_SIZE>;
+using HashBowVector = std::unordered_map<FeatureHash, double>;
 
 /// keypoint positions and descriptors for an image
 struct KeypointsData {
@@ -77,6 +81,9 @@ struct KeypointsData {
   std::vector<std::bitset<256>> corner_descriptors;
 
   Eigen::vector<Eigen::Vector4d> corners_3d;
+
+  std::vector<FeatureHash> hashes;
+  HashBowVector bow_vector;
 };
 
 /// feature corners is a collection of { imageId => KeypointsData }
