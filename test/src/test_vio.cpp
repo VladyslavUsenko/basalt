@@ -21,7 +21,7 @@ std::mt19937 gen{rd()};
 std::normal_distribution<> gyro_noise_dist{0, gyro_std_dev};
 std::normal_distribution<> accel_noise_dist{0, accel_std_dev};
 
-TEST(PreIntegrationTestSuite, ImuNullspace2Test) {
+TEST(VioTestSuite, ImuNullspace2Test) {
   int num_knots = 15;
 
   Eigen::Vector3d bg, ba;
@@ -146,7 +146,7 @@ TEST(PreIntegrationTestSuite, ImuNullspace2Test) {
   EXPECT_LE(std::abs(null_res[5]), 1e-6);
 }
 
-TEST(PreIntegrationTestSuite, ImuNullspace3Test) {
+TEST(VioTestSuite, ImuNullspace3Test) {
   int num_knots = 15;
 
   Eigen::Vector3d bg, ba;
@@ -287,7 +287,7 @@ TEST(PreIntegrationTestSuite, ImuNullspace3Test) {
   EXPECT_LE(std::abs(null_res[5]), 1e-6);
 }
 
-TEST(PreIntegrationTestSuite, RelPoseTest) {
+TEST(VioTestSuite, RelPoseTest) {
   Sophus::SE3d T_w_i_h = Sophus::expd(Sophus::Vector6d::Random());
   Sophus::SE3d T_w_i_t = Sophus::expd(Sophus::Vector6d::Random());
 
@@ -335,7 +335,7 @@ TEST(PreIntegrationTestSuite, RelPoseTest) {
   }
 }
 
-TEST(PreIntegrationTestSuite, LinearizePointsTest) {
+TEST(VioTestSuite, LinearizePointsTest) {
   basalt::ExtendedUnifiedCamera<double> cam =
       basalt::ExtendedUnifiedCamera<double>::getTestProjections()[0];
 

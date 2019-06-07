@@ -22,7 +22,12 @@ enable_testing()
 
 include(GoogleTest)
 
-gtest_discover_tests(test_image DISCOVERY_TIMEOUT 60)
-gtest_discover_tests(test_spline_opt DISCOVERY_TIMEOUT 60)
-gtest_discover_tests(test_vio DISCOVERY_TIMEOUT 60)
-gtest_discover_tests(test_nfr DISCOVERY_TIMEOUT 60)
+#gtest_discover_tests(test_image DISCOVERY_TIMEOUT 60)
+#gtest_discover_tests(test_spline_opt DISCOVERY_TIMEOUT 60)
+#gtest_discover_tests(test_vio DISCOVERY_TIMEOUT 60)
+#gtest_discover_tests(test_nfr DISCOVERY_TIMEOUT 60)
+
+gtest_add_tests(TARGET test_image AUTO)
+gtest_add_tests(TARGET test_spline_opt AUTO)
+gtest_add_tests(TARGET test_vio AUTO)
+gtest_add_tests(TARGET test_nfr AUTO)
