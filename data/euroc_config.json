@@ -25,6 +25,7 @@
         "config.mapper_ransac_threshold": 5e-5,
         "config.mapper_min_track_length": 5,
         "config.mapper_max_hamming_distance": 70,
-        "config.mapper_second_best_test_ratio": 1.2
+        "config.mapper_second_best_test_ratio": 1.2,
+        "config.mapper_bow_num_bits": 16
     }
 }
