@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.10)
 
 add_subdirectory(ros EXCLUDE_FROM_ALL)
 add_subdirectory(apriltag EXCLUDE_FROM_ALL)
-add_subdirectory(DBoW3 EXCLUDE_FROM_ALL)
 
 
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Enable BUILD_SHARED_LIBS")

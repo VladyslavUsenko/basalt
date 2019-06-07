@@ -193,7 +193,6 @@ include_directories(thirdparty/basalt-headers/thirdparty/cereal/include)
 include_directories(thirdparty/basalt-headers/include)
 include_directories(thirdparty/CLI11/include)
 include_directories(thirdparty/fast/include)
-include_directories(thirdparty/DBoW3/src/)
 
 include_directories(include)
 
@@ -215,7 +214,7 @@ add_library(basalt SHARED
   src/utils/keypoints.cpp)
 
 
-target_link_libraries(basalt PUBLIC ${TBB_LIBRARIES} ${STD_CXX_FS} ${OpenCV_LIBS} pangolin PRIVATE rosbag apriltag opengv DBoW3)
+target_link_libraries(basalt PUBLIC ${TBB_LIBRARIES} ${STD_CXX_FS} ${OpenCV_LIBS} pangolin PRIVATE rosbag apriltag opengv)
 
 
 add_executable(basalt_calibrate src/calibrate.cpp)
@@ -259,7 +258,7 @@ install(TARGETS basalt_calibrate basalt_calibrate_imu basalt_vio_sim basalt_mapp
   ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 
 file(GLOB CONFIG_FILES "${CMAKE_CURRENT_SOURCE_DIR}/data/*.json")
-install(FILES ${CONFIG_FILES} ${CMAKE_CURRENT_SOURCE_DIR}/data/basalt-data/orbvoc.dbow3
+install(FILES ${CONFIG_FILES}
   DESTINATION ${CMAKE_INSTALL_PREFIX}/etc/basalt)
 
 

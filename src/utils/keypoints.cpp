@@ -33,6 +33,8 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <unordered_set>
+
 #include <basalt/utils/keypoints.h>
 
 #include <opencv2/features2d/features2d.hpp>
@@ -305,7 +307,7 @@ void computeDescriptors(const basalt::Image<const uint16_t>& img_raw,
 
 void matchFastHelper(const std::vector<std::bitset<256>>& corner_descriptors_1,
                      const std::vector<std::bitset<256>>& corner_descriptors_2,
-                     std::map<int, int>& matches, int threshold,
+                     std::unordered_map<int, int>& matches, int threshold,
                      double test_dist) {
   matches.clear();
 
@@ -338,7 +340,7 @@ void matchDescriptors(const std::vector<std::bitset<256>>& corner_descriptors_1,
                       double dist_2_best) {
   matches.clear();
 
-  std::map<int, int> matches_1_2, matches_2_1;
+  std::unordered_map<int, int> matches_1_2, matches_2_1;
   matchFastHelper(corner_descriptors_1, corner_descriptors_2, matches_1_2,
                   threshold, dist_2_best);
   matchFastHelper(corner_descriptors_2, corner_descriptors_1, matches_2_1,
@@ -397,8 +399,8 @@ void findInliersRansac(const KeypointsData& kd1, const KeypointsData& kd2,
   ransac.sac_model_->selectWithinDistance(nonlinear_transformation,
                                           ransac.threshold_, ransac.inliers_);
 
-  // Sanity check if the number of inliers decreased, but only warn if it is by
-  // 3 or more, since some small fluctuation is expected.
+  // Sanity check if the number of inliers decreased, but only warn if it is
+  // by 3 or more, since some small fluctuation is expected.
   if (ransac.inliers_.size() + 2 < num_inliers_ransac) {
     std::cout << "Warning: non-linear refinement reduced the relative pose "
                  "ransac inlier count from "

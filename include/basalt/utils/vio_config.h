@@ -71,5 +71,6 @@ struct VioConfig {
   double mapper_min_track_length;
   double mapper_max_hamming_distance;
   double mapper_second_best_test_ratio;
+  int mapper_bow_num_bits;
 };
 }  // namespace basalt

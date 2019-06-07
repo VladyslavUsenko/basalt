@@ -65,11 +65,6 @@ void computeAngles(const basalt::Image<const uint16_t>& img_raw,
 void computeDescriptors(const basalt::Image<const uint16_t>& img_raw,
                         KeypointsData& kd);
 
-void matchFastHelper(const std::vector<std::bitset<256>>& corner_descriptors_1,
-                     const std::vector<std::bitset<256>>& corner_descriptors_2,
-                     std::map<int, int>& matches, int threshold,
-                     double test_dist);
-
 void matchDescriptors(const std::vector<std::bitset<256>>& corner_descriptors_1,
                       const std::vector<std::bitset<256>>& corner_descriptors_2,
                       std::vector<std::pair<int, int>>& matches, int threshold,

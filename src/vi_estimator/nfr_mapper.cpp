@@ -39,21 +39,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <basalt/utils/tracks.h>
 #include <basalt/vi_estimator/nfr_mapper.h>
 
-#include <DBoW3.h>
+#include <basalt/hash_bow/hash_bow.h>
 
 namespace basalt {
 
-NfrMapper::NfrMapper(const Calibration<double>& calib, const VioConfig& config,
-                     const std::string& vocabulary)
+NfrMapper::NfrMapper(const Calibration<double>& calib, const VioConfig& config)
     : config(config) {
   this->calib = calib;
   this->obs_std_dev = config.mapper_obs_std_dev;
   this->huber_thresh = config.mapper_obs_huber_thresh;
 
-  if (!vocabulary.empty()) {
-    DBoW3::Vocabulary voc(vocabulary);
-    bow_database.setVocabulary(voc);
-  }
+  hash_bow_database.reset(new HashBow<256>(config.mapper_bow_num_bits));
 }
 
 void NfrMapper::addMargData(MargData::Ptr& data) {
@@ -378,7 +374,7 @@ void NfrMapper::detect_keypoints() {
           if (kv->second.get()) {
             for (size_t i = 0; i < kv->second->img_data.size(); i++) {
               TimeCamId tcid(kv->first, i);
-              KeypointsData kd;
+              KeypointsData& kd = feature_corners[tcid];
 
               if (!kv->second->img_data[i].img.get()) continue;
 
@@ -394,18 +390,13 @@ void NfrMapper::detect_keypoints() {
               calib.intrinsics[tcid.second].unproject(kd.corners, kd.corners_3d,
                                                       success);
 
-              feature_corners[tcid] = kd;
+              hash_bow_database->compute_bow(kd.corner_descriptors, kd.hashes,
+                                             kd.bow_vector);
 
-              auto& bow = bow_data[tcid];
+              hash_bow_database->add_to_database(tcid, kd.bow_vector);
 
-              if (bow_database.usingDirectIndex()) {
-                bow_database.getVocabulary()->transform(
-                    kd.corner_descriptors, bow.first, bow.second,
-                    bow_database.getDirectIndexLevels());
-              } else {
-                bow_database.getVocabulary()->transform(kd.corner_descriptors,
-                                                        bow.first);
-              }
+              // std::cout << "bow " << kd.bow_vector.size() << " desc "
+              //          << kd.corner_descriptors.size() << std::endl;
             }
           }
         }
@@ -413,28 +404,13 @@ void NfrMapper::detect_keypoints() {
 
   auto t2 = std::chrono::high_resolution_clock::now();
 
-  for (const auto& kv : bow_data) {
-    int bow_id;
-    if (bow_database.usingDirectIndex()) {
-      bow_id = bow_database.add(kv.second.first, kv.second.second);
-    } else {
-      bow_id = bow_database.add(kv.second.first);
-    }
-    bow_id_to_tcid[bow_id] = kv.first;
-  }
-
-  auto t3 = std::chrono::high_resolution_clock::now();
-
   auto elapsed1 =
       std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
-  auto elapsed2 =
-      std::chrono::duration_cast<std::chrono::microseconds>(t3 - t2);
 
   std::cout << "Processed " << feature_corners.size() << " frames."
             << std::endl;
 
-  std::cout << "Detection time: " << elapsed1.count() * 1e-6
-            << "s. Adding to DB time: " << elapsed2.count() * 1e-6 << "s."
+  std::cout << "Detection time: " << elapsed1.count() * 1e-6 << "s."
             << std::endl;
 }
 
@@ -502,33 +478,34 @@ void NfrMapper::match_all() {
   tbb::blocked_range<size_t> keys_range(0, keys.size());
   auto compute_pairs = [&](const tbb::blocked_range<size_t>& r) {
     for (size_t i = r.begin(); i != r.end(); ++i) {
-      DBoW3::QueryResults q;
+      const TimeCamId& tcid = keys[i];
+      const KeypointsData& kd = feature_corners.at(tcid);
 
-      auto it = bow_data.find(keys[i]);
+      std::vector<std::pair<TimeCamId, double>> results;
 
-      if (it != bow_data.end()) {
-        bow_database.query(it->second.first, q,
-                           config.mapper_num_frames_to_match);
+      hash_bow_database->querry_database(kd.bow_vector,
+                                         config.mapper_num_frames_to_match,
+                                         results, &tcid.first);
 
-        for (const auto& r : q) {
-          // Match only previous frames
+      // std::cout << "Closest frames for " << tcid << ": ";
+      for (const auto& otcid_score : results) {
+        // std::cout << otcid_score.first << "(" << otcid_score.second << ") ";
+        if (otcid_score.first.first != tcid.first &&
+            otcid_score.second > config.mapper_frames_to_match_threshold) {
+          match_pair m;
+          m.i = i;
+          m.j = id_to_key_idx.at(otcid_score.first);
+          m.score = otcid_score.second;
 
-          size_t j = id_to_key_idx.at(bow_id_to_tcid.at(r.Id));
-          if (r.Score > config.mapper_frames_to_match_threshold &&
-              keys[i].first < keys[j].first) {
-            match_pair m;
-            m.i = i;
-            m.j = j;
-            m.score = r.Score;
-
-            ids_to_match.emplace_back(m);
-          }
+          ids_to_match.emplace_back(m);
         }
       }
+      // std::cout << std::endl;
     }
   };
 
   tbb::parallel_for(keys_range, compute_pairs);
+  // compute_pairs(keys_range);
 
   auto t2 = std::chrono::high_resolution_clock::now();
 

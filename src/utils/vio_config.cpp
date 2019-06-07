@@ -65,12 +65,13 @@ VioConfig::VioConfig() {
   mapper_obs_huber_thresh = 1.5;
   mapper_detection_num_points = 800;
   mapper_num_frames_to_match = 30;
-  mapper_frames_to_match_threshold = 0.3;
+  mapper_frames_to_match_threshold = 0.04;
   mapper_min_matches = 20;
   mapper_ransac_threshold = 5e-5;
   mapper_min_track_length = 5;
   mapper_max_hamming_distance = 70;
   mapper_second_best_test_ratio = 1.2;
+  mapper_bow_num_bits = 16;
 }
 
 void VioConfig::save(const std::string& filename) {
@@ -126,5 +127,6 @@ void serialize(Archive& ar, basalt::VioConfig& config) {
   ar(CEREAL_NVP(config.mapper_min_track_length));
   ar(CEREAL_NVP(config.mapper_max_hamming_distance));
   ar(CEREAL_NVP(config.mapper_second_best_test_ratio));
+  ar(CEREAL_NVP(config.mapper_bow_num_bits));
 }
 }  // namespace cereal

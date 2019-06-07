@@ -47,9 +47,9 @@ For evaluation the button `align_svd` is used. It aligns the GT trajectory with 
 ### Visual-inertial mapping
 To run the mapping tool execute the following command:
 ```
-basalt_mapper --cam-calib /usr/etc/basalt/euroc_ds_calib.json --marg-data euroc_marg_data --vocabulary /usr/etc/basalt/orbvoc.dbow3
+basalt_mapper --cam-calib /usr/etc/basalt/euroc_ds_calib.json --marg-data euroc_marg_data
 ```
-Here `--marg-data` is the folder with the results from VIO and `--vocabulary` is the path to DBoW3 vocabulary.
+Here `--marg-data` is the folder with the results from VIO.
 
 This opens the GUI and extracts non-linear factors from the marginalization data.
 ![MH_05_MAPPING](/doc/img/MH_05_MAPPING.png)
@@ -112,6 +112,6 @@ basalt_vio --dataset-path dataset-magistrale1_512_16/ --cam-calib /usr/etc/basal
 ### Visual-inertial mapping
 To run the mapping tool execute the following command:
 ```
-basalt_mapper --cam-calib /usr/etc/basalt/tumvi_512_ds_calib.json --marg-data tumvi_marg_data --vocabulary /usr/etc/basalt/orbvoc.dbow3
+basalt_mapper --cam-calib /usr/etc/basalt/tumvi_512_ds_calib.json --marg-data tumvi_marg_data
 ```
 ![magistrale1_mapping](/doc/img/magistrale1_mapping.png)
