@@ -35,23 +35,24 @@ class HashBow {
     size_t descriptors_size = descriptors.size();
     hashes.resize(descriptors_size);
 
-    bow_vector.clear();
-    bow_vector.reserve(descriptors_size);
+    std::unordered_map<FeatureHash, double> bow_map;
+    bow_map.clear();
+    bow_map.reserve(descriptors_size);
 
     for (size_t i = 0; i < descriptors_size; i++) {
       hashes[i] = compute_hash(descriptors[i]);
-
-      FeatureHash bow_word = hashes[i];
-      bow_vector[bow_word] += 1.0;
+      bow_map[hashes[i]] += 1.0;
     }
 
+    bow_vector.clear();
+
     double sum_squared = 0;
-    for (const auto& kv : bow_vector) {
+    for (const auto& kv : bow_map) {
+      bow_vector.emplace_back(kv);
       sum_squared += kv.second * kv.second;
     }
 
     double norm = std::sqrt(sum_squared);
-
     for (auto& kv : bow_vector) {
       kv.second /= norm;
     }

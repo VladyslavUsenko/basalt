@@ -66,7 +66,7 @@ inline std::ostream& operator<<(std::ostream& os, const TimeCamId& tcid) {
 
 constexpr static const size_t FEATURE_HASH_MAX_SIZE = 32;
 using FeatureHash = std::bitset<FEATURE_HASH_MAX_SIZE>;
-using HashBowVector = std::unordered_map<FeatureHash, double>;
+using HashBowVector = std::vector<std::pair<FeatureHash, double>>;
 
 /// keypoint positions and descriptors for an image
 struct KeypointsData {
