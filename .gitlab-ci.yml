@@ -94,7 +94,7 @@ bionic-release-compile:
   only:
     - master
   variables:
-    CXX_MARCH: 'corei7-avx'
+    CXX_MARCH: 'sandybridge'
     DEB_DIR: deb_bionic
   artifacts:
     paths:
@@ -109,7 +109,7 @@ xenial-release-compile:
   only:
     - master
   variables:
-    CXX_MARCH: 'corei7-avx'
+    CXX_MARCH: 'sandybridge'
     DEB_DIR: deb_xenial
   artifacts:
     paths:
@@ -122,13 +122,13 @@ bionic-debug-compile:
   only:
     - master
   variables:
-    BUILD_TYPE: Debug
+    BUILD_TYPE: CiDebug
 
 bionic-relwithdebinfo-compile:
   <<: *prepare_docker_definition
   <<: *compile_test_package_definition
   variables:
-    BUILD_TYPE: RelWithDebInfo
+    BUILD_TYPE: CiRelWithDebInfo
 
 elcapitan-relwithdebinfo-compile:
   <<: *compile_test_definition
@@ -136,7 +136,7 @@ elcapitan-relwithdebinfo-compile:
   only:
     - master
   variables:
-    BUILD_TYPE: RelWithDebInfo
+    BUILD_TYPE: CiRelWithDebInfo
 
 mojave-relwithdebinfo-compile:
   <<: *compile_test_definition
@@ -144,7 +144,7 @@ mojave-relwithdebinfo-compile:
   only:
     - master
   variables:
-    BUILD_TYPE: RelWithDebInfo
+    BUILD_TYPE: CiRelWithDebInfo
 
 # check if clang-format would make any changes
 clang-format:
