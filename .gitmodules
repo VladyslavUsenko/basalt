@@ -19,6 +19,3 @@
 [submodule "thirdparty/basalt-headers"]
 	path = thirdparty/basalt-headers
 	url = https://gitlab.com/VladyslavUsenko/basalt-headers.git
-[submodule "data/basalt-data"]
-	path = data/basalt-data
-	url = https://gitlab.com/VladyslavUsenko/basalt-data.git
