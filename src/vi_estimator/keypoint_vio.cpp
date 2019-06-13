@@ -94,6 +94,7 @@ void KeypointVioEstimator::initialize(int64_t t_ns, const Sophus::SE3d& T_w_i,
   initialized = true;
   T_w_i_init = T_w_i;
 
+  last_state_t_ns = t_ns;
   imu_meas[t_ns] = IntegratedImuMeasurement(t_ns, bg, ba);
   frame_states[t_ns] =
       PoseVelBiasStateWithLin(t_ns, T_w_i, vel_w_i, bg, ba, true);

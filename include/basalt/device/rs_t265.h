@@ -47,8 +47,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <pangolin/image/typed_image.h>
 #include <pangolin/pangolin.h>
-#include <opencv2/core.hpp>
-#include <opencv2/highgui.hpp>
 
 #include <tbb/concurrent_queue.h>
 

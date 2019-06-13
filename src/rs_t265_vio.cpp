@@ -178,12 +178,12 @@ int main(int argc, char** argv) {
   if (show_gui) vio->out_vis_queue = &out_vis_queue;
   vio->out_state_queue = &out_state_queue;
 
-  //  basalt::MargDataSaver::Ptr marg_data_saver;
-  //
-  //  if (!marg_data_path.empty()) {
-  //    marg_data_saver.reset(new basalt::MargDataSaver(marg_data_path));
-  //    vio->out_marg_queue = &marg_data_saver->in_marg_queue;
-  //  }
+  basalt::MargDataSaver::Ptr marg_data_saver;
+
+  if (!marg_data_path.empty()) {
+    marg_data_saver.reset(new basalt::MargDataSaver(marg_data_path));
+    vio->out_marg_queue = &marg_data_saver->in_marg_queue;
+  }
 
   vio_data_log.Clear();
 
@@ -282,8 +282,9 @@ int main(int argc, char** argv) {
           std::bind(&draw_image_overlay, std::placeholders::_1, idx);
     }
 
-    Eigen::Vector3d cam_p(-0.5, -3, -5);
+    Eigen::Vector3d cam_p(0.5, -2, -2);
     cam_p = vio->getT_w_i_init().so3() * calib.T_i_c[0].so3() * cam_p;
+    cam_p[2] = 1;
 
     pangolin::OpenGlRenderState camera(
         pangolin::ProjectionMatrix(640, 480, 400, 400, 320, 240, 0.001, 10000),
