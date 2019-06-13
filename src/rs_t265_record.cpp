@@ -136,7 +136,7 @@ void image_save_worker() {
                                                webp_quality};
         cv::imwrite(filename, image, compression_params);
 #else
-        std::string filename = dataset_folder + "mav0/cam" +
+        std::string filename = dataset_dir + "mav0/cam" +
                                std::to_string(cam_id) + "/data/" +
                                std::to_string(img->t_ns) + ".jpg";
 
