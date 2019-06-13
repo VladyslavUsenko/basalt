@@ -73,17 +73,18 @@ struct RsPoseData {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
-class Device {
+class RsT265Device {
  public:
-  using Ptr = std::shared_ptr<Device>;
+  using Ptr = std::shared_ptr<RsT265Device>;
 
   static constexpr int IMU_RATE = 200;
   static constexpr int NUM_CAMS = 2;
 
-  Device(bool manual_exposure, int skip_frames, int webp_quality,
-         double exposure_value = 10.0);
-  ~Device();
+  RsT265Device(bool manual_exposure, int skip_frames, int webp_quality,
+               double exposure_value = 10.0);
+  ~RsT265Device();
   void start();
+  void stop();
 
   bool setExposure(double exposure);  // in milliseconds
   void setSkipFrames(int skip);
@@ -102,15 +103,16 @@ class Device {
   int skip_frames;
   int webp_quality;
 
-  rs2::config config;
-  rs2::pipeline pipe;
-  rs2::context context;
-  rs2::pipeline_profile profile;
-
   Eigen::deque<RsIMUData> gyro_data_queue;
   std::shared_ptr<RsIMUData> prev_accel_data;
 
   std::shared_ptr<basalt::Calibration<double>> calib;
+
+  rs2::context context;
+  rs2::config config;
+  rs2::pipeline pipe;
+
+  rs2::pipeline_profile profile;
 };
 
 }  // namespace basalt

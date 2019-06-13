@@ -64,7 +64,7 @@ namespace fs = std::experimental::filesystem;
 
 constexpr int UI_WIDTH = 200;
 
-basalt::Device::Ptr t265_device;
+basalt::RsT265Device::Ptr t265_device;
 
 std::shared_ptr<pangolin::DataLog> imu_log;
 
@@ -81,7 +81,7 @@ std::atomic<bool> recording;
 
 std::string dataset_dir;
 
-static constexpr int NUM_CAMS = basalt::Device::NUM_CAMS;
+static constexpr int NUM_CAMS = basalt::RsT265Device::NUM_CAMS;
 static constexpr int NUM_WORKERS = 8;
 
 std::ofstream cam_data[NUM_CAMS], exposure_data[NUM_CAMS], imu0_data, pose_data;
@@ -192,7 +192,7 @@ void pose_save_worker() {
   }
 }
 
-void save_calibration(const basalt::Device::Ptr &device) {
+void save_calibration(const basalt::RsT265Device::Ptr &device) {
   auto calib = device->exportCalibration();
 
   if (calib) {
@@ -317,8 +317,8 @@ int main(int argc, char *argv[]) {
   pose_data_queue.set_capacity(10000);
 
   // realsense
-  t265_device.reset(
-      new basalt::Device(manual_exposure, skip_frames, webp_quality, exposure));
+  t265_device.reset(new basalt::RsT265Device(manual_exposure, skip_frames,
+                                             webp_quality, exposure));
 
   t265_device->image_data_queue = &image_data_queue;
   t265_device->imu_data_queue = &imu_data_queue;
@@ -352,7 +352,7 @@ int main(int argc, char *argv[]) {
                                           pangolin::Attach::Pix(UI_WIDTH));
 
     std::vector<std::shared_ptr<pangolin::ImageView>> img_view;
-    while (img_view.size() < basalt::Device::NUM_CAMS) {
+    while (img_view.size() < basalt::RsT265Device::NUM_CAMS) {
       int idx = img_view.size();
       std::shared_ptr<pangolin::ImageView> iv(new pangolin::ImageView);
 
@@ -414,7 +414,8 @@ int main(int argc, char *argv[]) {
         fmt.scalable_internal_format = GL_LUMINANCE16;
 
         if (t265_device->last_img_data.get())
-          for (size_t cam_id = 0; cam_id < basalt::Device::NUM_CAMS; cam_id++) {
+          for (size_t cam_id = 0; cam_id < basalt::RsT265Device::NUM_CAMS;
+               cam_id++) {
             if (t265_device->last_img_data->img_data[cam_id].img.get())
               img_view[cam_id]->SetImage(
                   t265_device->last_img_data->img_data[cam_id].img->ptr,

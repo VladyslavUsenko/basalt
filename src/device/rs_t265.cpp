@@ -39,8 +39,8 @@ std::string get_date();
 
 namespace basalt {
 
-Device::Device(bool manual_exposure, int skip_frames, int webp_quality,
-               double exposure_value)
+RsT265Device::RsT265Device(bool manual_exposure, int skip_frames,
+                           int webp_quality, double exposure_value)
     : manual_exposure(manual_exposure),
       skip_frames(skip_frames),
       webp_quality(webp_quality) {
@@ -82,9 +82,9 @@ Device::Device(bool manual_exposure, int skip_frames, int webp_quality,
   }
 }
 
-Device::~Device() = default;
+RsT265Device::~RsT265Device(){};
 
-void Device::start() {
+void RsT265Device::start() {
   auto callback = [&](const rs2::frame& frame) {
     exportCalibration();
 
@@ -206,7 +206,12 @@ void Device::start() {
   profile = pipe.start(config, callback);
 }
 
-bool Device::setExposure(double exposure) {
+void RsT265Device::stop() {
+  if (image_data_queue) image_data_queue->push(nullptr);
+  if (imu_data_queue) imu_data_queue->push(nullptr);
+}
+
+bool RsT265Device::setExposure(double exposure) {
   if (!manual_exposure) return false;
 
   auto device = context.query_devices()[0];
@@ -215,11 +220,11 @@ bool Device::setExposure(double exposure) {
   return true;
 }
 
-void Device::setSkipFrames(int skip) { skip_frames = skip; }
+void RsT265Device::setSkipFrames(int skip) { skip_frames = skip; }
 
-void Device::setWebpQuality(int quality) { webp_quality = quality; }
+void RsT265Device::setWebpQuality(int quality) { webp_quality = quality; }
 
-std::shared_ptr<basalt::Calibration<double>> Device::exportCalibration() {
+std::shared_ptr<basalt::Calibration<double>> RsT265Device::exportCalibration() {
   using Scalar = double;
 
   if (calib.get()) return calib;

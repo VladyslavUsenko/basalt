@@ -74,7 +74,7 @@ void draw_plots();
 // Pangolin variables
 constexpr int UI_WIDTH = 200;
 
-basalt::Device::Ptr t265_device;
+basalt::RsT265Device::Ptr t265_device;
 
 using Button = pangolin::Var<std::function<void(void)>>;
 
@@ -106,7 +106,6 @@ std::string marg_data_path;
 
 std::mutex m;
 bool step_by_step = false;
-std::atomic<bool> terminate;
 int64_t curr_t_ns = -1;
 
 // VIO variables
@@ -117,7 +116,6 @@ basalt::OpticalFlowBase::Ptr opt_flow_ptr;
 basalt::VioEstimatorBase::Ptr vio;
 
 int main(int argc, char** argv) {
-  terminate = false;
   bool show_gui = true;
   bool print_queue = false;
   std::string cam_calib_path;
@@ -156,7 +154,7 @@ int main(int argc, char** argv) {
 
   // realsense
   t265_device.reset(
-      new basalt::Device(false, 1, 90, 10.0));  // TODO: add options?
+      new basalt::RsT265Device(false, 1, 90, 10.0));  // TODO: add options?
 
   // startup device and load calibration
   t265_device->start();
@@ -193,6 +191,8 @@ int main(int argc, char** argv) {
     t3.reset(new std::thread([&]() {
       while (true) {
         out_vis_queue.pop(curr_vis_data);
+
+        if (!curr_vis_data.get()) break;
       }
 
       std::cout << "Finished t3" << std::endl;
@@ -326,7 +326,8 @@ int main(int argc, char** argv) {
             curr_vis_data->opt_flow_res->input_images.get()) {
           auto& img_data = curr_vis_data->opt_flow_res->input_images->img_data;
 
-          for (size_t cam_id = 0; cam_id < basalt::Device::NUM_CAMS; cam_id++) {
+          for (size_t cam_id = 0; cam_id < basalt::RsT265Device::NUM_CAMS;
+               cam_id++) {
             if (img_data[cam_id].img.get())
               img_view[cam_id]->SetImage(
                   img_data[cam_id].img->ptr, img_data[cam_id].img->w,
@@ -346,7 +347,8 @@ int main(int argc, char** argv) {
     }
   }
 
-  terminate = true;
+  t265_device->stop();
+
   if (t3.get()) t3->join();
   t4.join();
 
