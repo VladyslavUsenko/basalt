@@ -7,7 +7,7 @@ RUN add-apt-repository ppa:ubuntu-toolchain-r/test
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-key C8B3A55A6F3EFCDE
 RUN echo "deb http://realsense-hw-public.s3.amazonaws.com/Debian/apt-repo xenial main" > /etc/apt/sources.list.d/realsense.list
 
-RUN apt update && apt-get install -y g++-7 librealsense2-dev
+RUN apt update && apt-get install -y g++-7 librealsense2-dev librealsense2-gl-dev librealsense2-dkms librealsense2-utils
 
 
 RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 60 \
