@@ -47,20 +47,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace basalt {
 
 KeypointVioEstimator::KeypointVioEstimator(
-    int64_t t_ns, const Sophus::SE3d& T_w_i, const Eigen::Vector3d& vel_w_i,
-    const Eigen::Vector3d& bg, const Eigen::Vector3d& ba, double int_std_dev,
-    const Eigen::Vector3d& g, const basalt::Calibration<double>& calib,
-    const VioConfig& config)
-    : take_kf(true), frames_after_kf(0), g(g), config(config) {
+    double int_std_dev, const Eigen::Vector3d& g,
+    const basalt::Calibration<double>& calib, const VioConfig& config)
+    : take_kf(true),
+      frames_after_kf(0),
+      g(g),
+      initialized(false),
+      config(config) {
   this->obs_std_dev = config.vio_obs_std_dev;
   this->huber_thresh = config.vio_obs_huber_thresh;
   this->calib = calib;
-
-  last_state_t_ns = t_ns;
-
-  imu_meas[t_ns] = IntegratedImuMeasurement(t_ns, bg, ba);
-  frame_states[t_ns] =
-      PoseVelBiasStateWithLin(t_ns, T_w_i, vel_w_i, bg, ba, true);
 
   // Setup marginalization
   marg_H.setZero(POSE_VEL_BIAS_SIZE, POSE_VEL_BIAS_SIZE);
@@ -77,10 +73,6 @@ KeypointVioEstimator::KeypointVioEstimator(
 
   std::cout << "marg_H\n" << marg_H << std::endl;
 
-  marg_order.abs_order_map[t_ns] = std::make_pair(0, POSE_VEL_BIAS_SIZE);
-  marg_order.total_size = POSE_VEL_BIAS_SIZE;
-  marg_order.items = 1;
-
   gyro_bias_weight.setConstant(1.0 /
                                (calib.gyro_bias_std * calib.gyro_bias_std));
   accel_bias_weight.setConstant(1.0 /
@@ -93,8 +85,29 @@ KeypointVioEstimator::KeypointVioEstimator(
 
   vision_data_queue.set_capacity(10);
   imu_data_queue.set_capacity(300);
+}
 
-  auto proc_func = [&] {
+void KeypointVioEstimator::initialize(int64_t t_ns, const Sophus::SE3d& T_w_i,
+                                      const Eigen::Vector3d& vel_w_i,
+                                      const Eigen::Vector3d& bg,
+                                      const Eigen::Vector3d& ba) {
+  initialized = true;
+  T_w_i_init = T_w_i;
+
+  imu_meas[t_ns] = IntegratedImuMeasurement(t_ns, bg, ba);
+  frame_states[t_ns] =
+      PoseVelBiasStateWithLin(t_ns, T_w_i, vel_w_i, bg, ba, true);
+
+  marg_order.abs_order_map[t_ns] = std::make_pair(0, POSE_VEL_BIAS_SIZE);
+  marg_order.total_size = POSE_VEL_BIAS_SIZE;
+  marg_order.items = 1;
+
+  initialize(bg, ba);
+}
+
+void KeypointVioEstimator::initialize(const Eigen::Vector3d& bg,
+                                      const Eigen::Vector3d& ba) {
+  auto proc_func = [&, bg, ba] {
     OpticalFlowResult::Ptr prev_frame, curr_frame;
     IntegratedImuMeasurement::Ptr meas;
 
@@ -103,6 +116,31 @@ KeypointVioEstimator::KeypointVioEstimator(
 
     while (true) {
       vision_data_queue.pop(curr_frame);
+
+      if (!initialized) {
+        Eigen::Vector3d vel_w_i_init;
+        vel_w_i_init.setZero();
+
+        T_w_i_init.setQuaternion(Eigen::Quaterniond::FromTwoVectors(
+            data->accel, Eigen::Vector3d::UnitZ()));
+
+        last_state_t_ns = curr_frame->t_ns;
+        imu_meas[last_state_t_ns] =
+            IntegratedImuMeasurement(last_state_t_ns, bg, ba);
+        frame_states[last_state_t_ns] = PoseVelBiasStateWithLin(
+            last_state_t_ns, T_w_i_init, vel_w_i_init, bg, ba, true);
+
+        marg_order.abs_order_map[last_state_t_ns] =
+            std::make_pair(0, POSE_VEL_BIAS_SIZE);
+        marg_order.total_size = POSE_VEL_BIAS_SIZE;
+        marg_order.items = 1;
+
+        std::cout << "Setting up filter: t_ns " << last_state_t_ns << std::endl;
+        std::cout << "T_w_i\n" << T_w_i_init.matrix() << std::endl;
+        std::cout << "vel_w_i " << vel_w_i_init.transpose() << std::endl;
+
+        initialized = true;
+      }
 
       if (!curr_frame.get()) {
         break;
@@ -346,6 +384,8 @@ bool KeypointVioEstimator::measure(const OpticalFlowResult::Ptr& opt_flow_meas,
 
     data->projections.resize(opt_flow_meas->observations.size());
     computeProjections(data->projections);
+
+    data->opt_flow_res = prev_opt_flow_res[last_state_t_ns];
 
     out_vis_queue->push(data);
   }

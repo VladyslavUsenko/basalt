@@ -50,6 +50,7 @@ struct VioConfig {
   int optical_flow_max_iterations;
   int optical_flow_levels;
   float optical_flow_epipolar_error;
+  int optical_flow_skip_frames;
 
   int vio_max_states;
   int vio_max_kfs;

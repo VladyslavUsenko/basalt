@@ -84,15 +84,24 @@ class VioEstimatorBase {
   tbb::concurrent_bounded_queue<MargData::Ptr>* out_marg_queue = nullptr;
   tbb::concurrent_bounded_queue<VioVisualizationData::Ptr>* out_vis_queue =
       nullptr;
+
+  virtual void initialize(int64_t t_ns, const Sophus::SE3d& T_w_i,
+                          const Eigen::Vector3d& vel_w_i,
+                          const Eigen::Vector3d& bg,
+                          const Eigen::Vector3d& ba) = 0;
+
+  virtual void initialize(const Eigen::Vector3d& bg,
+                          const Eigen::Vector3d& ba) = 0;
+
+  virtual const Sophus::SE3d& getT_w_i_init() = 0;
 };
 
 class VioEstimatorFactory {
  public:
-  static VioEstimatorBase::Ptr getVioEstimator(
-      const VioConfig& config, const Calibration<double>& cam, int64_t t_ns,
-      const Sophus::SE3d& T_w_i, const Eigen::Vector3d& vel_w_i,
-      const Eigen::Vector3d& bg, const Eigen::Vector3d& ba, double int_std_dev,
-      const Eigen::Vector3d& g);
+  static VioEstimatorBase::Ptr getVioEstimator(const VioConfig& config,
+                                               const Calibration<double>& cam,
+                                               double int_std_dev,
+                                               const Eigen::Vector3d& g);
 };
 
 double alignSVD(const std::vector<int64_t>& filter_t_ns,

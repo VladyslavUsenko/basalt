@@ -40,14 +40,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace basalt {
 
 VioEstimatorBase::Ptr VioEstimatorFactory::getVioEstimator(
-    const VioConfig& config, const Calibration<double>& cam, int64_t t_ns,
-    const Sophus::SE3d& T_w_i, const Eigen::Vector3d& vel_w_i,
-    const Eigen::Vector3d& bg, const Eigen::Vector3d& ba, double int_std_dev,
+    const VioConfig& config, const Calibration<double>& cam, double int_std_dev,
     const Eigen::Vector3d& g) {
   KeypointVioEstimator::Ptr res;
 
-  res.reset(new KeypointVioEstimator(t_ns, T_w_i, vel_w_i, bg, ba, int_std_dev,
-                                     g, cam, config));
+  res.reset(new KeypointVioEstimator(int_std_dev, g, cam, config));
 
   res->setMaxKfs(config.vio_max_kfs);
   res->setMaxStates(config.vio_max_states);

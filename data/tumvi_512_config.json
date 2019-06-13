@@ -7,6 +7,7 @@
         "config.optical_flow_max_iterations": 5,
         "config.optical_flow_epipolar_error": 0.005,
         "config.optical_flow_levels": 3,
+        "config.optical_flow_skip_frames": 1,
         "config.vio_max_states": 3,
         "config.vio_max_kfs": 7,
         "config.vio_min_frames_after_kf": 5,

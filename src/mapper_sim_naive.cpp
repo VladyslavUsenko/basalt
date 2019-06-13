@@ -708,9 +708,9 @@ void setup_vio() {
   basalt::VioConfig config;
   config.vio_debug = true;
 
-  vio.reset(new basalt::KeypointVioEstimator(
-      t_init_ns, T_w_i_init, vel_w_i_init, gt_gyro_bias.front(),
-      gt_accel_bias.front(), 0.0001, g, calib, config));
+  vio.reset(new basalt::KeypointVioEstimator(0.0001, g, calib, config));
+  vio->initialize(t_init_ns, T_w_i_init, vel_w_i_init, gt_gyro_bias.front(),
+                  gt_accel_bias.front());
 
   vio->setMaxStates(10000);
   vio->setMaxKfs(10000);
