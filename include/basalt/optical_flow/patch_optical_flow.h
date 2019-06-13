@@ -65,7 +65,11 @@ class PatchOpticalFlow : public OpticalFlowBase {
 
   PatchOpticalFlow(const VioConfig& config,
                    const basalt::Calibration<double>& calib)
-      : t_ns(-1), last_keypoint_id(0), config(config), calib(calib) {
+      : t_ns(-1),
+        frame_counter(0),
+        last_keypoint_id(0),
+        config(config),
+        calib(calib) {
     patches.reserve(3000);
     input_queue.set_capacity(10);
 
@@ -151,9 +155,10 @@ class PatchOpticalFlow : public OpticalFlowBase {
       filterPoints();
     }
 
-    if (output_queue) {
+    if (output_queue && frame_counter % config.optical_flow_skip_frames == 0) {
       output_queue->push(transforms);
     }
+    frame_counter++;
   }
 
   void trackPoints(
@@ -356,6 +361,8 @@ class PatchOpticalFlow : public OpticalFlowBase {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
  private:
   int64_t t_ns;
+
+  size_t frame_counter;
 
   KeypointId last_keypoint_id;
 

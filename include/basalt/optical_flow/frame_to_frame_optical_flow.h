@@ -67,7 +67,7 @@ class FrameToFrameOpticalFlow : public OpticalFlowBase {
 
   FrameToFrameOpticalFlow(const VioConfig& config,
                           const basalt::Calibration<double>& calib)
-      : t_ns(-1), last_keypoint_id(0), config(config) {
+      : t_ns(-1), frame_counter(0), last_keypoint_id(0), config(config) {
     input_queue.set_capacity(10);
 
     this->calib = calib.cast<Scalar>();
@@ -165,9 +165,11 @@ class FrameToFrameOpticalFlow : public OpticalFlowBase {
       filterPoints();
     }
 
-    if (output_queue) {
+    if (output_queue && frame_counter % config.optical_flow_skip_frames == 0) {
       output_queue->push(transforms);
     }
+
+    frame_counter++;
   }
 
   void trackPoints(
@@ -364,6 +366,8 @@ class FrameToFrameOpticalFlow : public OpticalFlowBase {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
  private:
   int64_t t_ns;
+
+  size_t frame_counter;
 
   KeypointId last_keypoint_id;
 

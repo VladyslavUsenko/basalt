@@ -65,14 +65,17 @@ class KeypointVioEstimator : public VioEstimatorBase,
 
   static constexpr double prior_weight = 1e8;
 
-  KeypointVioEstimator(int64_t t_ns, const Sophus::SE3d& T_w_i,
-                       const Eigen::Vector3d& vel_w_i,
-                       const Eigen::Vector3d& bg, const Eigen::Vector3d& ba,
-                       double int_std_dev, const Eigen::Vector3d& g,
+  KeypointVioEstimator(double int_std_dev, const Eigen::Vector3d& g,
                        const basalt::Calibration<double>& calib,
                        const VioConfig& config);
 
-  ~KeypointVioEstimator() { processing_thread->join(); }
+  void initialize(int64_t t_ns, const Sophus::SE3d& T_w_i,
+                  const Eigen::Vector3d& vel_w_i, const Eigen::Vector3d& bg,
+                  const Eigen::Vector3d& ba);
+
+  void initialize(const Eigen::Vector3d& bg, const Eigen::Vector3d& ba);
+
+  virtual ~KeypointVioEstimator() { processing_thread->join(); }
 
   void addIMUToQueue(const ImuData::Ptr& data);
   void addVisionToQueue(const OpticalFlowResult::Ptr& data);
@@ -190,6 +193,8 @@ class KeypointVioEstimator : public VioEstimatorBase,
     return res;
   }
 
+  const Sophus::SE3d& getT_w_i_init() { return T_w_i_init; }
+
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
  private:
@@ -218,6 +223,9 @@ class KeypointVioEstimator : public VioEstimatorBase,
   size_t max_states;
   size_t max_kfs;
 
+  Sophus::SE3d T_w_i_init;
+
+  bool initialized;
   bool opt_started;
 
   VioConfig config;

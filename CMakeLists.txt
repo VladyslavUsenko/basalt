@@ -247,8 +247,11 @@ target_link_libraries(basalt_vio basalt)
 
 find_package(realsense2 QUIET)
 if(realsense2_FOUND)
-  add_executable(basalt_rs_t265_record src/rs_t265_record.cpp)
+  add_executable(basalt_rs_t265_record src/rs_t265_record.cpp src/device/rs_t265.cpp)
   target_link_libraries(basalt_rs_t265_record basalt realsense2::realsense2 ${OpenCV_LIBS})
+
+  add_executable(basalt_rs_t265_vio src/rs_t265_vio.cpp src/device/rs_t265.cpp)
+  target_link_libraries(basalt_rs_t265_vio basalt realsense2::realsense2)
 endif()
 
 
