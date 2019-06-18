@@ -18,6 +18,13 @@ set(BUILD_PANGOLIN_LIBREALSENSE2 OFF CACHE BOOL "Enable librealsense2")
 set(EIGEN_INCLUDE_DIR "${EIGEN3_INCLUDE_DIR}")
 set(EIGEN_INCLUDE_DIRS "${EIGEN3_INCLUDE_DIR}")
 
+
+# Hack to disable march=native in opengv
+macro(add_definitions)
+  if(NOT ${ARGV0} STREQUAL "-march=native")
+    _add_definitions(${ARGN})
+  endif()
+endmacro()
 add_subdirectory(opengv EXCLUDE_FROM_ALL)
 
 # Hack to disable CPack in Pangolin.

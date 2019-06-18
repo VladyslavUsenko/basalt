@@ -77,8 +77,8 @@ void alignButton();
 
 static const int knot_time = 3;
 static const double obs_std_dev = 0.5;
-static const double accel_std_dev = 0.23;
-static const double gyro_std_dev = 0.0027;
+static const double accel_std_dev = 0.5;
+static const double gyro_std_dev = 0.008;
 
 static const double accel_bias_std_dev = 0.00123;
 static const double gyro_bias_std_dev = 0.000234;
