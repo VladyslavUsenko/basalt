@@ -70,15 +70,15 @@ RsT265Device::RsT265Device(bool manual_exposure, int skip_frames,
     }
   }
 
-  if (manual_exposure) {
-    auto device = context.query_devices()[0];
-    std::cout << "Device " << device.get_info(RS2_CAMERA_INFO_NAME)
-              << " connected" << std::endl;
-    auto sens = device.query_sensors()[0];
+  auto device = context.query_devices()[0];
+  std::cout << "Device " << device.get_info(RS2_CAMERA_INFO_NAME)
+            << " connected" << std::endl;
+  sensor = device.query_sensors()[0];
 
+  if (manual_exposure) {
     std::cout << "Enabling manual exposure control" << std::endl;
-    sens.set_option(rs2_option::RS2_OPTION_ENABLE_AUTO_EXPOSURE, 0);
-    sens.set_option(rs2_option::RS2_OPTION_EXPOSURE, exposure_value * 1000);
+    sensor.set_option(rs2_option::RS2_OPTION_ENABLE_AUTO_EXPOSURE, 0);
+    sensor.set_option(rs2_option::RS2_OPTION_EXPOSURE, exposure_value * 1000);
   }
 }
 
@@ -153,6 +153,8 @@ void RsT265Device::start() {
         }
       }
     } else if (auto fs = frame.as<rs2::frameset>()) {
+      if (frame_counter++ % skip_frames != 0) return;
+
       OpticalFlowInput::Ptr data(new OpticalFlowInput);
       data->img_data.resize(NUM_CAMS);
 
@@ -214,9 +216,7 @@ void RsT265Device::stop() {
 bool RsT265Device::setExposure(double exposure) {
   if (!manual_exposure) return false;
 
-  auto device = context.query_devices()[0];
-  auto sens = device.query_sensors()[0];
-  sens.set_option(rs2_option::RS2_OPTION_EXPOSURE, exposure * 1000);
+  sensor.set_option(rs2_option::RS2_OPTION_EXPOSURE, exposure * 1000);
   return true;
 }
 
