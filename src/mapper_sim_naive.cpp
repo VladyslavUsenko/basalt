@@ -77,24 +77,12 @@ void alignButton();
 
 static const int knot_time = 3;
 static const double obs_std_dev = 0.5;
-static const double accel_std_dev = 0.5;
-static const double gyro_std_dev = 0.008;
-
-static const double accel_bias_std_dev = 0.00123;
-static const double gyro_bias_std_dev = 0.000234;
 
 Eigen::Vector3d g(0, 0, -9.81);
 
 // std::random_device rd{};
 // std::mt19937 gen{rd()};
 std::mt19937 gen{1};
-
-std::normal_distribution<> obs_noise_dist{0, obs_std_dev};
-std::normal_distribution<> gyro_noise_dist{0, gyro_std_dev};
-std::normal_distribution<> accel_noise_dist{0, accel_std_dev};
-
-std::normal_distribution<> gyro_bias_dist{0, gyro_bias_std_dev};
-std::normal_distribution<> accel_bias_dist{0, accel_bias_std_dev};
 
 // Simulated data
 
@@ -181,6 +169,16 @@ int main(int argc, char** argv) {
   }
 
   load_data(cam_calib_path);
+
+  std::normal_distribution<> obs_noise_dist{0, obs_std_dev};
+  std::normal_distribution<> gyro_noise_dist{
+      0, calib.dicreete_time_gyro_noise_std()};
+  std::normal_distribution<> accel_noise_dist{
+      0, calib.dicreete_time_accel_noise_std()};
+
+  std::normal_distribution<> gyro_bias_dist{0, calib.gyro_bias_std};
+  std::normal_distribution<> accel_bias_dist{0, calib.accel_bias_std};
+
   gen_data();
 
   setup_vio();
@@ -196,8 +194,10 @@ int main(int argc, char** argv) {
       data->accel = noisy_accel[i];
       data->gyro = noisy_gyro[i];
 
-      data->accel_cov.setConstant(accel_std_dev * accel_std_dev);
-      data->gyro_cov.setConstant(gyro_std_dev * gyro_std_dev);
+      data->accel_cov.setConstant(calib.dicreete_time_accel_noise_std() *
+                                  calib.dicreete_time_accel_noise_std());
+      data->gyro_cov.setConstant(calib.dicreete_time_gyro_noise_std() *
+                                 calib.dicreete_time_gyro_noise_std());
 
       vio->addIMUToQueue(data);
     }

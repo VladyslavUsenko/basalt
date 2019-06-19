@@ -85,24 +85,13 @@ constexpr int IMU_FREQ = 200;
 
 static const int knot_time = 3;
 static const double obs_std_dev = 0.5;
-static const double accel_std_dev = 0.5;
-static const double gyro_std_dev = 0.008;
-
-static const double accel_bias_std_dev = 0.00123;
-static const double gyro_bias_std_dev = 0.000234;
 
 Eigen::Vector3d g(0, 0, -9.81);
 
 // std::random_device rd{};
 // std::mt19937 gen{rd()};
 std::mt19937 gen{1};
-
 std::normal_distribution<> obs_noise_dist{0, obs_std_dev};
-std::normal_distribution<> gyro_noise_dist{0, gyro_std_dev};
-std::normal_distribution<> accel_noise_dist{0, accel_std_dev};
-
-std::normal_distribution<> gyro_bias_dist{0, gyro_bias_std_dev};
-std::normal_distribution<> accel_bias_dist{0, accel_bias_std_dev};
 
 // Simulated data
 
@@ -196,6 +185,7 @@ int main(int argc, char** argv) {
   }
 
   load_data(cam_calib_path);
+
   gen_data();
 
   setup_vio();
@@ -215,8 +205,10 @@ int main(int argc, char** argv) {
       data->accel = noisy_accel[i];
       data->gyro = noisy_gyro[i];
 
-      data->accel_cov.setConstant(accel_std_dev * accel_std_dev);
-      data->gyro_cov.setConstant(gyro_std_dev * gyro_std_dev);
+      data->accel_cov.setConstant(calib.dicreete_time_accel_noise_std() *
+                                  calib.dicreete_time_accel_noise_std());
+      data->gyro_cov.setConstant(calib.dicreete_time_gyro_noise_std() *
+                                 calib.dicreete_time_gyro_noise_std());
 
       vio->addIMUToQueue(data);
     }
@@ -592,6 +584,14 @@ void compute_projections() {
 }
 
 void gen_data() {
+  std::normal_distribution<> gyro_noise_dist{
+      0, calib.dicreete_time_gyro_noise_std()};
+  std::normal_distribution<> accel_noise_dist{
+      0, calib.dicreete_time_accel_noise_std()};
+
+  std::normal_distribution<> gyro_bias_dist{0, calib.gyro_bias_std};
+  std::normal_distribution<> accel_bias_dist{0, calib.accel_bias_std};
+
   for (size_t i = 0; i < calib.intrinsics.size(); i++) {
     images.emplace_back();
     images.back() =
@@ -862,12 +862,6 @@ void setup_vio() {
   std::cout << "Setting up filter: t_ns " << t_init_ns << std::endl;
   std::cout << "T_w_i\n" << T_w_i_init.matrix() << std::endl;
   std::cout << "vel_w_i " << vel_w_i_init.transpose() << std::endl;
-
-  Eigen::Vector3d gyro_bias_std;
-  gyro_bias_std.setConstant(gyro_bias_std_dev);
-
-  Eigen::Vector3d accel_bias_std;
-  accel_bias_std.setConstant(accel_bias_std_dev);
 
   basalt::VioConfig config;
 
