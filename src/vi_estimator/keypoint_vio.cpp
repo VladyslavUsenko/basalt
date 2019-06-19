@@ -62,6 +62,8 @@ KeypointVioEstimator::KeypointVioEstimator(
   marg_H.setZero(POSE_VEL_BIAS_SIZE, POSE_VEL_BIAS_SIZE);
   marg_b.setZero(POSE_VEL_BIAS_SIZE);
 
+  double prior_weight = 1.0 / (int_std_dev * int_std_dev);
+
   // prior on position
   marg_H.diagonal().head<3>().setConstant(prior_weight);
   // prior on yaw
