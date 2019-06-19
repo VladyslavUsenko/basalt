@@ -97,7 +97,7 @@ void image_save_worker() {
 
   while (!stop_workers) {
     if (image_data_queue.try_pop(img)) {
-      if (recording)
+      if (recording) {
         for (size_t cam_id = 0; cam_id < NUM_CAMS; ++cam_id) {
 #if CV_MAJOR_VERSION >= 3
           cam_data[cam_id] << img->t_ns << "," << img->t_ns << ".webp"
@@ -112,38 +112,39 @@ void image_save_worker() {
                                 << std::endl;
         }
 
-      for (size_t cam_id = 0; cam_id < NUM_CAMS; ++cam_id) {
-        basalt::ManagedImage<uint16_t>::Ptr image_raw =
-            img->img_data[cam_id].img;
+        for (size_t cam_id = 0; cam_id < NUM_CAMS; ++cam_id) {
+          basalt::ManagedImage<uint16_t>::Ptr image_raw =
+              img->img_data[cam_id].img;
 
-        if (!image_raw.get()) continue;
+          if (!image_raw.get()) continue;
 
-        cv::Mat image(image_raw->h, image_raw->w, CV_8U);
+          cv::Mat image(image_raw->h, image_raw->w, CV_8U);
 
-        uint8_t *dst = image.ptr();
-        const uint16_t *src = image_raw->ptr;
+          uint8_t *dst = image.ptr();
+          const uint16_t *src = image_raw->ptr;
 
-        for (size_t i = 0; i < image_raw->size(); i++) {
-          dst[i] = (src[i] >> 8);
-        }
+          for (size_t i = 0; i < image_raw->size(); i++) {
+            dst[i] = (src[i] >> 8);
+          }
 
 #if CV_MAJOR_VERSION >= 3
-        std::string filename = dataset_dir + "mav0/cam" +
-                               std::to_string(cam_id) + "/data/" +
-                               std::to_string(img->t_ns) + ".webp";
+          std::string filename = dataset_dir + "mav0/cam" +
+                                 std::to_string(cam_id) + "/data/" +
+                                 std::to_string(img->t_ns) + ".webp";
 
-        std::vector<int> compression_params = {cv::IMWRITE_WEBP_QUALITY,
-                                               webp_quality};
-        cv::imwrite(filename, image, compression_params);
+          std::vector<int> compression_params = {cv::IMWRITE_WEBP_QUALITY,
+                                                 webp_quality};
+          cv::imwrite(filename, image, compression_params);
 #else
-        std::string filename = dataset_dir + "mav0/cam" +
-                               std::to_string(cam_id) + "/data/" +
-                               std::to_string(img->t_ns) + ".jpg";
+          std::string filename = dataset_dir + "mav0/cam" +
+                                 std::to_string(cam_id) + "/data/" +
+                                 std::to_string(img->t_ns) + ".jpg";
 
-        std::vector<int> compression_params = {cv::IMWRITE_JPEG_QUALITY,
-                                               webp_quality};
-        cv::imwrite(filename, image, compression_params);
+          std::vector<int> compression_params = {cv::IMWRITE_JPEG_QUALITY,
+                                                 webp_quality};
+          cv::imwrite(filename, image, compression_params);
 #endif
+        }
       }
     } else {
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -272,6 +273,7 @@ void stopRecording() {
     exposure_data[0].close();
     exposure_data[1].close();
     imu0_data.close();
+    pose_data.close();
 
     std::cout << "Stopped recording dataset in " << dataset_dir << std::endl;
   }
@@ -298,6 +300,10 @@ int main(int argc, char *argv[]) {
     app.parse(argc, argv);
   } catch (const CLI::ParseError &e) {
     return app.exit(e);
+  }
+
+  if (dataset_path[dataset_path.length() - 1] != '/') {
+    dataset_path += '/';
   }
 
   bool show_gui = true;
@@ -378,6 +384,17 @@ int main(int argc, char *argv[]) {
           pangolin::GlFont::I().Text("Recording").Draw(30, 90);
         }
       };
+
+      iv->OnSelectionCallback =
+          [&](pangolin::ImageView::OnSelectionEventData o) {
+            int64_t curr_t_ns = std::chrono::high_resolution_clock::now()
+                                    .time_since_epoch()
+                                    .count();
+            if (std::abs(record_t_ns - curr_t_ns) > int64_t(2e9)) {
+              toggleRecording(dataset_path);
+              record_t_ns = curr_t_ns;
+            }
+          };
 
       img_view.push_back(iv);
       img_view_display.AddDisplay(*iv);

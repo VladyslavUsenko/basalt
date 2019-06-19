@@ -116,6 +116,7 @@ basalt::OpticalFlowBase::Ptr opt_flow_ptr;
 basalt::VioEstimatorBase::Ptr vio;
 
 int main(int argc, char** argv) {
+  bool terminate = false;
   bool show_gui = true;
   bool print_queue = false;
   std::string cam_calib_path;
@@ -239,7 +240,7 @@ int main(int argc, char** argv) {
 
   if (print_queue) {
     t5.reset(new std::thread([&]() {
-      while (true) {
+      while (!terminate) {
         std::cout << "opt_flow_ptr->input_queue "
                   << opt_flow_ptr->input_queue.size()
                   << " opt_flow_ptr->output_queue "
@@ -348,9 +349,11 @@ int main(int argc, char** argv) {
   }
 
   t265_device->stop();
+  terminate = true;
 
   if (t3.get()) t3->join();
   t4.join();
+  if (t5.get()) t5->join();
 
   return 0;
 }

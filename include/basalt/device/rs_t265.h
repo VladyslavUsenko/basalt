@@ -103,6 +103,8 @@ class RsT265Device {
   int skip_frames;
   int webp_quality;
 
+  int frame_counter = 0;
+
   Eigen::deque<RsIMUData> gyro_data_queue;
   std::shared_ptr<RsIMUData> prev_accel_data;
 
@@ -111,6 +113,7 @@ class RsT265Device {
   rs2::context context;
   rs2::config config;
   rs2::pipeline pipe;
+  rs2::sensor sensor;
 
   rs2::pipeline_profile profile;
 };
