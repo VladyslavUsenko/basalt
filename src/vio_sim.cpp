@@ -159,6 +159,7 @@ int main(int argc, char** argv) {
 
   bool show_gui = true;
   std::string cam_calib_path;
+  std::string result_path;
 
   CLI::App app{"App description"};
 
@@ -170,6 +171,9 @@ int main(int argc, char** argv) {
   app.add_option("--marg-data", marg_data_path,
                  "Folder to store marginalization data.")
       ->required();
+
+  app.add_option("--result-path", result_path,
+                 "Path to result file where the system will write RMSE ATE.");
 
   app.add_option("--num-points", NUM_POINTS, "Number of points in simulation.");
 
@@ -405,6 +409,15 @@ int main(int argc, char** argv) {
   t2.join();
   t3.join();
   // t4.join();
+
+  if (!result_path.empty()) {
+    double error = basalt::alignSVD(gt_frame_t_ns, vio_t_w_i, gt_frame_t_ns,
+                                    gt_frame_t_w_i);
+
+    std::ofstream os(result_path);
+    os << error << std::endl;
+    os.close();
+  }
 
   return 0;
 }

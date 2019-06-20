@@ -139,6 +139,7 @@ std::string marg_data_path;
 int main(int argc, char** argv) {
   bool show_gui = true;
   std::string cam_calib_path;
+  std::string result_path;
 
   CLI::App app{"App description"};
 
@@ -149,6 +150,9 @@ int main(int argc, char** argv) {
 
   app.add_option("--marg-data", marg_data_path, "Path to cache folder.")
       ->required();
+
+  app.add_option("--result-path", result_path,
+                 "Path to result file where the system will write RMSE ATE.");
 
   try {
     app.parse(argc, argv);
@@ -203,6 +207,17 @@ int main(int argc, char** argv) {
       pangolin::FinishFrame();
 
       std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    }
+  } else {
+    setup_points();
+    optimize();
+
+    if (!result_path.empty()) {
+      double error = alignButton();
+
+      std::ofstream os(result_path);
+      os << error << std::endl;
+      os.close();
     }
   }
 

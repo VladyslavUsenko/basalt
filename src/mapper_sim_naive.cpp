@@ -150,6 +150,7 @@ int main(int argc, char** argv) {
 
   bool show_gui = true;
   std::string cam_calib_path;
+  std::string result_path;
 
   CLI::App app{"App description"};
 
@@ -161,6 +162,9 @@ int main(int argc, char** argv) {
   app.add_option("--marg-data", marg_data_path,
                  "Folder to store marginalization data.")
       ->required();
+
+  app.add_option("--result-path", result_path,
+                 "Path to result file where the system will write RMSE ATE.");
 
   try {
     app.parse(argc, argv);
@@ -364,6 +368,29 @@ int main(int argc, char** argv) {
   t2.join();
   t3.join();
   // t4.join();
+
+  if (!result_path.empty()) {
+    Eigen::vector<Eigen::Vector3d> vio_t_w_i;
+
+    auto it = vis_map.find(kf_t_ns.back());
+
+    if (it != vis_map.end()) {
+      for (const auto& t : it->second->states)
+        vio_t_w_i.emplace_back(t.translation());
+
+    } else {
+      std::cerr << "Could not find results!!" << std::endl;
+    }
+
+    BASALT_ASSERT(kf_t_ns.size() == vio_t_w_i.size());
+
+    double error =
+        basalt::alignSVD(kf_t_ns, vio_t_w_i, gt_frame_t_ns, gt_frame_t_w_i);
+
+    std::ofstream os(result_path);
+    os << error << std::endl;
+    os.close();
+  }
 
   return 0;
 }
