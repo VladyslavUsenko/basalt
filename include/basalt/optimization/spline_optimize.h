@@ -89,8 +89,8 @@ class SplineOptimization {
 
   SplineOptimization(int64_t dt_ns = 1e7)
       : pose_var(1e-4),
-        lambda(1),
-        min_lambda(1e-6),
+        lambda(1e-12),
+        min_lambda(1e-12),
         max_lambda(10),
         spline(dt_ns),
         dt_ns(dt_ns) {
@@ -405,11 +405,18 @@ class SplineOptimization {
       std::cout << "[LINEARIZE] Error: " << lopt.error << " num points "
                 << lopt.num_points << std::endl;
 
+      lopt.accum.setup_solver();
+      Eigen::VectorXd Hdiag = lopt.accum.Hdiagonal();
+
       bool step = false;
       int max_iter = 10;
 
       while (!step && max_iter > 0) {
-        VectorX inc_full = -lopt.accum.solve(lambda);
+        Eigen::VectorXd Hdiag_lambda = Hdiag * lambda;
+        for (int i = 0; i < Hdiag_lambda.size(); i++)
+          Hdiag_lambda[i] = std::max(Hdiag_lambda[i], min_lambda);
+
+        VectorX inc_full = -lopt.accum.solve(&Hdiag_lambda);
 
         Calibration<Scalar> calib_backup = *calib;
         MocapCalibration<Scalar> mocap_calib_backup = *mocap_calib;

@@ -220,24 +220,11 @@ class SparseHashAccumulator {
     b.template segment<ROWS>(i) += data;
   }
 
-  inline VectorX solve(Scalar alpha = 1e-6) const {
-    SparseMatrix sm(b.rows(), b.rows());
-
-    auto t1 = std::chrono::high_resolution_clock::now();
+  inline void setup_solver() {
     std::vector<T> triplets;
     triplets.reserve(hash_map.size() * 36 + b.rows());
 
-    if (alpha > 0)
-      for (int i = 0; i < b.rows(); i++) {
-        triplets.emplace_back(i, i, alpha);
-      }
-
     for (const auto& kv : hash_map) {
-      // if (kv.first[2] != kv.second.rows()) std::cerr << "rows mismatch" <<
-      // std::endl;
-      // if (kv.first[3] != kv.second.cols()) std::cerr << "cols mismatch" <<
-      // std::endl;
-
       for (int i = 0; i < kv.second.rows(); i++) {
         for (int j = 0; j < kv.second.cols(); j++) {
           triplets.emplace_back(kv.first[0] + i, kv.first[1] + j,
@@ -246,14 +233,21 @@ class SparseHashAccumulator {
       }
     }
 
-    sm.setFromTriplets(triplets.begin(), triplets.end());
+    for (int i = 0; i < b.rows(); i++) {
+      triplets.emplace_back(i, i, std::numeric_limits<double>::min());
+    }
 
+    smm = SparseMatrix(b.rows(), b.rows());
+    smm.setFromTriplets(triplets.begin(), triplets.end());
+  }
+
+  inline VectorX Hdiagonal() const { return smm.diagonal(); }
+
+  inline VectorX solve(const VectorX* diagonal) const {
     auto t2 = std::chrono::high_resolution_clock::now();
 
-    // sm.diagonal() *= 1.01;
-
-    // Eigen::IOFormat CleanFmt(2);
-    // std::cerr << "sm\n" << sm.toDense().format(CleanFmt) << std::endl;
+    SparseMatrix sm = smm;
+    if (diagonal) sm.diagonal() += *diagonal;
 
     VectorX res;
 
@@ -272,15 +266,12 @@ class SparseHashAccumulator {
 
     auto t3 = std::chrono::high_resolution_clock::now();
 
-    auto elapsed1 =
-        std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
     auto elapsed2 =
         std::chrono::duration_cast<std::chrono::microseconds>(t3 - t2);
 
     if (print_info) {
-      std::cout << "Forming matrix: " << elapsed1.count() * 1e-6
-                << "s. Solving linear system: " << elapsed2.count() * 1e-6
-                << "s." << std::endl;
+      std::cout << "Solving linear system: " << elapsed2.count() * 1e-6 << "s."
+                << std::endl;
     }
 
     return res;
@@ -330,6 +321,8 @@ class SparseHashAccumulator {
   std::unordered_map<KeyT, MatrixX, KeyHash> hash_map;
 
   VectorX b;
+
+  SparseMatrix smm;
 };
 
 }  // namespace basalt

@@ -270,7 +270,11 @@ void NfrMapper::optimize(int num_iterations) {
     lopt.accum.iterative_solver = true;
     lopt.accum.print_info = true;
 
-    const Eigen::VectorXd inc = lopt.accum.solve();
+    lopt.accum.setup_solver();
+    Eigen::VectorXd Hdiag = lopt.accum.Hdiagonal();
+    Hdiag.setConstant(Hdiag.size(), 1e-6);
+
+    const Eigen::VectorXd inc = lopt.accum.solve(&Hdiag);
 
     // apply increment to poses
     for (auto& kv : frame_poses) {
