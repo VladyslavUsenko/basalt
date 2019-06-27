@@ -395,7 +395,7 @@ struct LinearizeSplineOpt : public LinearizeBase<Scalar> {
 
             for (size_t i = 0; i < acd.corner_pos.size(); i++) {
               this->linearize_point(acd.corner_pos[i], acd.corner_id[i],
-                                    T_c_w_m, cam, cph, err, num_inliers,
+                                    T_c_w_m, cam, &cph, err, num_inliers,
                                     reproj_err);
             }
 

@@ -60,7 +60,7 @@ class PosesOptimization {
       typename Eigen::vector<AprilgridCornersData>::const_iterator;
 
  public:
-  PosesOptimization() {}
+  PosesOptimization() : lambda(1e-6), min_lambda(1e-6), max_lambda(10) {}
 
   bool initializeIntrinsics(
       size_t cam_id, const Eigen::vector<Eigen::Vector2d> &corners,
@@ -146,19 +146,57 @@ class PosesOptimization {
     num_points = lopt.num_points;
     reprojection_error = lopt.reprojection_error;
 
-    Eigen::VectorXd inc = -lopt.accum.solve();
+    std::cout << "[LINEARIZE] Error: " << lopt.error << " num points "
+              << lopt.num_points << std::endl;
 
-    for (auto &kv : timestam_to_pose) {
-      kv.second *= Sophus::expd(inc.segment<POSE_SIZE>(offset_poses[kv.first]));
-    }
+    bool step = false;
+    int max_iter = 10;
 
-    for (size_t i = 0; i < calib->T_i_c.size(); i++) {
-      calib->T_i_c[i] *= Sophus::expd(inc.segment<POSE_SIZE>(offset_T_i_c[i]));
-    }
+    while (!step && max_iter > 0) {
+      Eigen::unordered_map<int64_t, Sophus::SE3d> timestam_to_pose_backup =
+          timestam_to_pose;
+      Eigen::vector<SE3> T_i_c_backup = calib->T_i_c;
+      Eigen::vector<GenericCamera<Scalar>> intrinsics_backup =
+          calib->intrinsics;
 
-    for (size_t i = 0; i < calib->intrinsics.size(); i++) {
-      auto &c = calib->intrinsics[i];
-      c.applyInc(inc.segment(offset_cam_intrinsics[i], c.getN()));
+      Eigen::VectorXd inc = -lopt.accum.solve(lambda);
+
+      for (auto &kv : timestam_to_pose) {
+        kv.second *=
+            Sophus::expd(inc.segment<POSE_SIZE>(offset_poses[kv.first]));
+      }
+
+      for (size_t i = 0; i < calib->T_i_c.size(); i++) {
+        calib->T_i_c[i] *=
+            Sophus::expd(inc.segment<POSE_SIZE>(offset_T_i_c[i]));
+      }
+
+      for (size_t i = 0; i < calib->intrinsics.size(); i++) {
+        auto &c = calib->intrinsics[i];
+        c.applyInc(inc.segment(offset_cam_intrinsics[i], c.getN()));
+      }
+
+      ComputeErrorPosesOpt<double> eopt(problem_size, timestam_to_pose, ccd);
+      tbb::parallel_reduce(april_range, eopt);
+
+      if (eopt.error <= lopt.error) {
+        std::cout << "\t[ACCEPTED] lambda:" << lambda
+                  << " Error: " << eopt.error << " num points "
+                  << eopt.num_points << std::endl;
+
+        lambda = std::max(min_lambda, lambda / 2);
+        step = true;
+      } else {
+        std::cout << "\t[REJECTED] lambda:" << lambda
+                  << " Error: " << eopt.error << " num points "
+                  << eopt.num_points << std::endl;
+        lambda = std::min(max_lambda, 2 * lambda);
+
+        timestam_to_pose = timestam_to_pose_backup;
+        calib->T_i_c = T_i_c_backup;
+        calib->intrinsics = intrinsics_backup;
+      }
+      max_iter--;
     }
   }
 
@@ -240,6 +278,8 @@ class PosesOptimization {
  private:
   typename LinearizePosesOpt<
       Scalar, SparseHashAccumulator<Scalar>>::CalibCommonData ccd;
+
+  Scalar lambda, min_lambda, max_lambda;
 
   size_t problem_size;
 

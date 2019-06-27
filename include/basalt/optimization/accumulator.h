@@ -220,16 +220,17 @@ class SparseHashAccumulator {
     b.template segment<ROWS>(i) += data;
   }
 
-  inline VectorX solve() const {
+  inline VectorX solve(Scalar alpha = 1e-6) const {
     SparseMatrix sm(b.rows(), b.rows());
 
     auto t1 = std::chrono::high_resolution_clock::now();
     std::vector<T> triplets;
     triplets.reserve(hash_map.size() * 36 + b.rows());
 
-    for (int i = 0; i < b.rows(); i++) {
-      triplets.emplace_back(i, i, 0.000001);
-    }
+    if (alpha > 0)
+      for (int i = 0; i < b.rows(); i++) {
+        triplets.emplace_back(i, i, alpha);
+      }
 
     for (const auto& kv : hash_map) {
       // if (kv.first[2] != kv.second.rows()) std::cerr << "rows mismatch" <<
