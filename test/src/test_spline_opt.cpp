@@ -61,7 +61,7 @@ TEST(SplineOpt, SplineOptTest) {
   double error;
   double reprojection_error;
   int num_inliers;
-  for (int i = 0; i < 5; i++)
+  for (int i = 0; i < 10; i++)
     spline_opt.optimize(false, true, false, false, true, false, 0.002, error,
                         num_inliers, reprojection_error);
 
