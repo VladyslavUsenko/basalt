@@ -631,6 +631,206 @@ struct LinearizeSplineOpt : public LinearizeBase<Scalar> {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
+template <int N, typename Scalar>
+struct ComputeErrorSplineOpt : public LinearizeBase<Scalar> {
+  typedef Sophus::SE3<Scalar> SE3;
+
+  typedef Eigen::Matrix<Scalar, 2, 1> Vector2;
+  typedef Eigen::Matrix<Scalar, 3, 1> Vector3;
+  typedef Eigen::Matrix<Scalar, 4, 1> Vector4;
+  typedef Eigen::Matrix<Scalar, 6, 1> Vector6;
+
+  typedef Eigen::Matrix<Scalar, 3, 3> Matrix3;
+  typedef Eigen::Matrix<Scalar, 6, 6> Matrix6;
+
+  typedef Eigen::Matrix<Scalar, 2, 4> Matrix24;
+
+  typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1> VectorX;
+  typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> MatrixX;
+
+  typedef Se3Spline<N, Scalar> SplineT;
+
+  typedef typename Eigen::deque<PoseData>::const_iterator PoseDataIter;
+  typedef typename Eigen::deque<GyroData>::const_iterator GyroDataIter;
+  typedef typename Eigen::deque<AccelData>::const_iterator AccelDataIter;
+  typedef typename Eigen::deque<AprilgridCornersData>::const_iterator
+      AprilgridCornersDataIter;
+  typedef
+      typename Eigen::deque<MocapPoseData>::const_iterator MocapPoseDataIter;
+
+  // typedef typename LinearizeBase<Scalar>::PoseCalibH PoseCalibH;
+  typedef typename LinearizeBase<Scalar>::CalibCommonData CalibCommonData;
+
+  Scalar error;
+  Scalar reprojection_error;
+  int num_points;
+
+  size_t opt_size;
+
+  const SplineT* spline;
+
+  ComputeErrorSplineOpt(size_t opt_size, const SplineT* spl,
+                        const CalibCommonData& common_data,
+                        const SplineT* spl_lin = nullptr)
+      : opt_size(opt_size), spline(spl) {
+    this->common_data = common_data;
+
+    error = 0;
+    reprojection_error = 0;
+    num_points = 0;
+
+    BASALT_ASSERT(spline);
+  }
+
+  ComputeErrorSplineOpt(const ComputeErrorSplineOpt& other, tbb::split)
+      : opt_size(other.opt_size), spline(other.spline) {
+    this->common_data = other.common_data;
+    error = 0;
+    reprojection_error = 0;
+    num_points = 0;
+  }
+
+  void operator()(const tbb::blocked_range<PoseDataIter>& r) {
+    for (const PoseData& pm : r) {
+      int64_t time_ns = pm.timestamp_ns;
+
+      BASALT_ASSERT_STREAM(
+          time_ns >= spline->minTimeNs(),
+          "time " << time_ns << " spline.minTimeNs() " << spline->minTimeNs());
+
+      // Residual from current value of spline
+      Vector3 residual_pos =
+          spline->positionResidual(time_ns, pm.data.translation());
+      Vector3 residual_rot =
+          spline->orientationResidual(time_ns, pm.data.so3());
+
+      // std::cout << "J_pos.start_idx " << J_pos.start_idx << std::endl;
+
+      const Scalar& pose_var_inv = this->common_data.pose_var_inv;
+
+      error += pose_var_inv *
+               (residual_pos.squaredNorm() + residual_rot.squaredNorm());
+    }
+  }
+
+  void operator()(const tbb::blocked_range<AccelDataIter>& r) {
+    // size_t num_knots = spline.numKnots();
+    // size_t bias_block_offset = POSE_SIZE * num_knots;
+
+    for (const AccelData& pm : r) {
+      int64_t t = pm.timestamp_ns;
+
+      //      std::cout << "time " << t << std::endl;
+      //      std::cout << "sline.minTime() " << spline.minTime() << std::endl;
+
+      BASALT_ASSERT_STREAM(
+          t >= spline->minTimeNs(),
+          "t " << t << " spline.minTime() " << spline->minTimeNs());
+      BASALT_ASSERT_STREAM(
+          t <= spline->maxTimeNs(),
+          "t " << t << " spline.maxTime() " << spline->maxTimeNs());
+
+      Vector3 residual = spline->accelResidual(
+          t, pm.data, this->common_data.calibration->calib_accel_bias,
+          *(this->common_data.g));
+
+      const Scalar& accel_var_inv = this->common_data.accel_var_inv;
+
+      error += accel_var_inv * residual.squaredNorm();
+    }
+  }
+
+  void operator()(const tbb::blocked_range<GyroDataIter>& r) {
+    // size_t num_knots = spline.numKnots();
+    // size_t bias_block_offset = POSE_SIZE * num_knots;
+
+    for (const GyroData& pm : r) {
+      int64_t t_ns = pm.timestamp_ns;
+
+      BASALT_ASSERT(t_ns >= spline->minTimeNs());
+      BASALT_ASSERT(t_ns <= spline->maxTimeNs());
+
+      const Scalar& gyro_var_inv = this->common_data.gyro_var_inv;
+
+      Vector3 residual = spline->gyroResidual(
+          t_ns, pm.data, this->common_data.calibration->calib_gyro_bias);
+
+      error += gyro_var_inv * residual.squaredNorm();
+    }
+  }
+
+  void operator()(const tbb::blocked_range<AprilgridCornersDataIter>& r) {
+    for (const AprilgridCornersData& acd : r) {
+      std::visit(
+          [&](const auto& cam) {
+            int64_t time_ns = acd.timestamp_ns +
+                              this->common_data.calibration->cam_time_offset_ns;
+
+            if (time_ns < spline->minTimeNs() || time_ns >= spline->maxTimeNs())
+              return;
+
+            SE3 T_w_i = spline->pose(time_ns);
+            SE3 T_w_c =
+                T_w_i * this->common_data.calibration->T_i_c[acd.cam_id];
+            SE3 T_c_w = T_w_c.inverse();
+            Eigen::Matrix4d T_c_w_m = T_c_w.matrix();
+
+            double err = 0;
+            double reproj_err = 0;
+            int num_inliers = 0;
+
+            for (size_t i = 0; i < acd.corner_pos.size(); i++) {
+              this->linearize_point(acd.corner_pos[i], acd.corner_id[i],
+                                    T_c_w_m, cam, nullptr, err, num_inliers,
+                                    reproj_err);
+            }
+
+            error += err;
+            reprojection_error += reproj_err;
+            num_points += num_inliers;
+          },
+          this->common_data.calibration->intrinsics[acd.cam_id].variant);
+    }
+  }
+
+  void operator()(const tbb::blocked_range<MocapPoseDataIter>& r) {
+    for (const MocapPoseData& pm : r) {
+      int64_t time_ns =
+          pm.timestamp_ns +
+          this->common_data.mocap_calibration->mocap_time_offset_ns;
+
+      if (time_ns < spline->minTimeNs() || time_ns >= spline->maxTimeNs())
+        continue;
+
+      BASALT_ASSERT_STREAM(
+          time_ns >= spline->minTimeNs(),
+          "time " << time_ns << " spline.minTimeNs() " << spline->minTimeNs());
+
+      const SE3 T_moc_w = this->common_data.mocap_calibration->T_moc_w;
+      const SE3 T_i_mark = this->common_data.mocap_calibration->T_i_mark;
+
+      const SE3 T_w_i = spline->pose(time_ns);
+      const SE3 T_moc_mark = T_moc_w * T_w_i * T_i_mark;
+
+      const SE3 T_mark_moc_meas = pm.data.inverse();
+
+      Vector6 residual = Sophus::logd(T_mark_moc_meas * T_moc_mark);
+
+      const Scalar& mocap_var_inv = this->common_data.mocap_var_inv;
+
+      error += mocap_var_inv * residual.squaredNorm();
+    }
+  }
+
+  void join(ComputeErrorSplineOpt& rhs) {
+    error += rhs.error;
+    reprojection_error += rhs.reprojection_error;
+    num_points += rhs.num_points;
+  }
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+};
+
 }  // namespace basalt
 
 #endif

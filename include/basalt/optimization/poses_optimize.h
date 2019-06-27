@@ -155,9 +155,7 @@ class PosesOptimization {
     while (!step && max_iter > 0) {
       Eigen::unordered_map<int64_t, Sophus::SE3d> timestam_to_pose_backup =
           timestam_to_pose;
-      Eigen::vector<SE3> T_i_c_backup = calib->T_i_c;
-      Eigen::vector<GenericCamera<Scalar>> intrinsics_backup =
-          calib->intrinsics;
+      Calibration<Scalar> calib_backup = *calib;
 
       Eigen::VectorXd inc = -lopt.accum.solve(lambda);
 
@@ -179,22 +177,26 @@ class PosesOptimization {
       ComputeErrorPosesOpt<double> eopt(problem_size, timestam_to_pose, ccd);
       tbb::parallel_reduce(april_range, eopt);
 
-      if (eopt.error <= lopt.error) {
-        std::cout << "\t[ACCEPTED] lambda:" << lambda
-                  << " Error: " << eopt.error << " num points "
-                  << eopt.num_points << std::endl;
-
-        lambda = std::max(min_lambda, lambda / 2);
-        step = true;
-      } else {
+      if (eopt.error > lopt.error) {
         std::cout << "\t[REJECTED] lambda:" << lambda
                   << " Error: " << eopt.error << " num points "
                   << eopt.num_points << std::endl;
         lambda = std::min(max_lambda, 2 * lambda);
 
         timestam_to_pose = timestam_to_pose_backup;
-        calib->T_i_c = T_i_c_backup;
-        calib->intrinsics = intrinsics_backup;
+        *calib = calib_backup;
+      } else {
+        std::cout << "\t[ACCEPTED] lambda:" << lambda
+                  << " Error: " << eopt.error << " num points "
+                  << eopt.num_points << std::endl;
+
+        lambda = std::max(min_lambda, lambda / 2);
+
+        error = eopt.error;
+        num_points = eopt.num_points;
+        reprojection_error = eopt.reprojection_error;
+
+        step = true;
       }
       max_iter--;
     }

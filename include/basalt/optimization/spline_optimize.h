@@ -88,7 +88,12 @@ class SplineOptimization {
   typedef Se3Spline<N, Scalar> SplineT;
 
   SplineOptimization(int64_t dt_ns = 1e7)
-      : pose_var(1e-4), spline(dt_ns), dt_ns(dt_ns) {
+      : pose_var(1e-4),
+        lambda(1),
+        min_lambda(1e-6),
+        max_lambda(10),
+        spline(dt_ns),
+        dt_ns(dt_ns) {
     pose_var_inv = 1.0 / pose_var;
 
     // reasonable default values
@@ -360,45 +365,101 @@ class SplineOptimization {
 
       // auto t1 = std::chrono::high_resolution_clock::now();
 
-      if (use_poses) {
-        tbb::blocked_range<PoseDataIter> pose_range(pose_measurements.begin(),
-                                                    pose_measurements.end());
+      tbb::blocked_range<PoseDataIter> pose_range(pose_measurements.begin(),
+                                                  pose_measurements.end());
+      tbb::blocked_range<AprilgridCornersDataIter> april_range(
+          aprilgrid_corners_measurements.begin(),
+          aprilgrid_corners_measurements.end());
 
+      tbb::blocked_range<MocapPoseDataIter> mocap_pose_range(
+          mocap_measurements.begin(), mocap_measurements.end());
+
+      tbb::blocked_range<AccelDataIter> accel_range(accel_measurements.begin(),
+                                                    accel_measurements.end());
+
+      tbb::blocked_range<GyroDataIter> gyro_range(gyro_measurements.begin(),
+                                                  gyro_measurements.end());
+
+      if (use_poses) {
         tbb::parallel_reduce(pose_range, lopt);
         // lopt(pose_range);
       }
 
       if (use_april_corners) {
-        tbb::blocked_range<AprilgridCornersDataIter> april_range(
-            aprilgrid_corners_measurements.begin(),
-            aprilgrid_corners_measurements.end());
         tbb::parallel_reduce(april_range, lopt);
         // lopt(april_range);
       }
 
       if (use_mocap) {
-        tbb::blocked_range<MocapPoseDataIter> mocap_pose_range(
-            mocap_measurements.begin(), mocap_measurements.end());
         tbb::parallel_reduce(mocap_pose_range, lopt);
         // lopt(mocap_pose_range);
       }
 
-      tbb::blocked_range<AccelDataIter> accel_range(accel_measurements.begin(),
-                                                    accel_measurements.end());
       tbb::parallel_reduce(accel_range, lopt);
-
-      tbb::blocked_range<GyroDataIter> gyro_range(gyro_measurements.begin(),
-                                                  gyro_measurements.end());
-
       tbb::parallel_reduce(gyro_range, lopt);
-
-      VectorX inc_full = -lopt.accum.solve();
-
-      applyInc(inc_full, offset_cam_intrinsics);
 
       error = lopt.error;
       num_points = lopt.num_points;
       reprojection_error = lopt.reprojection_error;
+
+      std::cout << "[LINEARIZE] Error: " << lopt.error << " num points "
+                << lopt.num_points << std::endl;
+
+      bool step = false;
+      int max_iter = 10;
+
+      while (!step && max_iter > 0) {
+        VectorX inc_full = -lopt.accum.solve(lambda);
+
+        Calibration<Scalar> calib_backup = *calib;
+        MocapCalibration<Scalar> mocap_calib_backup = *mocap_calib;
+        SplineT spline_backup = spline;
+        Vector3 g_backup = g;
+
+        applyInc(inc_full, offset_cam_intrinsics);
+
+        ComputeErrorSplineOpt eopt(opt_size, &spline, ccd);
+        if (use_poses) {
+          tbb::parallel_reduce(pose_range, eopt);
+        }
+
+        if (use_april_corners) {
+          tbb::parallel_reduce(april_range, eopt);
+        }
+
+        if (use_mocap) {
+          tbb::parallel_reduce(mocap_pose_range, eopt);
+        }
+
+        tbb::parallel_reduce(accel_range, eopt);
+        tbb::parallel_reduce(gyro_range, eopt);
+
+        if (eopt.error > lopt.error) {
+          std::cout << "\t[REJECTED] lambda:" << lambda
+                    << " Error: " << eopt.error << " num points "
+                    << eopt.num_points << std::endl;
+          lambda = std::min(max_lambda, 2 * lambda);
+
+          spline = spline_backup;
+          *calib = calib_backup;
+          *mocap_calib = mocap_calib_backup;
+          g = g_backup;
+
+        } else {
+          std::cout << "\t[ACCEPTED] lambda:" << lambda
+                    << " Error: " << eopt.error << " num points "
+                    << eopt.num_points << std::endl;
+
+          lambda = std::max(min_lambda, lambda / 2);
+
+          error = eopt.error;
+          num_points = eopt.num_points;
+          reprojection_error = eopt.reprojection_error;
+
+          step = true;
+        }
+        max_iter--;
+      }
     }
   }
 
@@ -460,6 +521,8 @@ class SplineOptimization {
     calib->cam_time_offset_ns +=
         1e9 * inc_full[mocap_block_offset + 2 * POSE_SIZE + 1];
   }
+
+  Scalar lambda, min_lambda, max_lambda;
 
   int64_t min_time_us, max_time_us;
 
