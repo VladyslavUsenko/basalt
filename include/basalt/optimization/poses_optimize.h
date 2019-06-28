@@ -60,7 +60,7 @@ class PosesOptimization {
       typename Eigen::vector<AprilgridCornersData>::const_iterator;
 
  public:
-  PosesOptimization() : lambda(1e-12), min_lambda(1e-12), max_lambda(10) {}
+  PosesOptimization() : lambda(1e-6), min_lambda(1e-12), max_lambda(10) {}
 
   bool initializeIntrinsics(
       size_t cam_id, const Eigen::vector<Eigen::Vector2d> &corners,
