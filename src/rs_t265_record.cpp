@@ -85,6 +85,7 @@ static constexpr int NUM_CAMS = basalt::RsT265Device::NUM_CAMS;
 static constexpr int NUM_WORKERS = 8;
 
 std::ofstream cam_data[NUM_CAMS], exposure_data[NUM_CAMS], imu0_data, pose_data;
+std::mutex cam_mutex[NUM_CAMS];
 
 std::vector<std::thread> worker_threads;
 std::thread imu_worker_thread, pose_worker_thread;
@@ -99,6 +100,7 @@ void image_save_worker() {
     if (image_data_queue.try_pop(img)) {
       if (recording) {
         for (size_t cam_id = 0; cam_id < NUM_CAMS; ++cam_id) {
+          std::scoped_lock<std::mutex> lock(cam_mutex[cam_id]);
 #if CV_MAJOR_VERSION >= 3
           cam_data[cam_id] << img->t_ns << "," << img->t_ns << ".webp"
                            << std::endl;
