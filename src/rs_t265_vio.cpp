@@ -246,7 +246,7 @@ int main(int argc, char** argv) {
                   << " opt_flow_ptr->output_queue "
                   << opt_flow_ptr->output_queue->size() << " out_state_queue "
                   << out_state_queue.size() << std::endl;
-        sleep(1);
+        std::this_thread::sleep_for(std::chrono::seconds(1));
       }
     }));
   }
