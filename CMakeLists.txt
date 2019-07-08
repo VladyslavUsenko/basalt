@@ -202,6 +202,7 @@ include_directories(include)
 add_library(basalt SHARED
   src/io/dataset_io.cpp
   src/io/marg_data_io.cpp
+  src/calibration/aprilgrid.cpp
   src/calibration/cam_calib.cpp
   src/calibration/cam_imu_calib.cpp
   src/calibration/calibraiton_helper.cpp

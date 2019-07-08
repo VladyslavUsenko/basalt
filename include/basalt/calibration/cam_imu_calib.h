@@ -61,7 +61,7 @@ class SplineOptimization;
 class CamImuCalib {
  public:
   CamImuCalib(const std::string &dataset_path, const std::string &dataset_type,
-              const std::string &cache_path,
+              const std::string &aprilgrid_path, const std::string &cache_path,
               const std::string &cache_dataset_name, int skip_images,
               const std::vector<double> &imu_noise, bool show_gui = true);
 
@@ -109,8 +109,6 @@ class CamImuCalib {
  private:
   static constexpr int UI_WIDTH = 300;
 
-  AprilGrid april_grid;
-
   VioDatasetPtr vio_dataset;
 
   tbb::concurrent_unordered_map<TimeCamId, CalibCornerData> calib_corners;
@@ -126,6 +124,9 @@ class CamImuCalib {
 
   std::string dataset_path;
   std::string dataset_type;
+
+  AprilGrid april_grid;
+
   std::string cache_path;
   std::string cache_dataset_name;
 

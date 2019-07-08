@@ -45,11 +45,13 @@ namespace basalt {
 
 CamImuCalib::CamImuCalib(const std::string &dataset_path,
                          const std::string &dataset_type,
+                         const std::string &aprilgrid_path,
                          const std::string &cache_path,
                          const std::string &cache_dataset_name, int skip_images,
                          const std::vector<double> &imu_noise, bool show_gui)
     : dataset_path(dataset_path),
       dataset_type(dataset_type),
+      april_grid(aprilgrid_path),
       cache_path(ensure_trailing_slash(cache_path)),
       cache_dataset_name(cache_dataset_name),
       skip_images(skip_images),

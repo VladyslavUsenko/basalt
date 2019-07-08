@@ -45,6 +45,7 @@ int main(int argc, char **argv) {
 
   std::string dataset_path;
   std::string dataset_type;
+  std::string aprilgrid_path;
   std::string result_path;
   std::vector<std::string> cam_types;
   std::string cache_dataset_name = "calib-cam";
@@ -56,6 +57,10 @@ int main(int argc, char **argv) {
   app.add_option("--result-path", result_path, "Path to result folder")
       ->required();
   app.add_option("--dataset-type", dataset_type, "Dataset type (euroc, bag)")
+      ->required();
+
+  app.add_option("--aprilgrid", aprilgrid_path,
+                 "Path to Aprilgrid config file)")
       ->required();
 
   app.add_option("--cache-name", cache_dataset_name,
@@ -72,7 +77,7 @@ int main(int argc, char **argv) {
     return app.exit(e);
   }
 
-  basalt::CamCalib cv(dataset_path, dataset_type, result_path,
+  basalt::CamCalib cv(dataset_path, dataset_type, aprilgrid_path, result_path,
                       cache_dataset_name, skip_images, cam_types);
 
   cv.renderingLoop();

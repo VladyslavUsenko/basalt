@@ -60,9 +60,9 @@ class PosesOptimization;
 class CamCalib {
  public:
   CamCalib(const std::string &dataset_path, const std::string &dataset_type,
-           const std::string &cache_path, const std::string &cache_dataset_name,
-           int skip_images, const std::vector<std::string> &cam_types,
-           bool show_gui = true);
+           const std::string &aprilgrid_path, const std::string &cache_path,
+           const std::string &cache_dataset_name, int skip_images,
+           const std::vector<std::string> &cam_types, bool show_gui = true);
 
   ~CamCalib();
 
@@ -108,8 +108,6 @@ class CamCalib {
 
   // typedef Calibration::Ptr CalibrationPtr;
 
-  AprilGrid april_grid;
-
   VioDatasetPtr vio_dataset;
   // CalibrationPtr calib;
 
@@ -128,6 +126,9 @@ class CamCalib {
 
   std::string dataset_path;
   std::string dataset_type;
+
+  AprilGrid april_grid;
+
   std::string cache_path;
   std::string cache_dataset_name;
 

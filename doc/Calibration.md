@@ -15,12 +15,13 @@ wget http://vision.in.tum.de/tumvi/calibrated/512_16/dataset-calib-imu1_512_16.b
 ### Camera calibration
 Run the camera calibration:
 ```
-basalt_calibrate --dataset-path ~/tumvi_calib_data/dataset-calib-cam3_512_16.bag --dataset-type bag --result-path ~/tumvi_calib_result/ --cam-types ds ds
+basalt_calibrate --dataset-path ~/tumvi_calib_data/dataset-calib-cam3_512_16.bag --dataset-type bag --aprilgrid /usr/etc/basalt/aprilgrid_6x6.json --result-path ~/tumvi_calib_result/ --cam-types ds ds
 ```
 The command line options have the following meaning:
 * `--dataset-path` path to the dataset.
 * `--dataset-type` type of the datset. Currently only `bag` and `euroc` formats of the datasets are supported.
 * `--result-path` path to the folder where the resulting calibration and intermediate results will be stored.
+* `--aprilgrid` path to the configuration file for the aprilgrid.
 * `--cam-types` camera models for the image streams in the dataset. For more detais see [arXiv:1807.08957](https://arxiv.org/abs/1807.08957).
 
 After that, you should see the calibration GUI:
@@ -51,7 +52,7 @@ You can also control the process using the following buttons:
 ### Camera + IMU + Mocap calibration
 After calibrating the camera you can run the camera + IMU + Mocap calibration. The result path should point to the **same folder as before**:
 ```
-basalt_calibrate_imu --dataset-path ~/tumvi_calib_data/dataset-calib-imu1_512_16.bag --dataset-type bag --result-path ~/tumvi_calib_result/ --gyro-noise-std 0.000282 --accel-noise-std 0.016 --gyro-bias-std 0.0001 --accel-bias-std 0.001
+basalt_calibrate_imu --dataset-path ~/tumvi_calib_data/dataset-calib-imu1_512_16.bag --dataset-type bag --aprilgrid /usr/etc/basalt/aprilgrid_6x6.json --result-path ~/tumvi_calib_result/ --gyro-noise-std 0.000282 --accel-noise-std 0.016 --gyro-bias-std 0.0001 --accel-bias-std 0.001
 ```
 The command line options for the IMU noise are continous-time and defined as in [Kalibr](https://github.com/ethz-asl/kalibr/wiki/IMU-Noise-Model):
 * `--gyro-noise-std` gyroscope white noise.
@@ -106,13 +107,13 @@ wget http://robotics.ethz.ch/~asl-datasets/ijrr_euroc_mav_dataset/calibration_da
 ### Camera calibration
 Run the camera calibration:
 ```
-basalt_calibrate --dataset-path ~/euroc_calib_data/cam_april.bag --dataset-type bag --result-path ~/euroc_calib_result/ --cam-types ds ds
+basalt_calibrate --dataset-path ~/euroc_calib_data/cam_april.bag --dataset-type bag --aprilgrid /usr/etc/basalt/aprilgrid_6x6.json --result-path ~/euroc_calib_result/ --cam-types ds ds
 ```
 ![euroc_cam_calib](/doc/img/euroc_cam_calib.png)
 
 ### Camera + IMU calibration
 After calibrating the camera you can run the camera + IMU calibration. The result-path should point to the same folder as before:
 ```
-basalt_calibrate_imu --dataset-path ~/euroc_calib_data/imu_april.bag --dataset-type bag --result-path ~/euroc_calib_result/ --gyro-noise-std 0.000282 --accel-noise-std 0.016 --gyro-bias-std 0.0001 --accel-bias-std 0.001
+basalt_calibrate_imu --dataset-path ~/euroc_calib_data/imu_april.bag --dataset-type bag --aprilgrid /usr/etc/basalt/aprilgrid_6x6.json --result-path ~/euroc_calib_result/ --gyro-noise-std 0.000282 --accel-noise-std 0.016 --gyro-bias-std 0.0001 --accel-bias-std 0.001
 ```
 ![euroc_imu_calib](/doc/img/euroc_imu_calib.png)
