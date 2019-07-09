@@ -67,7 +67,7 @@ The buttons in the GUI are located in the order which you need to follow to cali
 * `init_cam_imu` initializes the rotation between camera and IMU by aligning rotation velocities of the camera to the gyro data.
 * `init_opt` initializes the optimization. Shows reprojected corners in magenta and the estimated values from the spline as solid lines below.
 * `optimize` runs an iteration of the optimization. You should press it several times until convergence before proceeding to next steps.
-* `init_mocap` initializes the transformation from the Aprilgrid calibration pattern to the Mocap coordinate system. **Currently we assume that the orientation of the Mocap marker frame is approximately aligned with IMU axes**.
+* `init_mocap` initializes the transformation from the Aprilgrid calibration pattern to the Mocap coordinate system.
 * `save_calib` save the current calibration as `calibration.json` in the result folder.
 * `save_mocap_calib` save the current Mocap to IMU calibration as `mocap_calibration.json` in the result folder.
 

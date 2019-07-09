@@ -484,6 +484,83 @@ void CamImuCalib::initMocap() {
     return;
   }
 
+  {
+    std::vector<int64_t> timestamps_cam;
+    Eigen::vector<Eigen::Vector3d> rot_vel_mocap;
+    Eigen::vector<Eigen::Vector3d> rot_vel_imu;
+
+    Sophus::SO3d R_i_mark_init = calib_opt->mocap_calib->T_i_mark.so3();
+
+    for (size_t i = 1; i < vio_dataset->get_gt_timestamps().size(); i++) {
+      int64_t timestamp0_ns = vio_dataset->get_gt_timestamps()[i - 1];
+      int64_t timestamp1_ns = vio_dataset->get_gt_timestamps()[i];
+
+      Sophus::SE3d T_a_mark0 = vio_dataset->get_gt_pose_data()[i - 1];
+      Sophus::SE3d T_a_mark1 = vio_dataset->get_gt_pose_data()[i];
+
+      double dt = (timestamp1_ns - timestamp0_ns) * 1e-9;
+
+      Eigen::Vector3d rot_vel_c0 =
+          R_i_mark_init * (T_a_mark0.so3().inverse() * T_a_mark1.so3()).log() /
+          dt;
+
+      timestamps_cam.push_back(timestamp0_ns);
+      rot_vel_mocap.push_back(rot_vel_c0);
+    }
+
+    for (size_t j = 0; j < timestamps_cam.size(); j++) {
+      int idx = -1;
+      int64_t min_dist = std::numeric_limits<int64_t>::max();
+
+      for (size_t i = 1; i < vio_dataset->get_gyro_data().size(); i++) {
+        int64_t dist =
+            vio_dataset->get_gyro_data()[i].timestamp_ns - timestamps_cam[j];
+        if (std::abs(dist) < min_dist) {
+          min_dist = std::abs(dist);
+          idx = i;
+        }
+      }
+
+      rot_vel_imu.push_back(vio_dataset->get_gyro_data()[idx].data);
+    }
+
+    BASALT_ASSERT_STREAM(rot_vel_mocap.size() == rot_vel_imu.size(),
+                         "rot_vel_cam.size() " << rot_vel_mocap.size()
+                                               << " rot_vel_imu.size() "
+                                               << rot_vel_imu.size());
+
+    //  R_i_c * rot_vel_mocap = rot_vel_imu
+    //  R_i_c * rot_vel_mocap * rot_vel_mocap.T = rot_vel_imu * rot_vel_mocap.T
+    //  R_i_c  = rot_vel_imu * rot_vel_mocap.T * (rot_vel_mocap *
+    //  rot_vel_mocap.T)^-1;
+
+    Eigen::Matrix<double, 3, Eigen::Dynamic> rot_vel_mocap_m(
+        3, rot_vel_mocap.size()),
+        rot_vel_imu_m(3, rot_vel_imu.size());
+
+    for (size_t i = 0; i < rot_vel_mocap.size(); i++) {
+      rot_vel_mocap_m.col(i) = rot_vel_mocap[i];
+      rot_vel_imu_m.col(i) = rot_vel_imu[i];
+    }
+
+    Eigen::Matrix3d R_i_mark =
+        rot_vel_imu_m * rot_vel_mocap_m.transpose() *
+        (rot_vel_mocap_m * rot_vel_mocap_m.transpose()).inverse();
+
+    // std::cout << "raw R_i_c0\n" << R_i_c0 << std::endl;
+
+    Eigen::AngleAxisd aa(R_i_mark);  // RotationMatrix to AxisAngle
+    R_i_mark = aa.toRotationMatrix();
+
+    Sophus::SE3d T_i_mark_new(R_i_mark, Eigen::Vector3d::Zero());
+    calib_opt->mocap_calib->T_i_mark =
+        T_i_mark_new * calib_opt->mocap_calib->T_i_mark;
+
+    std::cout << "Initialized T_i_mark:\n"
+              << calib_opt->mocap_calib->T_i_mark.matrix() << std::endl;
+  }
+
+  // Initialize T_w_moc;
   Sophus::SE3d T_w_moc;
 
   // TODO: check for failure cases..
@@ -491,6 +568,7 @@ void CamImuCalib::initMocap() {
        i < vio_dataset->get_gt_timestamps().size(); i++) {
     int64_t timestamp_ns = vio_dataset->get_gt_timestamps()[i];
     T_w_moc = calib_opt->getT_w_i(timestamp_ns) *
+              calib_opt->mocap_calib->T_i_mark *
               vio_dataset->get_gt_pose_data()[i].inverse();
 
     std::cout << "Initialized T_w_moc:\n" << T_w_moc.matrix() << std::endl;
