@@ -576,6 +576,8 @@ void CamImuCalib::initMocap() {
   }
 
   calib_opt->setT_w_moc(T_w_moc);
+  calib_opt->mocap_initialized = true;
+
   recomputeDataLog();
 }
 

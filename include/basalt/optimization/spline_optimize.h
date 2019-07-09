@@ -89,6 +89,7 @@ class SplineOptimization {
 
   SplineOptimization(int64_t dt_ns = 1e7)
       : pose_var(1e-4),
+        mocap_initialized(false),
         lambda(1e-12),
         min_lambda(1e-18),
         max_lambda(10),
@@ -391,9 +392,12 @@ class SplineOptimization {
       // lopt(april_range);
     }
 
-    if (use_mocap) {
+    if (use_mocap && mocap_initialized) {
       tbb::parallel_reduce(mocap_pose_range, lopt);
       // lopt(mocap_pose_range);
+    } else if (use_mocap && !mocap_initialized) {
+      std::cout << "Mocap residuals are not used. Initialize Mocap first!"
+                << std::endl;
     }
 
     tbb::parallel_reduce(accel_range, lopt);
@@ -419,7 +423,14 @@ class SplineOptimization {
         Hdiag_lambda[i] = std::max(Hdiag_lambda[i], min_lambda);
 
       VectorX inc_full = -lopt.accum.solve(&Hdiag_lambda);
-      if (inc_full.array().abs().maxCoeff() < 1e-10) converged = true;
+      typename VectorX::Index maxIndex;
+      double max_inc = inc_full.array().abs().maxCoeff(&maxIndex);
+
+      //      std::cout << "max_inc " << max_inc << " idx " << maxIndex << "
+      //      size "
+      //                << inc_full.size() << std::endl;
+
+      if (max_inc < 1e-10) converged = true;
 
       Calibration<Scalar> calib_backup = *calib;
       MocapCalibration<Scalar> mocap_calib_backup = *mocap_calib;
@@ -437,8 +448,11 @@ class SplineOptimization {
         tbb::parallel_reduce(april_range, eopt);
       }
 
-      if (use_mocap) {
+      if (use_mocap && mocap_initialized) {
         tbb::parallel_reduce(mocap_pose_range, eopt);
+      } else if (use_mocap && !mocap_initialized) {
+        std::cout << "Mocap residuals are not used. Initialize Mocap first!"
+                  << std::endl;
       }
 
       tbb::parallel_reduce(accel_range, eopt);
@@ -447,7 +461,7 @@ class SplineOptimization {
       double f_diff = (lopt.error - eopt.error);
       double l_diff = 0.5 * inc_full.dot(inc_full * lambda - lopt.accum.getB());
 
-      std::cout << "f_diff " << f_diff << " l_diff " << l_diff << std::endl;
+      // std::cout << "f_diff " << f_diff << " l_diff " << l_diff << std::endl;
 
       double step_quality = f_diff / l_diff;
 
@@ -494,6 +508,7 @@ class SplineOptimization {
 
   typename Calibration<Scalar>::Ptr calib;
   typename MocapCalibration<Scalar>::Ptr mocap_calib;
+  bool mocap_initialized;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
  private:
@@ -549,6 +564,9 @@ class SplineOptimization {
 
     calib->cam_time_offset_ns +=
         1e9 * inc_full[mocap_block_offset + 2 * POSE_SIZE + 1];
+
+    //    std::cout << "bias_block_offset " << bias_block_offset << std::endl;
+    //    std::cout << "mocap_block_offset " << mocap_block_offset << std::endl;
   }
 
   Scalar lambda, min_lambda, max_lambda, lambda_vee;
