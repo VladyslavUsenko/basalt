@@ -731,8 +731,8 @@ void CamCalib::optimizeWithParam(bool print_info,
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    calib_opt->optimize(opt_intr, huber_thresh, error, num_points,
-                        reprojection_error);
+    bool converged = calib_opt->optimize(opt_intr, huber_thresh, error,
+                                         num_points, reprojection_error);
 
     auto finish = std::chrono::high_resolution_clock::now();
 
@@ -767,6 +767,8 @@ void CamCalib::optimizeWithParam(bool print_info,
                        finish - start)
                        .count()
                 << "ms." << std::endl;
+
+      if (converged) std::cout << "Optimization Converged !!" << std::endl;
 
       std::cout << "==================================" << std::endl;
     }

@@ -60,7 +60,8 @@ class PosesOptimization {
       typename Eigen::vector<AprilgridCornersData>::const_iterator;
 
  public:
-  PosesOptimization() : lambda(1e-6), min_lambda(1e-12), max_lambda(10) {}
+  PosesOptimization()
+      : lambda(1e-6), min_lambda(1e-12), max_lambda(10), lambda_vee(2) {}
 
   bool initializeIntrinsics(
       size_t cam_id, const Eigen::vector<Eigen::Vector2d> &corners,
@@ -126,7 +127,8 @@ class PosesOptimization {
   bool calibInitialized() const { return calib != nullptr; }
   bool initialized() const { return true; }
 
-  void optimize(bool opt_intrinsics, double huber_thresh, double &error,
+  // Returns true when converged
+  bool optimize(bool opt_intrinsics, double huber_thresh, double &error,
                 int &num_points, double &reprojection_error) {
     error = 0;
     num_points = 0;
@@ -152,10 +154,11 @@ class PosesOptimization {
     lopt.accum.setup_solver();
     Eigen::VectorXd Hdiag = lopt.accum.Hdiagonal();
 
+    bool converged = false;
     bool step = false;
     int max_iter = 10;
 
-    while (!step && max_iter > 0) {
+    while (!step && max_iter > 0 && !converged) {
       Eigen::unordered_map<int64_t, Sophus::SE3d> timestam_to_pose_backup =
           timestam_to_pose;
       Calibration<Scalar> calib_backup = *calib;
@@ -165,6 +168,7 @@ class PosesOptimization {
         Hdiag_lambda[i] = std::max(Hdiag_lambda[i], min_lambda);
 
       Eigen::VectorXd inc = -lopt.accum.solve(&Hdiag_lambda);
+      if (inc.array().abs().maxCoeff() < 1e-10) converged = true;
 
       for (auto &kv : timestam_to_pose) {
         kv.second *=
@@ -184,20 +188,34 @@ class PosesOptimization {
       ComputeErrorPosesOpt<double> eopt(problem_size, timestam_to_pose, ccd);
       tbb::parallel_reduce(april_range, eopt);
 
-      if (eopt.error > lopt.error) {
+      double f_diff = (lopt.error - eopt.error);
+      double l_diff = 0.5 * inc.dot(inc * lambda - lopt.accum.getB());
+
+      // std::cout << "f_diff " << f_diff << " l_diff " << l_diff << std::endl;
+
+      double step_quality = f_diff / l_diff;
+
+      if (step_quality < 0) {
         std::cout << "\t[REJECTED] lambda:" << lambda
+                  << " step_quality: " << step_quality
                   << " Error: " << eopt.error << " num points "
                   << eopt.num_points << std::endl;
-        lambda = std::min(max_lambda, 2 * lambda);
+        lambda = std::min(max_lambda, lambda_vee * lambda);
+        lambda_vee *= 2;
 
         timestam_to_pose = timestam_to_pose_backup;
         *calib = calib_backup;
       } else {
         std::cout << "\t[ACCEPTED] lambda:" << lambda
+                  << " step_quality: " << step_quality
                   << " Error: " << eopt.error << " num points "
                   << eopt.num_points << std::endl;
 
-        lambda = std::max(min_lambda, lambda / 2);
+        lambda = std::max(
+            min_lambda,
+            lambda *
+                std::max(1.0 / 3, 1 - std::pow(2 * step_quality - 1, 3.0)));
+        lambda_vee = 2;
 
         error = eopt.error;
         num_points = eopt.num_points;
@@ -207,6 +225,12 @@ class PosesOptimization {
       }
       max_iter--;
     }
+
+    if (converged) {
+      std::cout << "[CONVERGED]" << std::endl;
+    }
+
+    return converged;
   }
 
   void recompute_size() {
@@ -288,7 +312,7 @@ class PosesOptimization {
   typename LinearizePosesOpt<
       Scalar, SparseHashAccumulator<Scalar>>::CalibCommonData ccd;
 
-  Scalar lambda, min_lambda, max_lambda;
+  Scalar lambda, min_lambda, max_lambda, lambda_vee;
 
   size_t problem_size;
 

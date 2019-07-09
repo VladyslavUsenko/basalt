@@ -130,65 +130,6 @@ class DenseAccumulator {
 };
 
 template <typename Scalar = double>
-class SparseAccumulator {
- public:
-  typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1> VectorX;
-  typedef Eigen::Triplet<Scalar> T;
-  typedef Eigen::SparseMatrix<Scalar> SparseMatrix;
-
-  template <int ROWS, int COLS, typename Derived>
-  inline void addH(int si, int sj, const Eigen::MatrixBase<Derived>& data) {
-    EIGEN_STATIC_ASSERT_MATRIX_SPECIFIC_SIZE(Derived, ROWS, COLS);
-
-    for (int i = 0; i < ROWS; i++) {
-      for (int j = 0; j < COLS; j++) {
-        triplets.emplace_back(si + i, sj + j, data(i, j));
-      }
-    }
-  }
-
-  template <int ROWS, typename Derived>
-  inline void addB(int i, const Eigen::MatrixBase<Derived>& data) {
-    b.template segment<ROWS>(i) += data;
-  }
-
-  inline VectorX solve() const {
-    SparseMatrix sm(b.rows(), b.rows());
-
-    auto triplets_copy = triplets;
-    for (int i = 0; i < b.rows(); i++) {
-      triplets_copy.emplace_back(i, i, 0.000001);
-    }
-
-    sm.setFromTriplets(triplets_copy.begin(), triplets_copy.end());
-
-    // Eigen::IOFormat CleanFmt(2);
-    // std::cerr << "sm\n" << sm.toDense().format(CleanFmt) << std::endl;
-
-    Eigen::SimplicialLDLT<SparseMatrix> chol(sm);
-    return chol.solve(-b);
-    // return sm.toDense().ldlt().solve(-b);
-  }
-
-  inline void reset(int opt_size) {
-    triplets.clear();
-    b.setZero(opt_size);
-  }
-
-  inline void join(const SparseAccumulator<Scalar>& other) {
-    triplets.reserve(triplets.size() + other.triplets.size());
-    triplets.insert(triplets.end(), other.triplets.begin(),
-                    other.triplets.end());
-    b += other.b;
-  }
-
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
- private:
-  std::vector<T> triplets;
-  VectorX b;
-};
-
-template <typename Scalar = double>
 class SparseHashAccumulator {
  public:
   typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1> VectorX;
@@ -242,6 +183,8 @@ class SparseHashAccumulator {
   }
 
   inline VectorX Hdiagonal() const { return smm.diagonal(); }
+
+  inline VectorX& getB() { return b; }
 
   inline VectorX solve(const VectorX* diagonal) const {
     auto t2 = std::chrono::high_resolution_clock::now();
