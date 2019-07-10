@@ -302,12 +302,14 @@ class SplineOptimization {
     //    std::cout << "spline.minTimeNs() " << spline.minTimeNs() << std::endl;
     //    std::cout << "spline.maxTimeNs() " << spline.maxTimeNs() << std::endl;
 
-    while (mocap_measurements.front().timestamp_ns <=
-           spline.minTimeNs() + spline.getDtNs())
+    while (!mocap_measurements.empty() &&
+           mocap_measurements.front().timestamp_ns <=
+               spline.minTimeNs() + spline.getDtNs())
       mocap_measurements.pop_front();
 
-    while (mocap_measurements.back().timestamp_ns >=
-           spline.maxTimeNs() - spline.getDtNs())
+    while (!mocap_measurements.empty() &&
+           mocap_measurements.back().timestamp_ns >=
+               spline.maxTimeNs() - spline.getDtNs())
       mocap_measurements.pop_back();
 
     ccd.calibration = calib.get();
