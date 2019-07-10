@@ -299,8 +299,16 @@ class SplineOptimization {
 
     recompute_size();
 
-    // std::cout << "spline.minTimeNs() " << spline.minTimeNs() << std::endl;
-    // std::cout << "spline.maxTimeNs() " << spline.maxTimeNs() << std::endl;
+    //    std::cout << "spline.minTimeNs() " << spline.minTimeNs() << std::endl;
+    //    std::cout << "spline.maxTimeNs() " << spline.maxTimeNs() << std::endl;
+
+    while (mocap_measurements.front().timestamp_ns <=
+           spline.minTimeNs() + spline.getDtNs())
+      mocap_measurements.pop_front();
+
+    while (mocap_measurements.back().timestamp_ns >=
+           spline.maxTimeNs() - spline.getDtNs())
+      mocap_measurements.pop_back();
 
     ccd.calibration = calib.get();
     ccd.mocap_calibration = mocap_calib.get();
@@ -354,8 +362,8 @@ class SplineOptimization {
   // Returns true when converged
   bool optimize(bool use_intr, bool use_poses, bool use_april_corners,
                 bool opt_cam_time_offset, bool opt_imu_scale, bool use_mocap,
-                double huber_thresh, double& error, int& num_points,
-                double& reprojection_error) {
+                double huber_thresh, double stop_thresh, double& error,
+                int& num_points, double& reprojection_error) {
     // std::cerr << "optimize num_knots " << num_knots << std::endl;
 
     ccd.opt_intrinsics = use_intr;
@@ -423,14 +431,9 @@ class SplineOptimization {
         Hdiag_lambda[i] = std::max(Hdiag_lambda[i], min_lambda);
 
       VectorX inc_full = -lopt.accum.solve(&Hdiag_lambda);
-      typename VectorX::Index maxIndex;
-      double max_inc = inc_full.array().abs().maxCoeff(&maxIndex);
+      double max_inc = inc_full.array().abs().maxCoeff();
 
-      //      std::cout << "max_inc " << max_inc << " idx " << maxIndex << "
-      //      size "
-      //                << inc_full.size() << std::endl;
-
-      if (max_inc < 1e-10) converged = true;
+      if (max_inc < stop_thresh) converged = true;
 
       Calibration<Scalar> calib_backup = *calib;
       MocapCalibration<Scalar> mocap_calib_backup = *mocap_calib;
@@ -468,8 +471,8 @@ class SplineOptimization {
       if (step_quality < 0) {
         std::cout << "\t[REJECTED] lambda:" << lambda
                   << " step_quality: " << step_quality
-                  << " Error: " << eopt.error << " num points "
-                  << eopt.num_points << std::endl;
+                  << " max_inc: " << max_inc << " Error: " << eopt.error
+                  << " num points " << eopt.num_points << std::endl;
         lambda = std::min(max_lambda, lambda_vee * lambda);
         lambda_vee *= 2;
 
@@ -481,8 +484,8 @@ class SplineOptimization {
       } else {
         std::cout << "\t[ACCEPTED] lambda:" << lambda
                   << " step_quality: " << step_quality
-                  << " Error: " << eopt.error << " num points "
-                  << eopt.num_points << std::endl;
+                  << " max_inc: " << max_inc << " Error: " << eopt.error
+                  << " num points " << eopt.num_points << std::endl;
 
         lambda = std::max(
             min_lambda,

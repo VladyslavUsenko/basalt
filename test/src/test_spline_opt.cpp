@@ -62,8 +62,8 @@ TEST(SplineOpt, SplineOptTest) {
   double reprojection_error;
   int num_inliers;
   for (int i = 0; i < 10; i++)
-    spline_opt.optimize(false, true, false, false, true, false, 0.002, error,
-                        num_inliers, reprojection_error);
+    spline_opt.optimize(false, true, false, false, true, false, 0.002, 1e-10,
+                        error, num_inliers, reprojection_error);
 
   ASSERT_TRUE(
       spline_opt.getAccelBias().getParam().isApprox(accel_bias_full.getParam()))

@@ -90,7 +90,7 @@ class CamCalib {
 
   void optimize();
 
-  void optimizeWithParam(bool print_info,
+  bool optimizeWithParam(bool print_info,
                          std::map<std::string, double> *stats = nullptr);
 
   void saveCalib();
@@ -154,6 +154,9 @@ class CamCalib {
   pangolin::Var<double> huber_thresh;
 
   pangolin::Var<bool> opt_intr;
+
+  pangolin::Var<bool> opt_until_convg;
+  pangolin::Var<double> stop_thresh;
 
   std::shared_ptr<pangolin::Plotter> vign_plotter;
   std::shared_ptr<pangolin::Plotter> polar_plotter;

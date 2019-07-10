@@ -78,7 +78,9 @@ CamImuCalib::CamImuCalib(const std::string &dataset_path,
       opt_cam_time_offset("ui.opt_cam_time_offset", false, false, true),
       opt_imu_scale("ui.opt_imu_scale", false, false, true),
       opt_mocap("ui.opt_mocap", false, false, true),
-      huber_thresh("ui.huber_thresh", 4.0, 0.1, 10.0) {
+      huber_thresh("ui.huber_thresh", 4.0, 0.1, 10.0),
+      opt_until_convg("ui.opt_until_convg", false, false, true),
+      stop_thresh("ui.stop_thresh", 1e-8, 1e-10, 0.01, true) {
   if (show_gui) initGui();
 }
 
@@ -184,6 +186,11 @@ void CamImuCalib::renderingLoop() {
           show_mocap_rot_vel.GuiChanged()) {
         drawPlots();
       }
+    }
+
+    if (opt_until_convg) {
+      bool converged = optimizeWithParam(true);
+      if (converged) opt_until_convg = false;
     }
 
     pangolin::FinishFrame();
@@ -668,12 +675,14 @@ void CamImuCalib::loadDataset() {
 
 void CamImuCalib::optimize() { optimizeWithParam(true); }
 
-void CamImuCalib::optimizeWithParam(bool print_info,
+bool CamImuCalib::optimizeWithParam(bool print_info,
                                     std::map<std::string, double> *stats) {
   if (!calib_opt.get() || !calib_opt->calibInitialized()) {
     std::cerr << "Initalize optimization first!" << std::endl;
-    return;
+    return true;
   }
+
+  bool converged = true;
 
   if (calib_opt) {
     // calib_opt->compute_projections();
@@ -683,9 +692,10 @@ void CamImuCalib::optimizeWithParam(bool print_info,
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    bool converged = calib_opt->optimize(
-        opt_intr, opt_poses, opt_corners, opt_cam_time_offset, opt_imu_scale,
-        opt_mocap, huber_thresh, error, num_points, reprojection_error);
+    converged = calib_opt->optimize(opt_intr, opt_poses, opt_corners,
+                                    opt_cam_time_offset, opt_imu_scale,
+                                    opt_mocap, huber_thresh, stop_thresh, error,
+                                    num_points, reprojection_error);
 
     auto finish = std::chrono::high_resolution_clock::now();
 
@@ -769,6 +779,8 @@ void CamImuCalib::optimizeWithParam(bool print_info,
       drawPlots();
     }
   }
+
+  return converged;
 }
 
 void CamImuCalib::saveCalib() {

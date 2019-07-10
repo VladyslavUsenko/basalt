@@ -89,7 +89,7 @@ class CamImuCalib {
 
   void optimize();
 
-  void optimizeWithParam(bool print_info,
+  bool optimizeWithParam(bool print_info,
                          std::map<std::string, double> *stats = nullptr);
 
   void saveCalib();
@@ -169,6 +169,9 @@ class CamImuCalib {
   pangolin::Var<bool> opt_mocap;
 
   pangolin::Var<double> huber_thresh;
+
+  pangolin::Var<bool> opt_until_convg;
+  pangolin::Var<double> stop_thresh;
 
   pangolin::Plotter *plotter;
   pangolin::View *img_view_display;

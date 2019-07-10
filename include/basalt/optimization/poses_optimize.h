@@ -128,8 +128,8 @@ class PosesOptimization {
   bool initialized() const { return true; }
 
   // Returns true when converged
-  bool optimize(bool opt_intrinsics, double huber_thresh, double &error,
-                int &num_points, double &reprojection_error) {
+  bool optimize(bool opt_intrinsics, double huber_thresh, double stop_thresh,
+                double &error, int &num_points, double &reprojection_error) {
     error = 0;
     num_points = 0;
 
@@ -168,7 +168,8 @@ class PosesOptimization {
         Hdiag_lambda[i] = std::max(Hdiag_lambda[i], min_lambda);
 
       Eigen::VectorXd inc = -lopt.accum.solve(&Hdiag_lambda);
-      if (inc.array().abs().maxCoeff() < 1e-10) converged = true;
+      double max_inc = inc.array().abs().maxCoeff();
+      if (max_inc < stop_thresh) converged = true;
 
       for (auto &kv : timestam_to_pose) {
         kv.second *=
@@ -198,8 +199,8 @@ class PosesOptimization {
       if (step_quality < 0) {
         std::cout << "\t[REJECTED] lambda:" << lambda
                   << " step_quality: " << step_quality
-                  << " Error: " << eopt.error << " num points "
-                  << eopt.num_points << std::endl;
+                  << " max_inc: " << max_inc << " Error: " << eopt.error
+                  << " num points " << eopt.num_points << std::endl;
         lambda = std::min(max_lambda, lambda_vee * lambda);
         lambda_vee *= 2;
 
@@ -208,8 +209,8 @@ class PosesOptimization {
       } else {
         std::cout << "\t[ACCEPTED] lambda:" << lambda
                   << " step_quality: " << step_quality
-                  << " Error: " << eopt.error << " num points "
-                  << eopt.num_points << std::endl;
+                  << " max_inc: " << max_inc << " Error: " << eopt.error
+                  << " num points " << eopt.num_points << std::endl;
 
         lambda = std::max(
             min_lambda,

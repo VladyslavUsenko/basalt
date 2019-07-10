@@ -29,7 +29,7 @@ After that, you should see the calibration GUI:
 
 The buttons in the GUI are located in the order which you should follow to calibrate the camera. After pressing a button the system will print the output to the command line:
 * `load_dataset` loads the dataset.
-* `detect_corners` starts corner detection in the backround thread. Since it is the most time consuming part of the calibration process, the detected corners are cached and loaded if you run the executable again pointing to the same result folder path.
+* `detect_corners` starts corner detection in the background thread. Since it is the most time consuming part of the calibration process, the detected corners are cached and loaded if you run the executable again pointing to the same result folder path.
 * `init_cam_intr` computes an initial guess for camera intrinsics.
 * `init_cam_poses` computes an initial guess for camera poses given the current intrinsics.
 * `init_cam_extr` computes an initial transformation between the cameras.
@@ -48,6 +48,9 @@ You can also control the process using the following buttons:
 * `show_ids` toggles the ID visualization for every point.
 * `huber_thresh` controls the threshold for the huber norm in pixels for the optimization.
 * `opt_intr` controls if the optimization can change the intrinsics. For some datasets it might be helpful to disable this option for several first iterations of the optimization.
+* `opt_until_convg` runs the optimization until convergence.
+* `stop_thresh` defines the stopping criteria. Optimization will stop when the maximum increment is smaller than this value.
+
 
 ### Camera + IMU + Mocap calibration
 After calibrating the camera you can run the camera + IMU + Mocap calibration. The result path should point to the **same folder as before**:
@@ -91,6 +94,8 @@ The following options control the optimization process:
 * `opt_imu_scale` enables IMU axis scaling, rotation and misalignment calibration. This option should be used only for refinement when the optimization already converged.
 * `opt_mocap` enables Mocap optimization. You should run it only after pressing `init_mocap`.
 * `huber_thresh` controls the threshold for the huber norm in pixels for the optimization.
+* `opt_until_convg` runs the optimization until convergence.
+* `stop_thresh` defines the stopping criteria. Optimization will stop when the maximum increment is smaller than this value.
 
 
 **NOTE:** In this case we use a pre-calibrated sequence, so most of refinements or Mocap to IMU calibration will not have any visible effect. If you want to test this functionality use the "raw" sequences, for example `http://vision.in.tum.de/tumvi/raw/dataset-calib-cam3.bag` and `http://vision.in.tum.de/tumvi/raw/dataset-calib-imu1.bag`. 

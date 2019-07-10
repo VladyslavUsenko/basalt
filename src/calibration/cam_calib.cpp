@@ -70,7 +70,9 @@ CamCalib::CamCalib(const std::string &dataset_path,
       show_vign("ui.show_vign", false, false, true),
       show_ids("ui.show_ids", false, false, true),
       huber_thresh("ui.huber_thresh", 4.0, 0.1, 10.0),
-      opt_intr("ui.opt_intr", true, false, true) {
+      opt_intr("ui.opt_intr", true, false, true),
+      opt_until_convg("ui.opt_until_convg", false, false, true),
+      stop_thresh("ui.stop_thresh", 1e-8, 1e-10, 0.01, true) {
   if (show_gui) initGui();
 
   if (!fs::exists(cache_path)) {
@@ -264,6 +266,11 @@ void CamCalib::renderingLoop() {
             img_view[cam_id]->Clear();
           }
       }
+    }
+
+    if (opt_until_convg) {
+      bool converged = optimizeWithParam(true);
+      if (converged) opt_until_convg = false;
     }
 
     pangolin::FinishFrame();
@@ -707,21 +714,23 @@ void CamCalib::loadDataset() {
 
 void CamCalib::optimize() { optimizeWithParam(true); }
 
-void CamCalib::optimizeWithParam(bool print_info,
+bool CamCalib::optimizeWithParam(bool print_info,
                                  std::map<std::string, double> *stats) {
   if (calib_init_poses.empty()) {
     std::cerr << "No initial camera poses. Press init_cam_poses initialize "
                  "camera poses "
               << std::endl;
-    return;
+    return true;
   }
 
   if (!calib_opt.get() || !calib_opt->calibInitialized()) {
     std::cerr << "No initial intrinsics. Press init_intrinsics initialize "
                  "intrinsics"
               << std::endl;
-    return;
+    return true;
   }
+
+  bool converged = true;
 
   if (calib_opt) {
     // calib_opt->compute_projections();
@@ -731,8 +740,8 @@ void CamCalib::optimizeWithParam(bool print_info,
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    bool converged = calib_opt->optimize(opt_intr, huber_thresh, error,
-                                         num_points, reprojection_error);
+    converged = calib_opt->optimize(opt_intr, huber_thresh, stop_thresh, error,
+                                    num_points, reprojection_error);
 
     auto finish = std::chrono::high_resolution_clock::now();
 
@@ -777,6 +786,8 @@ void CamCalib::optimizeWithParam(bool print_info,
       computeProjections();
     }
   }
+
+  return converged;
 }
 
 void CamCalib::saveCalib() {
