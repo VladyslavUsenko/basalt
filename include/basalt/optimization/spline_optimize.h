@@ -92,7 +92,7 @@ class SplineOptimization {
         mocap_initialized(false),
         lambda(1e-12),
         min_lambda(1e-18),
-        max_lambda(10),
+        max_lambda(100),
         lambda_vee(2),
         spline(dt_ns),
         dt_ns(dt_ns) {

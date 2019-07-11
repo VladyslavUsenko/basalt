@@ -79,7 +79,7 @@ CamImuCalib::CamImuCalib(const std::string &dataset_path,
       opt_imu_scale("ui.opt_imu_scale", false, false, true),
       opt_mocap("ui.opt_mocap", false, false, true),
       huber_thresh("ui.huber_thresh", 4.0, 0.1, 10.0),
-      opt_until_convg("ui.opt_until_convg", false, false, true),
+      opt_until_convg("ui.opt_until_converge", false, false, true),
       stop_thresh("ui.stop_thresh", 1e-8, 1e-10, 0.01, true) {
   if (show_gui) initGui();
 }
