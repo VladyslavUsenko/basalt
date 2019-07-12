@@ -35,6 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <basalt/io/dataset_io.h>
+#include <basalt/utils/common_types.h>
 #include <basalt/calibration/calibration.hpp>
 
 #include <tbb/concurrent_unordered_map.h>

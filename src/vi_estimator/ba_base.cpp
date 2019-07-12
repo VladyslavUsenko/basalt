@@ -89,9 +89,9 @@ void BundleAdjustmentBase::updatePoints(const AbsOrderMap& aom,
     const TimeCamId& tcid_h = rld.order[i].first;
     const TimeCamId& tcid_t = rld.order[i].second;
 
-    if (tcid_h.first != tcid_t.first) {
-      int abs_h_idx = aom.abs_order_map.at(tcid_h.first).first;
-      int abs_t_idx = aom.abs_order_map.at(tcid_t.first).first;
+    if (tcid_h.frame_id != tcid_t.frame_id) {
+      int abs_h_idx = aom.abs_order_map.at(tcid_h.frame_id).first;
+      int abs_t_idx = aom.abs_order_map.at(tcid_t.frame_id).first;
 
       rel_inc.segment<POSE_SIZE>(i * POSE_SIZE) =
           rld.d_rel_d_h[i] * inc.segment<POSE_SIZE>(abs_h_idx) +
@@ -138,12 +138,12 @@ void BundleAdjustmentBase::computeError(double& error) const {
       const TimeCamId& tcid_t = obs_kv.first;
 
       if (tcid_h != tcid_t) {
-        PoseStateWithLin state_h = getPoseStateWithLin(tcid_h.first);
-        PoseStateWithLin state_t = getPoseStateWithLin(tcid_t.first);
+        PoseStateWithLin state_h = getPoseStateWithLin(tcid_h.frame_id);
+        PoseStateWithLin state_t = getPoseStateWithLin(tcid_t.frame_id);
 
         Sophus::SE3d T_t_h_sophus =
-            computeRelPose(state_h.getPose(), calib.T_i_c[tcid_h.second],
-                           state_t.getPose(), calib.T_i_c[tcid_t.second]);
+            computeRelPose(state_h.getPose(), calib.T_i_c[tcid_h.cam_id],
+                           state_t.getPose(), calib.T_i_c[tcid_t.cam_id]);
 
         Eigen::Matrix4d T_t_h = T_t_h_sophus.matrix();
 
@@ -169,7 +169,7 @@ void BundleAdjustmentBase::computeError(double& error) const {
                 }
               }
             },
-            calib.intrinsics[tcid_t.second].variant);
+            calib.intrinsics[tcid_t.cam_id].variant);
 
       } else {
         // target and host are the same
@@ -197,7 +197,7 @@ void BundleAdjustmentBase::computeError(double& error) const {
                 }
               }
             },
-            calib.intrinsics[tcid_t.second].variant);
+            calib.intrinsics[tcid_t.cam_id].variant);
       }
     }
   }
@@ -237,14 +237,14 @@ void BundleAdjustmentBase::linearizeHelper(
               // target and host are not the same
               rld.order.emplace_back(std::make_pair(tcid_h, tcid_t));
 
-              PoseStateWithLin state_h = getPoseStateWithLin(tcid_h.first);
-              PoseStateWithLin state_t = getPoseStateWithLin(tcid_t.first);
+              PoseStateWithLin state_h = getPoseStateWithLin(tcid_h.frame_id);
+              PoseStateWithLin state_t = getPoseStateWithLin(tcid_t.frame_id);
 
               Sophus::Matrix6d d_rel_d_h, d_rel_d_t;
 
               Sophus::SE3d T_t_h_sophus = computeRelPose(
-                  state_h.getPoseLin(), calib.T_i_c[tcid_h.second],
-                  state_t.getPoseLin(), calib.T_i_c[tcid_t.second], &d_rel_d_h,
+                  state_h.getPoseLin(), calib.T_i_c[tcid_h.cam_id],
+                  state_t.getPoseLin(), calib.T_i_c[tcid_t.cam_id], &d_rel_d_h,
                   &d_rel_d_t);
 
               rld.d_rel_d_h.emplace_back(d_rel_d_h);
@@ -252,8 +252,8 @@ void BundleAdjustmentBase::linearizeHelper(
 
               if (state_h.isLinearized() || state_t.isLinearized()) {
                 T_t_h_sophus = computeRelPose(
-                    state_h.getPose(), calib.T_i_c[tcid_h.second],
-                    state_t.getPose(), calib.T_i_c[tcid_t.second]);
+                    state_h.getPose(), calib.T_i_c[tcid_h.cam_id],
+                    state_t.getPose(), calib.T_i_c[tcid_t.cam_id]);
               }
 
               Eigen::Matrix4d T_t_h = T_t_h_sophus.matrix();
@@ -305,7 +305,7 @@ void BundleAdjustmentBase::linearizeHelper(
                       }
                     }
                   },
-                  calib.intrinsics[tcid_t.second].variant);
+                  calib.intrinsics[tcid_t.cam_id].variant);
 
               rld.Hpppl.emplace_back(frld);
 
@@ -348,7 +348,7 @@ void BundleAdjustmentBase::linearizeHelper(
                       }
                     }
                   },
-                  calib.intrinsics[tcid_t.second].variant);
+                  calib.intrinsics[tcid_t.cam_id].variant);
             }
           }
         }
@@ -408,7 +408,7 @@ void BundleAdjustmentBase::get_current_points(
 
     Sophus::SE3d T_w_i;
 
-    int64_t id = kv_kpt.second.kf_id.first;
+    int64_t id = kv_kpt.second.kf_id.frame_id;
     if (frame_states.count(id) > 0) {
       PoseVelBiasStateWithLin state = frame_states.at(id);
       T_w_i = state.getState().T_w_i;
@@ -421,7 +421,7 @@ void BundleAdjustmentBase::get_current_points(
       std::abort();
     }
 
-    const Sophus::SE3d& T_i_c = calib.T_i_c[kv_kpt.second.kf_id.second];
+    const Sophus::SE3d& T_i_c = calib.T_i_c[kv_kpt.second.kf_id.cam_id];
 
     // std::cerr << "T_w_i\n" << T_w_i.matrix() << std::endl;
 

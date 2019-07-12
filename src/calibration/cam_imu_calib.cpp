@@ -213,7 +213,7 @@ void CamImuCalib::computeProjections() {
       continue;
 
     for (size_t i = 0; i < calib_opt->calib->intrinsics.size(); i++) {
-      TimeCamId tcid = std::make_pair(timestamp_ns, i);
+      TimeCamId tcid(timestamp_ns, i);
 
       ProjectedCornerData rc;
 
@@ -323,8 +323,8 @@ void CamImuCalib::initCamImuTransform() {
     int64_t timestamp0_ns = vio_dataset->get_image_timestamps()[i - 1];
     int64_t timestamp1_ns = vio_dataset->get_image_timestamps()[i];
 
-    TimeCamId tcid0 = std::make_pair(timestamp0_ns, 0);
-    TimeCamId tcid1 = std::make_pair(timestamp1_ns, 0);
+    TimeCamId tcid0(timestamp0_ns, 0);
+    TimeCamId tcid1(timestamp1_ns, 0);
 
     if (calib_init_poses.find(tcid0) == calib_init_poses.end()) continue;
     if (calib_init_poses.find(tcid1) == calib_init_poses.end()) continue;
@@ -421,12 +421,12 @@ void CamImuCalib::initOptimization() {
   std::set<uint64_t> invalid_timestamps;
   for (const auto &kv : calib_corners) {
     if (kv.second.corner_ids.size() < MIN_CORNERS)
-      invalid_timestamps.insert(kv.first.first);
+      invalid_timestamps.insert(kv.first.frame_id);
   }
 
   for (const auto &kv : calib_corners) {
-    if (invalid_timestamps.find(kv.first.first) == invalid_timestamps.end())
-      calib_opt->addAprilgridMeasurement(kv.first.first, kv.first.second,
+    if (invalid_timestamps.find(kv.first.frame_id) == invalid_timestamps.end())
+      calib_opt->addAprilgridMeasurement(kv.first.frame_id, kv.first.cam_id,
                                          kv.second.corners,
                                          kv.second.corner_ids);
   }
@@ -442,7 +442,7 @@ void CamImuCalib::initOptimization() {
   for (size_t j = 0; j < vio_dataset->get_image_timestamps().size(); ++j) {
     int64_t timestamp_ns = vio_dataset->get_image_timestamps()[j];
 
-    TimeCamId tcid = std::make_pair(timestamp_ns, 0);
+    TimeCamId tcid(timestamp_ns, 0);
     const auto cp_it = calib_init_poses.find(tcid);
 
     if (cp_it != calib_init_poses.end()) {
@@ -809,7 +809,7 @@ void CamImuCalib::drawImageOverlay(pangolin::View &v, size_t cam_id) {
 
   if (vio_dataset && frame_id < vio_dataset->get_image_timestamps().size()) {
     int64_t timestamp_ns = vio_dataset->get_image_timestamps()[frame_id];
-    TimeCamId tcid = std::make_pair(timestamp_ns, cam_id);
+    TimeCamId tcid(timestamp_ns, cam_id);
 
     if (show_corners) {
       glLineWidth(1.0);
@@ -955,7 +955,7 @@ void CamImuCalib::recomputeDataLog() {
   for (size_t i = 0; i < vio_dataset->get_image_timestamps().size(); i++) {
     int64_t timestamp_ns = vio_dataset->get_image_timestamps()[i];
 
-    TimeCamId tcid = std::make_pair(timestamp_ns, 0);
+    TimeCamId tcid(timestamp_ns, 0);
     const auto &it = calib_init_poses.find(tcid);
 
     double t = timestamp_ns * 1e-9 - min_time;

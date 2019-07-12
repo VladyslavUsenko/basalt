@@ -424,7 +424,7 @@ int main(int argc, char** argv) {
 
 void draw_image_overlay(pangolin::View& v, size_t cam_id) {
   size_t frame_id = show_frame;
-  basalt::TimeCamId tcid = std::make_pair(gt_frame_t_ns[frame_id], cam_id);
+  basalt::TimeCamId tcid(gt_frame_t_ns[frame_id], cam_id);
 
   if (show_obs) {
     glLineWidth(1.0);

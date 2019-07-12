@@ -265,8 +265,8 @@ class BundleAdjustmentBase {
       const TimeCamId& tcid_h = rld.order[i].first;
       const TimeCamId& tcid_ti = rld.order[i].second;
 
-      int abs_h_idx = aom.abs_order_map.at(tcid_h.first).first;
-      int abs_ti_idx = aom.abs_order_map.at(tcid_ti.first).first;
+      int abs_h_idx = aom.abs_order_map.at(tcid_h.frame_id).first;
+      int abs_ti_idx = aom.abs_order_map.at(tcid_ti.frame_id).first;
 
       accum.template addB<POSE_SIZE>(
           abs_h_idx, rld.d_rel_d_h[i].transpose() *
@@ -280,9 +280,10 @@ class BundleAdjustmentBase {
 
         const TimeCamId& tcid_tj = rld.order[j].second;
 
-        int abs_tj_idx = aom.abs_order_map.at(tcid_tj.first).first;
+        int abs_tj_idx = aom.abs_order_map.at(tcid_tj.frame_id).first;
 
-        if (tcid_h.first == tcid_ti.first || tcid_h.first == tcid_tj.first)
+        if (tcid_h.frame_id == tcid_ti.frame_id ||
+            tcid_h.frame_id == tcid_tj.frame_id)
           continue;
 
         accum.template addH<POSE_SIZE, POSE_SIZE>(

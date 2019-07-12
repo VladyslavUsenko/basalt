@@ -482,11 +482,11 @@ void computeEdgeVis() {
   for (const auto& kv1 : nrf_mapper->obs) {
     for (const auto& kv2 : kv1.second) {
       Eigen::Vector3d p1 = nrf_mapper->getFramePoses()
-                               .at(kv1.first.first)
+                               .at(kv1.first.frame_id)
                                .getPose()
                                .translation();
       Eigen::Vector3d p2 = nrf_mapper->getFramePoses()
-                               .at(kv2.first.first)
+                               .at(kv2.first.frame_id)
                                .getPose()
                                .translation();
 

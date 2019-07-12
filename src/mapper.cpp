@@ -342,7 +342,7 @@ void draw_image_overlay(pangolin::View& v, size_t view_id) {
   size_t frame_id = (view_id == 0) ? show_frame1 : show_frame2;
   size_t cam_id = (view_id == 0) ? show_cam1 : show_cam2;
 
-  basalt::TimeCamId tcid = std::make_pair(image_t_ns[frame_id], cam_id);
+  basalt::TimeCamId tcid(image_t_ns[frame_id], cam_id);
 
   float text_row = 20;
 
@@ -389,7 +389,7 @@ void draw_image_overlay(pangolin::View& v, size_t view_id) {
     size_t o_frame_id = (view_id == 0 ? show_frame2 : show_frame1);
     size_t o_cam_id = (view_id == 0 ? show_cam2 : show_cam1);
 
-    basalt::TimeCamId o_tcid = std::make_pair(image_t_ns[o_frame_id], o_cam_id);
+    basalt::TimeCamId o_tcid(image_t_ns[o_frame_id], o_cam_id);
 
     int idx = -1;
 
@@ -563,11 +563,11 @@ void computeEdgeVis() {
   for (const auto& kv1 : nrf_mapper->obs) {
     for (const auto& kv2 : kv1.second) {
       Eigen::Vector3d p1 = nrf_mapper->getFramePoses()
-                               .at(kv1.first.first)
+                               .at(kv1.first.frame_id)
                                .getPose()
                                .translation();
       Eigen::Vector3d p2 = nrf_mapper->getFramePoses()
-                               .at(kv2.first.first)
+                               .at(kv2.first.frame_id)
                                .getPose()
                                .translation();
 

@@ -391,7 +391,7 @@ void NfrMapper::detect_keypoints() {
               computeDescriptors(img, kd);
 
               std::vector<bool> success;
-              calib.intrinsics[tcid.second].unproject(kd.corners, kd.corners_3d,
+              calib.intrinsics[tcid.cam_id].unproject(kd.corners, kd.corners_3d,
                                                       success);
 
               hash_bow_database->compute_bow(kd.corner_descriptors, kd.hashes,
@@ -489,12 +489,12 @@ void NfrMapper::match_all() {
 
       hash_bow_database->querry_database(kd.bow_vector,
                                          config.mapper_num_frames_to_match,
-                                         results, &tcid.first);
+                                         results, &tcid.frame_id);
 
       // std::cout << "Closest frames for " << tcid << ": ";
       for (const auto& otcid_score : results) {
         // std::cout << otcid_score.first << "(" << otcid_score.second << ") ";
-        if (otcid_score.first.first != tcid.first &&
+        if (otcid_score.first.frame_id != tcid.frame_id &&
             otcid_score.second > config.mapper_frames_to_match_threshold) {
           match_pair m;
           m.i = i;
@@ -612,7 +612,7 @@ void NfrMapper::setup_opt() {
     FeatureId feat_id_h = it->second;
     Eigen::Vector2d pos_2d_h = feature_corners.at(tcid_h).corners[feat_id_h];
     Eigen::Vector4d pos_3d_h;
-    calib.intrinsics[tcid_h.second].unproject(pos_2d_h, pos_3d_h);
+    calib.intrinsics[tcid_h.cam_id].unproject(pos_2d_h, pos_3d_h);
 
     it++;
 
@@ -622,12 +622,12 @@ void NfrMapper::setup_opt() {
       FeatureId feat_id_o = it->second;
       Eigen::Vector2d pos_2d_o = feature_corners.at(tcid_o).corners[feat_id_o];
       Eigen::Vector4d pos_3d_o;
-      calib.intrinsics[tcid_o.second].unproject(pos_2d_o, pos_3d_o);
+      calib.intrinsics[tcid_o.cam_id].unproject(pos_2d_o, pos_3d_o);
 
-      Sophus::SE3d T_w_h =
-          frame_poses.at(tcid_h.first).getPose() * calib.T_i_c[tcid_h.second];
+      Sophus::SE3d T_w_h = frame_poses.at(tcid_h.frame_id).getPose() *
+                           calib.T_i_c[tcid_h.cam_id];
       Sophus::SE3d T_w_o =
-          frame_poses.at(tcid_o.first).getPose() * calib.T_i_c[tcid_o.second];
+          frame_poses.at(tcid_o.cam_id).getPose() * calib.T_i_c[tcid_o.cam_id];
 
       Eigen::Vector4d pos_3d = triangulate(
           pos_3d_h.head<3>(), pos_3d_o.head<3>(), T_w_h.inverse() * T_w_o);

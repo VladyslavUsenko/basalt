@@ -80,7 +80,7 @@ class HashBow {
       for (auto it = range_it.first; it != range_it.second; ++it) {
         // if there is a maximum query time select only the frames that have
         // timestamp below max_t_ns
-        if (!max_t_ns || it->second.first.first < (*max_t_ns))
+        if (!max_t_ns || it->second.first.frame_id < (*max_t_ns))
           scores[it->second.first] += kv.second * it->second.second;
       }
     }

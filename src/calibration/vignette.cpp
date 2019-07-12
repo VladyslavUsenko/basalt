@@ -95,7 +95,7 @@ void VignetteEstimator::compute_error(
     const TimeCamId &tcid = kv.first;
     const auto &points_2d_val = kv.second;
 
-    Eigen::Vector2d oc = optical_centers[tcid.second];
+    Eigen::Vector2d oc = optical_centers[tcid.cam_id];
 
     BASALT_ASSERT(points_2d_val.size() ==
                   april_grid.aprilgrid_vignette_pos_3d.size());
@@ -108,7 +108,7 @@ void VignetteEstimator::compute_error(
         int64_t loc =
             (points_2d_val[i].head<2>() - oc).norm() * 1e9;  // in pixels * 1e9
         double e =
-            irradiance[i] * vign_param[tcid.second].evaluate(loc)[0] - val;
+            irradiance[i] * vign_param[tcid.cam_id].evaluate(loc)[0] - val;
         ve[i] = e;
         error += e * e;
         mean_residual += std::abs(e);
@@ -151,7 +151,7 @@ void VignetteEstimator::opt_irradience() {
     const TimeCamId &tcid = kv.first;
     const auto &points_2d_val = kv.second;
 
-    Eigen::Vector2d oc = optical_centers[tcid.second];
+    Eigen::Vector2d oc = optical_centers[tcid.cam_id];
 
     BASALT_ASSERT(points_2d_val.size() ==
                   april_grid.aprilgrid_vignette_pos_3d.size());
@@ -162,7 +162,7 @@ void VignetteEstimator::opt_irradience() {
         int64_t loc =
             (points_2d_val[i].head<2>() - oc).norm() * 1e9;  // in pixels * 1e9
 
-        new_irradiance[i] += val / vign_param[tcid.second].evaluate(loc)[0];
+        new_irradiance[i] += val / vign_param[tcid.cam_id].evaluate(loc)[0];
         new_irradiance_count[i] += 1;
       }
     }
@@ -193,7 +193,7 @@ void VignetteEstimator::opt_vign() {
     //      Eigen::Vector3d::UnitZ();
     //      if (-opt_axis_w[2] < angle_threshold) continue;
 
-    Eigen::Vector2d oc = optical_centers[tcid.second];
+    Eigen::Vector2d oc = optical_centers[tcid.cam_id];
 
     BASALT_ASSERT(points_2d_val.size() ==
                   april_grid.aprilgrid_vignette_pos_3d.size());
@@ -204,12 +204,12 @@ void VignetteEstimator::opt_vign() {
         int64_t loc = (points_2d_val[i].head<2>() - oc).norm() * 1e9;
 
         RdSpline<1, SPLINE_N>::JacobianStruct J;
-        vign_param[tcid.second].evaluate(loc, &J);
+        vign_param[tcid.cam_id].evaluate(loc, &J);
 
         for (size_t k = 0; k < J.d_val_d_knot.size(); k++) {
-          new_vign_param[tcid.second][J.start_idx + k] +=
+          new_vign_param[tcid.cam_id][J.start_idx + k] +=
               J.d_val_d_knot[k] * val / irradiance[i];
-          new_vign_param_count[tcid.second][J.start_idx + k] +=
+          new_vign_param_count[tcid.cam_id][J.start_idx + k] +=
               J.d_val_d_knot[k];
         }
       }
@@ -255,7 +255,7 @@ void VignetteEstimator::compute_data_log(pangolin::DataLog &vign_data_log) {
     const TimeCamId &tcid = kv.first;
     const auto &points_2d = kv.second;
 
-    Eigen::Vector2d oc = optical_centers[tcid.second];
+    Eigen::Vector2d oc = optical_centers[tcid.cam_id];
 
     BASALT_ASSERT(points_2d.size() ==
                   april_grid.aprilgrid_vignette_pos_3d.size());
@@ -263,7 +263,7 @@ void VignetteEstimator::compute_data_log(pangolin::DataLog &vign_data_log) {
     for (size_t i = 0; i < points_2d.size(); i++) {
       if (points_2d[i][2] >= 0) {
         size_t loc = (points_2d[i].head<2>() - oc).norm();
-        num_proj_points[tcid.second][loc] += 1.;
+        num_proj_points[tcid.cam_id][loc] += 1.;
       }
     }
   }

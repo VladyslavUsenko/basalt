@@ -305,7 +305,7 @@ void CamCalib::computeProjections() {
     int64_t timestamp_ns = vio_dataset->get_image_timestamps()[j];
 
     for (size_t i = 0; i < calib_opt->calib->intrinsics.size(); i++) {
-      TimeCamId tcid = std::make_pair(timestamp_ns, i);
+      TimeCamId tcid(timestamp_ns, i);
 
       ProjectedCornerData rc, rv;
       Eigen::vector<Eigen::Vector2d> polar_azimuthal_angle;
@@ -339,15 +339,15 @@ void CamCalib::computeProjections() {
             size_t polar_bin =
                 180 * polar_azimuthal_angle[id][0] / (M_PI * ANGLE_BIN_SIZE);
 
-            polar_sum[tcid.second][polar_bin] += error;
-            polar_num[tcid.second][polar_bin] += 1;
+            polar_sum[tcid.cam_id][polar_bin] += error;
+            polar_num[tcid.cam_id][polar_bin] += 1;
 
             size_t azimuth_bin =
                 180 / ANGLE_BIN_SIZE + (180.0 * polar_azimuthal_angle[id][1]) /
                                            (M_PI * ANGLE_BIN_SIZE);
 
-            azimuth_sum[tcid.second][azimuth_bin] += error;
-            azimuth_num[tcid.second][azimuth_bin] += 1;
+            azimuth_sum[tcid.cam_id][azimuth_bin] += error;
+            azimuth_num[tcid.cam_id][azimuth_bin] += 1;
           }
         }
       }
@@ -450,7 +450,7 @@ void CamCalib::initCamIntrinsics() {
       const std::vector<basalt::ImageData> &img_vec =
           vio_dataset->get_image_data(timestamp_ns);
 
-      TimeCamId tcid = std::make_pair(timestamp_ns, j);
+      TimeCamId tcid(timestamp_ns, j);
 
       if (calib_corners.find(tcid) != calib_corners.end()) {
         CalibCornerData cid = calib_corners.at(tcid);
@@ -556,7 +556,7 @@ void CamCalib::initCamExtrinsics() {
   for (size_t i = 0; i < vio_dataset->get_image_timestamps().size(); i++) {
     int64_t timestamp_ns = vio_dataset->get_image_timestamps()[i];
 
-    TimeCamId tcid0 = std::make_pair(timestamp_ns, 0);
+    TimeCamId tcid0(timestamp_ns, 0);
 
     if (calib_init_poses.find(tcid0) == calib_init_poses.end()) continue;
 
@@ -565,7 +565,7 @@ void CamCalib::initCamExtrinsics() {
     bool success = true;
 
     for (size_t j = 1; j < vio_dataset->get_num_cams(); j++) {
-      TimeCamId tcid = std::make_pair(timestamp_ns, j);
+      TimeCamId tcid(timestamp_ns, j);
 
       auto cd = calib_init_poses.find(tcid);
       if (cd != calib_init_poses.end() && cd->second.num_inliers > 0) {
@@ -604,12 +604,12 @@ void CamCalib::initOptimization() {
   std::set<uint64_t> invalid_timestamps;
   for (const auto &kv : calib_corners) {
     if (kv.second.corner_ids.size() < MIN_CORNERS)
-      invalid_timestamps.insert(kv.first.first);
+      invalid_timestamps.insert(kv.first.frame_id);
   }
 
   for (const auto &kv : calib_corners) {
-    if (invalid_timestamps.find(kv.first.first) == invalid_timestamps.end())
-      calib_opt->addAprilgridMeasurement(kv.first.first, kv.first.second,
+    if (invalid_timestamps.find(kv.first.frame_id) == invalid_timestamps.end())
+      calib_opt->addAprilgridMeasurement(kv.first.frame_id, kv.first.cam_id,
                                          kv.second.corners,
                                          kv.second.corner_ids);
   }
@@ -618,7 +618,7 @@ void CamCalib::initOptimization() {
     int64_t timestamp_ns = vio_dataset->get_image_timestamps()[j];
 
     for (size_t cam_id = 0; cam_id < calib_opt->calib->T_i_c.size(); cam_id++) {
-      TimeCamId tcid = std::make_pair(timestamp_ns, cam_id);
+      TimeCamId tcid(timestamp_ns, cam_id);
       const auto cp_it = calib_init_poses.find(tcid);
 
       if (cp_it != calib_init_poses.end()) {
@@ -806,7 +806,7 @@ void CamCalib::drawImageOverlay(pangolin::View &v, size_t cam_id) {
 
   if (vio_dataset && frame_id < vio_dataset->get_image_timestamps().size()) {
     int64_t timestamp_ns = vio_dataset->get_image_timestamps()[frame_id];
-    TimeCamId tcid = std::make_pair(timestamp_ns, cam_id);
+    TimeCamId tcid(timestamp_ns, cam_id);
 
     if (show_corners) {
       glLineWidth(1.0);

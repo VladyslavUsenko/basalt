@@ -57,7 +57,6 @@ class HashBow;
 class NfrMapper : public BundleAdjustmentBase {
  public:
   using Ptr = std::shared_ptr<NfrMapper>;
-  using TimeCamId = std::pair<int64_t, std::size_t>;
   using Matches = tbb::concurrent_unordered_map<
       std::pair<TimeCamId, TimeCamId>, MatchData,
       tbb::tbb_hash<std::pair<TimeCamId, TimeCamId>>,

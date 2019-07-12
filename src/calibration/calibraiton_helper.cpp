@@ -128,7 +128,7 @@ void CalibHelper::detectCorners(
               //                          ccd_bad.corners.size()
               //                          << " rejected)" << std::endl;
 
-              TimeCamId tcid = std::make_pair(timestamp_ns, i);
+              TimeCamId tcid(timestamp_ns, i);
 
               calib_corners.emplace(tcid, ccd_good);
               calib_corners_rejected.emplace(tcid, ccd_bad);
@@ -160,7 +160,7 @@ void CalibHelper::initCamPoses(
 
                         CalibInitPoseData cp;
 
-                        computeInitialPose(calib, tcid.second,
+                        computeInitialPose(calib, tcid.cam_id,
                                            aprilgrid_corner_pos_3d, ccd, cp);
 
                         calib_init_poses.emplace(tcid, cp);

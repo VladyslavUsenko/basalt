@@ -45,6 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <basalt/imu/imu_types.h>
 #include <basalt/optical_flow/optical_flow.h>
+#include <basalt/utils/common_types.h>
 #include <basalt/utils/sophus_utils.hpp>
 
 #include <cereal/cereal.hpp>

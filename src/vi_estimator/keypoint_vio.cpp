@@ -247,10 +247,10 @@ bool KeypointVioEstimator::measure(const OpticalFlowResult::Ptr& opt_flow_meas,
 
         obs[tcid_host][tcid_target].push_back(kobs);
 
-        if (num_points_connected.count(tcid_host.first) == 0) {
-          num_points_connected[tcid_host.first] = 0;
+        if (num_points_connected.count(tcid_host.frame_id) == 0) {
+          num_points_connected[tcid_host.frame_id] = 0;
         }
-        num_points_connected[tcid_host.first]++;
+        num_points_connected[tcid_host.frame_id]++;
 
         if (i == 0) connected0++;
       } else {
@@ -310,22 +310,22 @@ bool KeypointVioEstimator::measure(const OpticalFlowResult::Ptr& opt_flow_meas,
                                        .at(lm_id)
                                        .translation()
                                        .cast<double>();
-        const Eigen::Vector2d p1 = prev_opt_flow_res[tcido.first]
-                                       ->observations[tcido.second]
+        const Eigen::Vector2d p1 = prev_opt_flow_res[tcido.frame_id]
+                                       ->observations[tcido.cam_id]
                                        .at(lm_id)
                                        .translation()
                                        .cast<double>();
 
         Eigen::Vector4d p0_3d, p1_3d;
         bool valid1 = calib.intrinsics[0].unproject(p0, p0_3d);
-        bool valid2 = calib.intrinsics[tcido.second].unproject(p1, p1_3d);
+        bool valid2 = calib.intrinsics[tcido.cam_id].unproject(p1, p1_3d);
         if (!valid1 || !valid2) continue;
 
         Sophus::SE3d T_i0_i1 =
-            getPoseStateWithLin(tcidl.first).getPose().inverse() *
-            getPoseStateWithLin(tcido.first).getPose();
+            getPoseStateWithLin(tcidl.frame_id).getPose().inverse() *
+            getPoseStateWithLin(tcido.frame_id).getPose();
         Sophus::SE3d T_0_1 =
-            calib.T_i_c[0].inverse() * T_i0_i1 * calib.T_i_c[tcido.second];
+            calib.T_i_c[0].inverse() * T_i0_i1 * calib.T_i_c[tcido.cam_id];
 
         if (T_0_1.translation().squaredNorm() < 0.03 * 0.03) continue;
 
@@ -672,10 +672,10 @@ void KeypointVioEstimator::marginalize(
           obs_to_lin;
 
       for (auto it = obs.cbegin(); it != obs.cend();) {
-        if (kfs_to_marg.count(it->first.first) > 0) {
+        if (kfs_to_marg.count(it->first.frame_id) > 0) {
           for (auto it2 = it->second.cbegin(); it2 != it->second.cend();
                ++it2) {
-            if (it2->first.first <= last_state_to_marg)
+            if (it2->first.frame_id <= last_state_to_marg)
               obs_to_lin[it->first].emplace(*it2);
           }
           it = obs.erase(it);
@@ -701,7 +701,7 @@ void KeypointVioEstimator::marginalize(
 
       // remove points
       for (auto it = kpts.cbegin(); it != kpts.cend();) {
-        if (kfs_to_marg.count(it->second.kf_id.first) > 0) {
+        if (kfs_to_marg.count(it->second.kf_id.frame_id) > 0) {
           it = kpts.erase(it);
         } else {
           ++it;
@@ -808,8 +808,8 @@ void KeypointVioEstimator::marginalize(
 
     for (auto it = obs.begin(); it != obs.end(); ++it) {
       for (auto it2 = it->second.cbegin(); it2 != it->second.cend();) {
-        if (poses_to_marg.count(it2->first.first) > 0 ||
-            states_to_marg_all.count(it2->first.first) > 0) {
+        if (poses_to_marg.count(it2->first.frame_id) > 0 ||
+            states_to_marg_all.count(it2->first.frame_id) > 0) {
           it2 = it->second.erase(it2);
         } else {
           ++it2;
@@ -1035,15 +1035,15 @@ void KeypointVioEstimator::computeProjections(
     for (const auto& obs_kv : kv.second) {
       const TimeCamId& tcid_t = obs_kv.first;
 
-      if (tcid_t.first != last_state_t_ns) continue;
+      if (tcid_t.frame_id != last_state_t_ns) continue;
 
       if (tcid_h != tcid_t) {
-        PoseStateWithLin state_h = getPoseStateWithLin(tcid_h.first);
-        PoseStateWithLin state_t = getPoseStateWithLin(tcid_t.first);
+        PoseStateWithLin state_h = getPoseStateWithLin(tcid_h.frame_id);
+        PoseStateWithLin state_t = getPoseStateWithLin(tcid_t.frame_id);
 
         Sophus::SE3d T_t_h_sophus =
-            computeRelPose(state_h.getPose(), calib.T_i_c[tcid_h.second],
-                           state_t.getPose(), calib.T_i_c[tcid_t.second]);
+            computeRelPose(state_h.getPose(), calib.T_i_c[tcid_h.cam_id],
+                           state_t.getPose(), calib.T_i_c[tcid_t.cam_id]);
 
         Eigen::Matrix4d T_t_h = T_t_h_sophus.matrix();
 
@@ -1062,10 +1062,10 @@ void KeypointVioEstimator::computeProjections(
                                nullptr, &proj);
 
                 proj[3] = kpt_obs.kpt_id;
-                data[tcid_t.second].emplace_back(proj);
+                data[tcid_t.cam_id].emplace_back(proj);
               }
             },
-            calib.intrinsics[tcid_t.second].variant);
+            calib.intrinsics[tcid_t.cam_id].variant);
 
       } else {
         // target and host are the same
@@ -1085,10 +1085,10 @@ void KeypointVioEstimator::computeProjections(
                                cam, res, nullptr, nullptr, &proj);
 
                 proj[3] = kpt_obs.kpt_id;
-                data[tcid_t.second].emplace_back(proj);
+                data[tcid_t.cam_id].emplace_back(proj);
               }
             },
-            calib.intrinsics[tcid_t.second].variant);
+            calib.intrinsics[tcid_t.cam_id].variant);
       }
     }
   }
