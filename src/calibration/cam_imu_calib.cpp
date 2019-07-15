@@ -223,7 +223,6 @@ void CamImuCalib::computeProjections() {
 
       Eigen::Matrix4d T_c_w = T_c_w_.matrix();
 
-      std::vector<bool> proj_success;
       calib_opt->calib->intrinsics[i].project(
           april_grid.aprilgrid_corner_pos_3d, T_c_w, rc.corners_proj,
           rc.corners_proj_success);
