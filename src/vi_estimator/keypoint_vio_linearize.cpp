@@ -45,6 +45,10 @@ void KeypointVioEstimator::linearizeMargPrior(const AbsOrderMap& aom,
 
   BASALT_ASSERT(size_t(marg_H.cols()) == marg_order.total_size);
 
+  // Check if the order of variables is the same.
+  for (const auto& kv : marg_order.abs_order_map)
+    BASALT_ASSERT(aom.abs_order_map.at(kv.first) == kv.second);
+
   size_t marg_size = marg_order.total_size;
   abs_H.topLeftCorner(marg_size, marg_size) += marg_H;
 

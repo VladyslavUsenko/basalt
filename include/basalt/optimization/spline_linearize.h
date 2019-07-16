@@ -101,8 +101,7 @@ struct LinearizeSplineOpt : public LinearizeBase<Scalar> {
   const SplineT* spline;
 
   LinearizeSplineOpt(size_t opt_size, const SplineT* spl,
-                     const CalibCommonData& common_data,
-                     const SplineT* spl_lin = nullptr)
+                     const CalibCommonData& common_data)
       : opt_size(opt_size), spline(spl) {
     this->common_data = common_data;
 
@@ -670,8 +669,7 @@ struct ComputeErrorSplineOpt : public LinearizeBase<Scalar> {
   const SplineT* spline;
 
   ComputeErrorSplineOpt(size_t opt_size, const SplineT* spl,
-                        const CalibCommonData& common_data,
-                        const SplineT* spl_lin = nullptr)
+                        const CalibCommonData& common_data)
       : opt_size(opt_size), spline(spl) {
     this->common_data = common_data;
 

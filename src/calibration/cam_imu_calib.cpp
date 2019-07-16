@@ -284,7 +284,7 @@ void CamImuCalib::initCamPoses() {
   {
     std::cout << "Started initial camera pose computation " << std::endl;
 
-    CalibHelper::initCamPoses(calib_opt->calib, this->vio_dataset,
+    CalibHelper::initCamPoses(calib_opt->calib,
                               april_grid.aprilgrid_corner_pos_3d,
                               this->calib_corners, this->calib_init_poses);
 

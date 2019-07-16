@@ -77,7 +77,7 @@ class CalibHelper {
           calib_corners_rejected);
 
   static void initCamPoses(
-      const Calibration<double>::Ptr& calib, const VioDatasetPtr& vio_data,
+      const Calibration<double>::Ptr& calib,
       const Eigen::vector<Eigen::Vector4d>& aprilgrid_corner_pos_3d,
       tbb::concurrent_unordered_map<TimeCamId, CalibCornerData>& calib_corners,
       tbb::concurrent_unordered_map<TimeCamId, CalibInitPoseData>&
