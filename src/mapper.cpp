@@ -339,6 +339,8 @@ int main(int argc, char** argv) {
 }
 
 void draw_image_overlay(pangolin::View& v, size_t view_id) {
+  UNUSED(v);
+
   size_t frame_id = (view_id == 0) ? show_frame1 : show_frame2;
   size_t cam_id = (view_id == 0) ? show_cam1 : show_cam2;
 

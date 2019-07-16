@@ -279,6 +279,8 @@ int main(int argc, char** argv) {
 }
 
 void draw_image_overlay(pangolin::View& v, size_t cam_id) {
+  UNUSED(v);
+
   size_t frame_id = static_cast<size_t>(show_frame);
   int64_t t_ns = vio_dataset->get_image_timestamps()[frame_id];
 

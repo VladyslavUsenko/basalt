@@ -365,6 +365,8 @@ int main(int argc, char *argv[]) {
       std::shared_ptr<pangolin::ImageView> iv(new pangolin::ImageView);
 
       iv->extern_draw_function = [&, idx](pangolin::View &v) {
+        UNUSED(v);
+
         glLineWidth(1.0);
         glColor3f(1.0, 0.0, 0.0);  // red
         glEnable(GL_BLEND);
@@ -389,6 +391,8 @@ int main(int argc, char *argv[]) {
 
       iv->OnSelectionCallback =
           [&](pangolin::ImageView::OnSelectionEventData o) {
+            UNUSED(o);
+
             int64_t curr_t_ns = std::chrono::high_resolution_clock::now()
                                     .time_since_epoch()
                                     .count();

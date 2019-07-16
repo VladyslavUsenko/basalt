@@ -796,7 +796,7 @@ bool CamCalib::optimizeWithParam(bool print_info,
 
 void CamCalib::saveCalib() {
   if (calib_opt) {
-    calib_opt->saveCalib(cache_path, vio_dataset->get_mocap_to_imu_offset_ns());
+    calib_opt->saveCalib(cache_path);
 
     std::cout << "Saved calibration in " << cache_path << "calibration.json"
               << std::endl;

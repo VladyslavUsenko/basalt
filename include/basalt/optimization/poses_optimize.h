@@ -114,8 +114,7 @@ class PosesOptimization {
     }
   }
 
-  void saveCalib(const std::string &path,
-                 int64_t mocap_to_imu_offset_ns = 0) const {
+  void saveCalib(const std::string &path) const {
     if (calib) {
       std::ofstream os(path + "calibration.json");
       cereal::JSONOutputArchive archive(os);

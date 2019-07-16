@@ -359,6 +359,8 @@ int main(int argc, char** argv) {
 }
 
 void draw_image_overlay(pangolin::View& v, size_t cam_id) {
+  UNUSED(v);
+
   if (show_obs) {
     glLineWidth(1.0);
     glColor3f(1.0, 0.0, 0.0);

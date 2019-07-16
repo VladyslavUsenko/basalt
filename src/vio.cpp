@@ -487,6 +487,8 @@ int main(int argc, char** argv) {
 }
 
 void draw_image_overlay(pangolin::View& v, size_t cam_id) {
+  UNUSED(v);
+
   //  size_t frame_id = show_frame;
   //  basalt::TimeCamId tcid =
   //      std::make_pair(vio_dataset->get_image_timestamps()[frame_id],
