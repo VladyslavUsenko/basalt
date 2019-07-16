@@ -35,8 +35,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <basalt/io/marg_data_io.h>
 
-#include <pangolin/image/image_io.h>
-
 #include <basalt/serialization/headers_serialization.h>
 
 #include <experimental/filesystem>

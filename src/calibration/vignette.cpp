@@ -247,7 +247,8 @@ void VignetteEstimator::optimize() {
   }
 }
 
-void VignetteEstimator::compute_data_log(pangolin::DataLog &vign_data_log) {
+void VignetteEstimator::compute_data_log(
+    std::vector<std::vector<float>> &vign_data_log) {
   std::vector<std::vector<double>> num_proj_points(
       2, std::vector<double>(vign_size, 0));
 
@@ -268,7 +269,7 @@ void VignetteEstimator::compute_data_log(pangolin::DataLog &vign_data_log) {
     }
   }
 
-  vign_data_log.Clear();
+  vign_data_log.clear();
   for (size_t i = 0; i < vign_size; i++) {
     std::vector<float> log_data;
     for (size_t j = 0; j < vio_dataset->get_num_cams(); j++) {
@@ -276,7 +277,7 @@ void VignetteEstimator::compute_data_log(pangolin::DataLog &vign_data_log) {
       log_data.push_back(vign_param[j].evaluate(loc)[0]);
       log_data.push_back(num_proj_points[j][i]);
     }
-    vign_data_log.Log(log_data);
+    vign_data_log.push_back(log_data);
   }
 }
 

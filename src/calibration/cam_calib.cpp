@@ -206,7 +206,11 @@ void CamCalib::computeVign() {
 
   ve.optimize();
   ve.compute_error(&reprojected_vignette_error);
-  ve.compute_data_log(vign_data_log);
+
+  std::vector<std::vector<float>> vign_data;
+  ve.compute_data_log(vign_data);
+  vign_data_log.Clear();
+  for (const auto &v : vign_data) vign_data_log.Log(v);
 
   {
     vign_plotter->ClearSeries();

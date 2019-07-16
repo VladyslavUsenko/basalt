@@ -203,8 +203,6 @@ add_library(basalt SHARED
   src/io/dataset_io.cpp
   src/io/marg_data_io.cpp
   src/calibration/aprilgrid.cpp
-  src/calibration/cam_calib.cpp
-  src/calibration/cam_imu_calib.cpp
   src/calibration/calibraiton_helper.cpp
   src/calibration/vignette.cpp
   src/utils/vio_config.cpp
@@ -217,42 +215,42 @@ add_library(basalt SHARED
   src/utils/keypoints.cpp)
 
 
-target_link_libraries(basalt PUBLIC ${TBB_LIBRARIES} ${STD_CXX_FS} ${OpenCV_LIBS} pangolin PRIVATE rosbag apriltag opengv)
+target_link_libraries(basalt PUBLIC ${TBB_LIBRARIES} ${STD_CXX_FS} ${OpenCV_LIBS} PRIVATE rosbag apriltag opengv)
 
 
-add_executable(basalt_calibrate src/calibrate.cpp)
-target_link_libraries(basalt_calibrate basalt)
+add_executable(basalt_calibrate src/calibrate.cpp src/calibration/cam_calib.cpp)
+target_link_libraries(basalt_calibrate basalt pangolin)
 
-add_executable(basalt_calibrate_imu src/calibrate_imu.cpp)
-target_link_libraries(basalt_calibrate_imu basalt)
+add_executable(basalt_calibrate_imu src/calibrate_imu.cpp src/calibration/cam_imu_calib.cpp)
+target_link_libraries(basalt_calibrate_imu basalt pangolin)
 
 
 add_executable(basalt_vio_sim src/vio_sim.cpp)
-target_link_libraries(basalt_vio_sim basalt)
+target_link_libraries(basalt_vio_sim basalt pangolin)
 
 add_executable(basalt_mapper_sim src/mapper_sim.cpp)
-target_link_libraries(basalt_mapper_sim basalt)
+target_link_libraries(basalt_mapper_sim basalt pangolin)
 
 add_executable(basalt_mapper_sim_naive src/mapper_sim_naive.cpp)
-target_link_libraries(basalt_mapper_sim_naive basalt)
+target_link_libraries(basalt_mapper_sim_naive basalt pangolin)
 
 add_executable(basalt_mapper src/mapper.cpp)
-target_link_libraries(basalt_mapper basalt)
+target_link_libraries(basalt_mapper basalt pangolin)
 
 
 add_executable(basalt_opt_flow src/opt_flow.cpp)
-target_link_libraries(basalt_opt_flow basalt)
+target_link_libraries(basalt_opt_flow basalt pangolin)
 
 add_executable(basalt_vio src/vio.cpp)
-target_link_libraries(basalt_vio basalt)
+target_link_libraries(basalt_vio basalt pangolin)
 
 find_package(realsense2 QUIET)
 if(realsense2_FOUND)
   add_executable(basalt_rs_t265_record src/rs_t265_record.cpp src/device/rs_t265.cpp)
-  target_link_libraries(basalt_rs_t265_record basalt realsense2::realsense2 ${OpenCV_LIBS})
+  target_link_libraries(basalt_rs_t265_record basalt realsense2::realsense2 ${OpenCV_LIBS} pangolin)
 
   add_executable(basalt_rs_t265_vio src/rs_t265_vio.cpp src/device/rs_t265.cpp)
-  target_link_libraries(basalt_rs_t265_vio basalt realsense2::realsense2)
+  target_link_libraries(basalt_rs_t265_vio basalt realsense2::realsense2 pangolin)
 endif()
 
 

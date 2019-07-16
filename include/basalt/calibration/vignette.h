@@ -39,8 +39,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <basalt/spline/rd_spline.h>
 
-#include <pangolin/plot/datalog.h>
-
 namespace basalt {
 
 class VignetteEstimator {
@@ -65,7 +63,7 @@ class VignetteEstimator {
 
   void optimize();
 
-  void compute_data_log(pangolin::DataLog &vign_data_log);
+  void compute_data_log(std::vector<std::vector<float>> &vign_data_log);
 
   void save_vign_png(const std::string &path);
 
