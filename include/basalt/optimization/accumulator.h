@@ -79,26 +79,15 @@ class DenseAccumulator {
     b.template segment<ROWS>(i) += data;
   }
 
-  inline VectorX solve() const { return H.ldlt().solve(b); }
-
-  inline VectorX solveWithPrior(const MatrixX& H_prior, const VectorX& b_prior,
-                                size_t pos) const {
-    const int prior_size = b_prior.rows();
-
-    BASALT_ASSERT_STREAM(
-        H_prior.cols() == prior_size,
-        "H_prior.cols() " << H_prior.cols() << " prior_size " << prior_size);
-    BASALT_ASSERT_STREAM(
-        H_prior.rows() == prior_size,
-        "H_prior.rows() " << H_prior.rows() << " prior_size " << prior_size);
-
-    MatrixX H_new = H;
-    VectorX b_new = b;
-
-    H_new.block(pos, pos, prior_size, prior_size) += H_prior;
-    b_new.segment(pos, prior_size) += b_prior;
-
-    return H_new.ldlt().solve(-b_new);
+  // inline VectorX solve() const { return H.ldlt().solve(b); }
+  inline VectorX solve(const VectorX* diagonal) const {
+    if (diagonal == nullptr) {
+      return H.ldlt().solve(b);
+    } else {
+      MatrixX HH = H;
+      HH.diagonal() += *diagonal;
+      return HH.ldlt().solve(b);
+    }
   }
 
   inline void reset(int opt_size) {
@@ -116,6 +105,9 @@ class DenseAccumulator {
     std::cerr << "H\n" << H.format(CleanFmt) << std::endl;
     std::cerr << "b\n" << b.transpose().format(CleanFmt) << std::endl;
   }
+
+  inline void setup_solver(){};
+  inline VectorX Hdiagonal() const { return H.diagonal(); }
 
   inline const MatrixX& getH() const { return H; }
   inline const VectorX& getB() const { return b; }

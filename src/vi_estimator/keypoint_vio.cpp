@@ -943,8 +943,13 @@ void KeypointVioEstimator::optimize() {
       double error_total =
           rld_error + imu_error + marg_prior_error + ba_error + bg_error;
 
-      lopt.accum.getH().diagonal() *= 1.0001;
-      const Eigen::VectorXd inc = lopt.accum.solve();
+      lopt.accum.setup_solver();
+      Eigen::VectorXd Hdiag = lopt.accum.Hdiagonal();
+      Hdiag *= 1e-12;
+      for (int i = 0; i < Hdiag.size(); i++)
+        Hdiag[i] = std::max(Hdiag[i], 1e-12);
+
+      const Eigen::VectorXd inc = lopt.accum.solve(&Hdiag);
 
       // apply increment to poses
       for (auto& kv : frame_poses) {
