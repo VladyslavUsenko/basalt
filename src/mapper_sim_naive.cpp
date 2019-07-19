@@ -76,7 +76,7 @@ bool next_step();
 void alignButton();
 
 static const int knot_time = 3;
-static const double obs_std_dev = 0.5;
+//static const double obs_std_dev = 0.5;
 
 Eigen::Vector3d g(0, 0, -9.81);
 
