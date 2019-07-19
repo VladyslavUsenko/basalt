@@ -139,13 +139,6 @@ void RsT265Device::start() {
             data->accel = accel_interpolated;
             data->gyro = gyro_data.data;
 
-            const double accel_noise_std =
-                calib->dicreete_time_accel_noise_std();
-            const double gyro_noise_std = calib->dicreete_time_gyro_noise_std();
-
-            data->accel_cov.setConstant(accel_noise_std * accel_noise_std);
-            data->gyro_cov.setConstant(gyro_noise_std * gyro_noise_std);
-
             if (imu_data_queue) imu_data_queue->push(data);
           }
 
@@ -253,13 +246,15 @@ std::shared_ptr<basalt::Calibration<double>> RsT265Device::exportCalibration() {
 
     // std::cout << "Gyro Bias\n" << gyro_bias_full << std::endl;
 
-    calib->gyro_noise_std = std::sqrt(std::max(
-        std::max(intrinsics.noise_variances[0], intrinsics.noise_variances[1]),
-        intrinsics.noise_variances[2]));
+    calib->gyro_noise_std = Eigen::Vector3d(intrinsics.noise_variances[0],
+                                            intrinsics.noise_variances[1],
+                                            intrinsics.noise_variances[2])
+                                .cwiseSqrt();
 
-    calib->gyro_bias_std = std::sqrt(std::max(
-        std::max(intrinsics.bias_variances[0], intrinsics.bias_variances[1]),
-        intrinsics.bias_variances[2]));
+    calib->gyro_bias_std = Eigen::Vector3d(intrinsics.bias_variances[0],
+                                           intrinsics.bias_variances[1],
+                                           intrinsics.bias_variances[2])
+                               .cwiseSqrt();
 
     // std::cout << "Gyro noise var: " << intrinsics.noise_variances[0]
     //          << " bias var: " << intrinsics.bias_variances[0] << std::endl;
@@ -281,13 +276,15 @@ std::shared_ptr<basalt::Calibration<double>> RsT265Device::exportCalibration() {
 
     // std::cout << "Gyro Bias\n" << accel_bias_full << std::endl;
 
-    calib->accel_noise_std = sqrt(std::max(
-        std::max(intrinsics.noise_variances[0], intrinsics.noise_variances[1]),
-        intrinsics.noise_variances[2]));
+    calib->accel_noise_std = Eigen::Vector3d(intrinsics.noise_variances[0],
+                                             intrinsics.noise_variances[1],
+                                             intrinsics.noise_variances[2])
+                                 .cwiseSqrt();
 
-    calib->accel_bias_std = sqrt(std::max(
-        std::max(intrinsics.bias_variances[0], intrinsics.bias_variances[1]),
-        intrinsics.bias_variances[2]));
+    calib->accel_bias_std = Eigen::Vector3d(intrinsics.bias_variances[0],
+                                            intrinsics.bias_variances[1],
+                                            intrinsics.bias_variances[2])
+                                .cwiseSqrt();
 
     // std::cout << "Accel noise var: " << intrinsics.noise_variances[0]
     //          << " bias var: " << intrinsics.bias_variances[0] << std::endl;

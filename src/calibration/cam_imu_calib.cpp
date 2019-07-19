@@ -651,10 +651,10 @@ void CamImuCalib::loadDataset() {
 
     calib_opt->loadCalib(cache_path);
 
-    calib_opt->calib->accel_noise_std = imu_noise[0];
-    calib_opt->calib->gyro_noise_std = imu_noise[1];
-    calib_opt->calib->accel_bias_std = imu_noise[2];
-    calib_opt->calib->gyro_bias_std = imu_noise[3];
+    calib_opt->calib->accel_noise_std.setConstant(imu_noise[0]);
+    calib_opt->calib->gyro_noise_std.setConstant(imu_noise[1]);
+    calib_opt->calib->accel_bias_std.setConstant(imu_noise[2]);
+    calib_opt->calib->gyro_bias_std.setConstant(imu_noise[3]);
   }
   calib_opt->resetMocapCalib();
 

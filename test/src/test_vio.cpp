@@ -41,6 +41,10 @@ TEST(VioTestSuite, ImuNullspace2Test) {
   state0.bias_gyro = bg;
   state0.bias_accel = ba;
 
+  Eigen::Vector3d accel_cov, gyro_cov;
+  accel_cov.setConstant(accel_std_dev * accel_std_dev);
+  gyro_cov.setConstant(gyro_std_dev * gyro_std_dev);
+
   int64_t dt_ns = 1e7;
   for (int64_t t_ns = dt_ns / 2;
        t_ns < int64_t(1e8);  //  gt_spline.maxTimeNs() - int64_t(1e9);
@@ -63,12 +67,9 @@ TEST(VioTestSuite, ImuNullspace2Test) {
     data.gyro[1] += gyro_noise_dist(gen);
     data.gyro[2] += gyro_noise_dist(gen);
 
-    data.accel_cov.setConstant(accel_std_dev * accel_std_dev);
-    data.gyro_cov.setConstant(gyro_std_dev * gyro_std_dev);
-
     data.t_ns = t_ns + dt_ns / 2;  // measurement in the middle of the interval;
 
-    imu_meas.integrate(data);
+    imu_meas.integrate(data, accel_cov, gyro_cov);
   }
 
   state1.t_ns = imu_meas.get_dt_ns();
@@ -166,6 +167,10 @@ TEST(VioTestSuite, ImuNullspace3Test) {
   state0.bias_gyro = bg;
   state0.bias_accel = ba;
 
+  Eigen::Vector3d accel_cov, gyro_cov;
+  accel_cov.setConstant(accel_std_dev * accel_std_dev);
+  gyro_cov.setConstant(gyro_std_dev * gyro_std_dev);
+
   int64_t dt_ns = 1e7;
   for (int64_t t_ns = dt_ns / 2;
        t_ns < int64_t(1e9);  //  gt_spline.maxTimeNs() - int64_t(1e9);
@@ -188,12 +193,9 @@ TEST(VioTestSuite, ImuNullspace3Test) {
     data.gyro[1] += gyro_noise_dist(gen);
     data.gyro[2] += gyro_noise_dist(gen);
 
-    data.accel_cov.setConstant(accel_std_dev * accel_std_dev);
-    data.gyro_cov.setConstant(gyro_std_dev * gyro_std_dev);
-
     data.t_ns = t_ns + dt_ns / 2;  // measurement in the middle of the interval;
 
-    imu_meas1.integrate(data);
+    imu_meas1.integrate(data, accel_cov, gyro_cov);
   }
 
   basalt::IntegratedImuMeasurement imu_meas2(imu_meas1.get_dt_ns(), bg, ba);
@@ -218,12 +220,9 @@ TEST(VioTestSuite, ImuNullspace3Test) {
     data.gyro[1] += gyro_noise_dist(gen);
     data.gyro[2] += gyro_noise_dist(gen);
 
-    data.accel_cov.setConstant(accel_std_dev * accel_std_dev);
-    data.gyro_cov.setConstant(gyro_std_dev * gyro_std_dev);
-
     data.t_ns = t_ns + dt_ns / 2;  // measurement in the middle of the interval;
 
-    imu_meas2.integrate(data);
+    imu_meas2.integrate(data, accel_cov, gyro_cov);
   }
 
   state1.t_ns = imu_meas1.get_dt_ns();

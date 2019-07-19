@@ -75,10 +75,8 @@ KeypointVioEstimator::KeypointVioEstimator(
 
   std::cout << "marg_H\n" << marg_H << std::endl;
 
-  gyro_bias_weight.setConstant(1.0 /
-                               (calib.gyro_bias_std * calib.gyro_bias_std));
-  accel_bias_weight.setConstant(1.0 /
-                                (calib.accel_bias_std * calib.accel_bias_std));
+  gyro_bias_weight = calib.gyro_bias_std.array().square().inverse();
+  accel_bias_weight = calib.accel_bias_std.array().square().inverse();
 
   max_states = std::numeric_limits<int>::max();
   max_kfs = std::numeric_limits<int>::max();
@@ -113,6 +111,10 @@ void KeypointVioEstimator::initialize(const Eigen::Vector3d& bg,
   auto proc_func = [&, bg, ba] {
     OpticalFlowResult::Ptr prev_frame, curr_frame;
     IntegratedImuMeasurement::Ptr meas;
+
+    Eigen::Vector3d accel_cov, gyro_cov;
+    accel_cov = calib.dicreete_time_accel_noise_std().array().square();
+    gyro_cov = calib.dicreete_time_gyro_noise_std().array().square();
 
     ImuData::Ptr data;
     imu_data_queue.pop(data);
@@ -165,7 +167,8 @@ void KeypointVioEstimator::initialize(const Eigen::Vector3d& bg,
         }
 
         while (data->t_ns <= curr_frame->t_ns) {
-          meas->integrate(*data);
+          meas->integrate(*data, calib.dicreete_time_accel_noise_std(),
+                          calib.dicreete_time_gyro_noise_std());
           imu_data_queue.pop(data);
           if (!data.get()) break;
         }
@@ -173,7 +176,7 @@ void KeypointVioEstimator::initialize(const Eigen::Vector3d& bg,
         if (meas->get_start_t_ns() + meas->get_dt_ns() < curr_frame->t_ns) {
           int64_t tmp = data->t_ns;
           data->t_ns = curr_frame->t_ns;
-          meas->integrate(*data);
+          meas->integrate(*data, accel_cov, gyro_cov);
           data->t_ns = tmp;
         }
       }

@@ -165,12 +165,6 @@ void feed_imu() {
     data->accel = vio_dataset->get_accel_data()[i].data;
     data->gyro = vio_dataset->get_gyro_data()[i].data;
 
-    const double accel_noise_std = calib.dicreete_time_accel_noise_std();
-    const double gyro_noise_std = calib.dicreete_time_gyro_noise_std();
-
-    data->accel_cov.setConstant(accel_noise_std * accel_noise_std);
-    data->gyro_cov.setConstant(gyro_noise_std * gyro_noise_std);
-
     vio->imu_data_queue.push(data);
   }
   vio->imu_data_queue.push(nullptr);

@@ -324,8 +324,10 @@ class SplineOptimization {
     ccd.opt_g = true;
 
     ccd.pose_var_inv = pose_var_inv;
-    ccd.gyro_var_inv = 1.0 / (calib->gyro_noise_std * calib->gyro_noise_std);
-    ccd.accel_var_inv = 1.0 / (calib->accel_noise_std * calib->accel_noise_std);
+    ccd.gyro_var_inv =
+        calib->dicreete_time_gyro_noise_std().array().square().inverse();
+    ccd.accel_var_inv =
+        calib->dicreete_time_accel_noise_std().array().square().inverse();
     ccd.mocap_var_inv = pose_var_inv;
   }
 

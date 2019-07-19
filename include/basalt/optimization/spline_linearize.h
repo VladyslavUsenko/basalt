@@ -235,9 +235,9 @@ struct LinearizeSplineOpt : public LinearizeBase<Scalar> {
       //      std::cerr << "sline.maxTime() " << spline.maxTime() << std::endl;
       //      std::cerr << "================================" << std::endl;
 
-      const Scalar& accel_var_inv = this->common_data.accel_var_inv;
+      const Vector3& accel_var_inv = this->common_data.accel_var_inv;
 
-      error += accel_var_inv * residual.squaredNorm();
+      error += residual.transpose() * accel_var_inv.asDiagonal() * residual;
 
       size_t start_bias =
           this->common_data.bias_block_offset + ACCEL_BIAS_OFFSET;
@@ -255,39 +255,45 @@ struct LinearizeSplineOpt : public LinearizeBase<Scalar> {
 
           accum.template addH<POSE_SIZE, POSE_SIZE>(
               start_i, start_j,
-              accel_var_inv * J.d_val_d_knot[i].transpose() *
+              J.d_val_d_knot[i].transpose() * accel_var_inv.asDiagonal() *
                   J.d_val_d_knot[j]);
         }
         accum.template addH<ACCEL_BIAS_SIZE, POSE_SIZE>(
             start_bias, start_i,
-            accel_var_inv * J_bias.transpose() * J.d_val_d_knot[i]);
+            J_bias.transpose() * accel_var_inv.asDiagonal() *
+                J.d_val_d_knot[i]);
 
         if (this->common_data.opt_g) {
           accum.template addH<G_SIZE, POSE_SIZE>(
               start_g, start_i,
-              accel_var_inv * J_g.transpose() * J.d_val_d_knot[i]);
+              J_g.transpose() * accel_var_inv.asDiagonal() * J.d_val_d_knot[i]);
         }
 
-        accum.template addB<POSE_SIZE>(
-            start_i, accel_var_inv * J.d_val_d_knot[i].transpose() * residual);
+        accum.template addB<POSE_SIZE>(start_i, J.d_val_d_knot[i].transpose() *
+                                                    accel_var_inv.asDiagonal() *
+                                                    residual);
       }
 
       accum.template addH<ACCEL_BIAS_SIZE, ACCEL_BIAS_SIZE>(
-          start_bias, start_bias, accel_var_inv * J_bias.transpose() * J_bias);
+          start_bias, start_bias,
+          J_bias.transpose() * accel_var_inv.asDiagonal() * J_bias);
 
       if (this->common_data.opt_g) {
         accum.template addH<G_SIZE, ACCEL_BIAS_SIZE>(
-            start_g, start_bias, accel_var_inv * J_g.transpose() * J_bias);
+            start_g, start_bias,
+            J_g.transpose() * accel_var_inv.asDiagonal() * J_bias);
         accum.template addH<G_SIZE, G_SIZE>(
-            start_g, start_g, accel_var_inv * J_g.transpose() * J_g);
+            start_g, start_g,
+            J_g.transpose() * accel_var_inv.asDiagonal() * J_g);
       }
 
       accum.template addB<ACCEL_BIAS_SIZE>(
-          start_bias, accel_var_inv * J_bias.transpose() * residual);
+          start_bias,
+          J_bias.transpose() * accel_var_inv.asDiagonal() * residual);
 
       if (this->common_data.opt_g) {
-        accum.template addB<G_SIZE>(start_g,
-                                    accel_var_inv * J_g.transpose() * residual);
+        accum.template addB<G_SIZE>(
+            start_g, J_g.transpose() * accel_var_inv.asDiagonal() * residual);
       }
     }
   }
@@ -305,7 +311,7 @@ struct LinearizeSplineOpt : public LinearizeBase<Scalar> {
       BASALT_ASSERT(t_ns >= spline->minTimeNs());
       BASALT_ASSERT(t_ns <= spline->maxTimeNs());
 
-      const Scalar& gyro_var_inv = this->common_data.gyro_var_inv;
+      const Vector3& gyro_var_inv = this->common_data.gyro_var_inv;
 
       Vector3 residual = spline->gyroResidual(
           t_ns, pm.data, this->common_data.calibration->calib_gyro_bias, &J,
@@ -323,7 +329,7 @@ struct LinearizeSplineOpt : public LinearizeBase<Scalar> {
       //      std::cerr << "pm.data " << pm.data.transpose() << std::endl;
       //      std::cerr << "t_ns " << t_ns << std::endl;
 
-      error += gyro_var_inv * residual.squaredNorm();
+      error += residual.transpose() * gyro_var_inv.asDiagonal() * residual;
 
       size_t start_bias =
           this->common_data.bias_block_offset + GYRO_BIAS_OFFSET;
@@ -344,19 +350,23 @@ struct LinearizeSplineOpt : public LinearizeBase<Scalar> {
 
           accum.template addH<ROT_SIZE, ROT_SIZE>(
               start_i, start_j,
-              gyro_var_inv * J.d_val_d_knot[i].transpose() * J.d_val_d_knot[j]);
+              J.d_val_d_knot[i].transpose() * gyro_var_inv.asDiagonal() *
+                  J.d_val_d_knot[j]);
         }
         accum.template addH<GYRO_BIAS_SIZE, ROT_SIZE>(
             start_bias, start_i,
-            gyro_var_inv * J_bias.transpose() * J.d_val_d_knot[i]);
-        accum.template addB<ROT_SIZE>(
-            start_i, gyro_var_inv * J.d_val_d_knot[i].transpose() * residual);
+            J_bias.transpose() * gyro_var_inv.asDiagonal() * J.d_val_d_knot[i]);
+        accum.template addB<ROT_SIZE>(start_i, J.d_val_d_knot[i].transpose() *
+                                                   gyro_var_inv.asDiagonal() *
+                                                   residual);
       }
 
       accum.template addH<GYRO_BIAS_SIZE, GYRO_BIAS_SIZE>(
-          start_bias, start_bias, gyro_var_inv * J_bias.transpose() * J_bias);
+          start_bias, start_bias,
+          J_bias.transpose() * gyro_var_inv.asDiagonal() * J_bias);
       accum.template addB<GYRO_BIAS_SIZE>(
-          start_bias, gyro_var_inv * J_bias.transpose() * residual);
+          start_bias,
+          J_bias.transpose() * gyro_var_inv.asDiagonal() * residual);
     }
   }
 
@@ -732,9 +742,9 @@ struct ComputeErrorSplineOpt : public LinearizeBase<Scalar> {
           t, pm.data, this->common_data.calibration->calib_accel_bias,
           *(this->common_data.g));
 
-      const Scalar& accel_var_inv = this->common_data.accel_var_inv;
+      const Vector3& accel_var_inv = this->common_data.accel_var_inv;
 
-      error += accel_var_inv * residual.squaredNorm();
+      error += residual.transpose() * accel_var_inv.asDiagonal() * residual;
     }
   }
 
@@ -748,12 +758,12 @@ struct ComputeErrorSplineOpt : public LinearizeBase<Scalar> {
       BASALT_ASSERT(t_ns >= spline->minTimeNs());
       BASALT_ASSERT(t_ns <= spline->maxTimeNs());
 
-      const Scalar& gyro_var_inv = this->common_data.gyro_var_inv;
+      const Vector3& gyro_var_inv = this->common_data.gyro_var_inv;
 
       Vector3 residual = spline->gyroResidual(
           t_ns, pm.data, this->common_data.calibration->calib_gyro_bias);
 
-      error += gyro_var_inv * residual.squaredNorm();
+      error += residual.transpose() * gyro_var_inv.asDiagonal() * residual;
     }
   }
 

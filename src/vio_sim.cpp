@@ -209,11 +209,6 @@ int main(int argc, char** argv) {
       data->accel = noisy_accel[i];
       data->gyro = noisy_gyro[i];
 
-      data->accel_cov.setConstant(calib.dicreete_time_accel_noise_std() *
-                                  calib.dicreete_time_accel_noise_std());
-      data->gyro_cov.setConstant(calib.dicreete_time_gyro_noise_std() *
-                                 calib.dicreete_time_gyro_noise_std());
-
       vio->addIMUToQueue(data);
     }
 
@@ -600,12 +595,12 @@ void compute_projections() {
 
 void gen_data() {
   std::normal_distribution<> gyro_noise_dist{
-      0, calib.dicreete_time_gyro_noise_std()};
+      0, calib.dicreete_time_gyro_noise_std()[0]};
   std::normal_distribution<> accel_noise_dist{
-      0, calib.dicreete_time_accel_noise_std()};
+      0, calib.dicreete_time_accel_noise_std()[0]};
 
-  std::normal_distribution<> gyro_bias_dist{0, calib.gyro_bias_std};
-  std::normal_distribution<> accel_bias_dist{0, calib.accel_bias_std};
+  std::normal_distribution<> gyro_bias_dist{0, calib.gyro_bias_std[0]};
+  std::normal_distribution<> accel_bias_dist{0, calib.accel_bias_std[0]};
 
   for (size_t i = 0; i < calib.intrinsics.size(); i++) {
     images.emplace_back();

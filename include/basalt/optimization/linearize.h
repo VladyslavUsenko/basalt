@@ -122,8 +122,8 @@ struct LinearizeBase {
     bool opt_imu_scale;
 
     Scalar pose_var_inv;
-    Scalar gyro_var_inv;
-    Scalar accel_var_inv;
+    Vector3 gyro_var_inv;
+    Vector3 accel_var_inv;
     Scalar mocap_var_inv;
 
     Scalar huber_thresh;
