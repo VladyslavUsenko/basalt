@@ -112,9 +112,10 @@ void KeypointVioEstimator::initialize(const Eigen::Vector3d& bg,
     OpticalFlowResult::Ptr prev_frame, curr_frame;
     IntegratedImuMeasurement::Ptr meas;
 
-    Eigen::Vector3d accel_cov, gyro_cov;
-    accel_cov = calib.dicreete_time_accel_noise_std().array().square();
-    gyro_cov = calib.dicreete_time_gyro_noise_std().array().square();
+    const Eigen::Vector3d accel_cov =
+        calib.dicreete_time_accel_noise_std().array().square();
+    const Eigen::Vector3d gyro_cov =
+        calib.dicreete_time_gyro_noise_std().array().square();
 
     ImuData::Ptr data;
     imu_data_queue.pop(data);
@@ -167,8 +168,7 @@ void KeypointVioEstimator::initialize(const Eigen::Vector3d& bg,
         }
 
         while (data->t_ns <= curr_frame->t_ns) {
-          meas->integrate(*data, calib.dicreete_time_accel_noise_std(),
-                          calib.dicreete_time_gyro_noise_std());
+          meas->integrate(*data, accel_cov, gyro_cov);
           imu_data_queue.pop(data);
           if (!data.get()) break;
         }
