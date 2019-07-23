@@ -330,7 +330,7 @@ bool KeypointVioEstimator::measure(const OpticalFlowResult::Ptr& opt_flow_meas,
         Sophus::SE3d T_0_1 =
             calib.T_i_c[0].inverse() * T_i0_i1 * calib.T_i_c[tcido.cam_id];
 
-        if (T_0_1.translation().squaredNorm() < 0.03 * 0.03) continue;
+        if (T_0_1.translation().squaredNorm() < 0.05 * 0.05) continue;
 
         Eigen::Vector4d p0_triangulated =
             triangulate(p0_3d.head<3>(), p1_3d.head<3>(), T_0_1);

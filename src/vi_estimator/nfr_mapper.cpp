@@ -636,8 +636,12 @@ void NfrMapper::setup_opt() {
       Sophus::SE3d T_w_o = frame_poses.at(tcid_o.frame_id).getPose() *
                            calib.T_i_c[tcid_o.cam_id];
 
-      Eigen::Vector4d pos_3d = triangulate(
-          pos_3d_h.head<3>(), pos_3d_o.head<3>(), T_w_h.inverse() * T_w_o);
+      Sophus::SE3d T_h_o = T_w_h.inverse() * T_w_o;
+
+      if (T_h_o.translation().squaredNorm() < 0.07 * 0.07) continue;
+
+      Eigen::Vector4d pos_3d =
+          triangulate(pos_3d_h.head<3>(), pos_3d_o.head<3>(), T_h_o);
 
       if (!pos_3d.array().isFinite().all() || pos_3d[3] <= 0 || pos_3d[3] > 2.0)
         continue;
