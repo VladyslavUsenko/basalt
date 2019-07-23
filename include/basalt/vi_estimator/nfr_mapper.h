@@ -168,7 +168,7 @@ class NfrMapper : public BundleAdjustmentBase {
 
   void processMargData(basalt::MargData& m);
 
-  void extractNonlinearFactors(basalt::MargData& m);
+  bool extractNonlinearFactors(basalt::MargData& m);
 
   void optimize(int num_iterations = 10);
 

@@ -53,22 +53,24 @@ NfrMapper::NfrMapper(const Calibration<double>& calib, const VioConfig& config)
 }
 
 void NfrMapper::addMargData(MargData::Ptr& data) {
-  for (const auto& kv : data->frame_poses) {
-    PoseStateWithLin p(kv.second.getT_ns(), kv.second.getPose());
+  processMargData(*data);
+  bool valid = extractNonlinearFactors(*data);
 
-    frame_poses[kv.first] = p;
-  }
+  if (valid) {
+    for (const auto& kv : data->frame_poses) {
+      PoseStateWithLin p(kv.second.getT_ns(), kv.second.getPose());
 
-  for (const auto& kv : data->frame_states) {
-    if (data->kfs_all.count(kv.first) > 0) {
-      auto state = kv.second;
-      PoseStateWithLin p(state.getState().t_ns, state.getState().T_w_i);
       frame_poses[kv.first] = p;
     }
-  }
 
-  processMargData(*data);
-  extractNonlinearFactors(*data);
+    for (const auto& kv : data->frame_states) {
+      if (data->kfs_all.count(kv.first) > 0) {
+        auto state = kv.second;
+        PoseStateWithLin p(state.getState().t_ns, state.getState().T_w_i);
+        frame_poses[kv.first] = p;
+      }
+    }
+  }
 }
 
 void NfrMapper::processMargData(MargData& m) {
@@ -138,13 +140,14 @@ void NfrMapper::processMargData(MargData& m) {
   }
 }
 
-void NfrMapper::extractNonlinearFactors(MargData& m) {
+bool NfrMapper::extractNonlinearFactors(MargData& m) {
   size_t asize = m.aom.total_size;
   // std::cout << "asize " << asize << std::endl;
 
-  Eigen::MatrixXd cov_old;
-  cov_old.setIdentity(asize, asize);
-  m.abs_H.ldlt().solveInPlace(cov_old);
+  Eigen::FullPivHouseholderQR<Eigen::MatrixXd> qr(m.abs_H);
+  if (qr.rank() != m.abs_H.cols()) return false;
+
+  Eigen::MatrixXd cov_old = qr.solve(Eigen::MatrixXd::Identity(asize, asize));
 
   int64_t kf_id = *m.kfs_to_marg.cbegin();
   int kf_start_idx = m.aom.abs_order_map.at(kf_id).first;
@@ -216,6 +219,8 @@ void NfrMapper::extractNonlinearFactors(MargData& m) {
 
     rel_pose_factors.emplace_back(rpf);
   }
+
+  return true;
 }
 
 void NfrMapper::optimize(int num_iterations) {
@@ -365,7 +370,9 @@ void NfrMapper::computeRollPitch(double& roll_pitch_error) {
 void NfrMapper::detect_keypoints() {
   std::vector<int64_t> keys;
   for (const auto& kv : img_data) {
-    keys.emplace_back(kv.first);
+    if (frame_poses.count(kv.first) > 0) {
+      keys.emplace_back(kv.first);
+    }
   }
 
   auto t1 = std::chrono::high_resolution_clock::now();
