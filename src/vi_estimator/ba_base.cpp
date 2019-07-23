@@ -431,29 +431,6 @@ void BundleAdjustmentBase::get_current_points(
   }
 }
 
-Eigen::Vector4d BundleAdjustmentBase::triangulate(const Eigen::Vector3d& p0_3d,
-                                                  const Eigen::Vector3d& p1_3d,
-                                                  const Sophus::SE3d& T_0_1) {
-  Eigen::Vector3d p1_3d_unrotated = T_0_1.so3() * p1_3d;
-  Eigen::Vector2d b;
-  b[0] = T_0_1.translation().dot(p0_3d);
-  b[1] = T_0_1.translation().dot(p1_3d_unrotated);
-  Eigen::Matrix2d A;
-  A(0, 0) = p0_3d.dot(p0_3d);
-  A(1, 0) = p0_3d.dot(p1_3d_unrotated);
-  A(0, 1) = -A(1, 0);
-  A(1, 1) = -p1_3d_unrotated.dot(p1_3d_unrotated);
-  Eigen::Vector2d lambda = A.inverse() * b;
-  Eigen::Vector3d xm = lambda[0] * p0_3d;
-  Eigen::Vector3d xn = T_0_1.translation() + lambda[1] * p1_3d_unrotated;
-
-  Eigen::Vector4d p0_triangulated;
-  p0_triangulated.head<3>() = (xm + xn) / 2;
-  p0_triangulated[3] = 0;
-
-  return p0_triangulated;
-}
-
 void BundleAdjustmentBase::marginalizeHelper(Eigen::MatrixXd& abs_H,
                                              Eigen::VectorXd& abs_b,
                                              const std::set<int>& idx_to_keep,

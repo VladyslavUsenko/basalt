@@ -335,18 +335,16 @@ bool KeypointVioEstimator::measure(const OpticalFlowResult::Ptr& opt_flow_meas,
         Eigen::Vector4d p0_triangulated =
             triangulate(p0_3d.head<3>(), p1_3d.head<3>(), T_0_1);
 
-        if (p0_triangulated[2] > 0) {
+        if (p0_triangulated.array().isFinite().all() &&
+            p0_triangulated[3] > 0 && p0_triangulated[3] < 3.0) {
           KeypointPosition kpt_pos;
           kpt_pos.kf_id = tcidl;
           kpt_pos.dir = StereographicParam<double>::project(p0_triangulated);
-          kpt_pos.id = 1.0 / p0_triangulated.norm();
+          kpt_pos.id = p0_triangulated[3];
+          kpts[lm_id] = kpt_pos;
 
-          if (kpt_pos.id > 0 && kpt_pos.id < 10) {
-            kpts[lm_id] = kpt_pos;
-
-            num_points_added++;
-            valid_kp = true;
-          }
+          num_points_added++;
+          valid_kp = true;
         }
       }
 

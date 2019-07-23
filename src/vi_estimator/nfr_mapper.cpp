@@ -632,12 +632,13 @@ void NfrMapper::setup_opt() {
       Eigen::Vector4d pos_3d = triangulate(
           pos_3d_h.head<3>(), pos_3d_o.head<3>(), T_w_h.inverse() * T_w_o);
 
-      if (pos_3d[2] < 0.5 || pos_3d.norm() < 0.5) continue;
+      if (!pos_3d.array().isFinite().all() || pos_3d[3] <= 0 || pos_3d[3] > 2.0)
+        continue;
 
       KeypointPosition pos;
       pos.kf_id = tcid_h;
       pos.dir = StereographicParam<double>::project(pos_3d);
-      pos.id = 1.0 / pos_3d.norm();
+      pos.id = pos_3d[3];
 
       kpts[kv.first] = pos;
 
