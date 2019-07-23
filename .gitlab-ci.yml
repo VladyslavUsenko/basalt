@@ -201,6 +201,8 @@ eval_euroc_master:
 eval_euroc:
   <<: *eval_euroc_definition
   when: manual
+  except:
+    - master
   allow_failure: false
 
 # aggregate results for all EuRoC sequences
