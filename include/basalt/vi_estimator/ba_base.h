@@ -253,38 +253,30 @@ class BundleAdjustmentBase {
   /// distance.
   template <class Derived>
   static Eigen::Matrix<typename Derived::Scalar, 4, 1> triangulate(
-      const Eigen::MatrixBase<Derived>& p0_3d,
-      const Eigen::MatrixBase<Derived>& p1_3d,
+      const Eigen::MatrixBase<Derived>& f0,
+      const Eigen::MatrixBase<Derived>& f1,
       const Sophus::SE3<typename Derived::Scalar>& T_0_1) {
     EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(Derived, 3);
 
     using Scalar = typename Derived::Scalar;
-    using Vec3 = Eigen::Matrix<Scalar, 3, 1>;
     using Vec4 = Eigen::Matrix<Scalar, 4, 1>;
-    using Mat33 = Eigen::Matrix<Scalar, 3, 3>;
 
-    Vec3 t12 = T_0_1.translation();
-    Mat33 R12 = T_0_1.rotationMatrix();
-    Eigen::Matrix<Scalar, 3, 4> P1 = Eigen::Matrix<Scalar, 3, 4>::Zero();
-    P1.template block<3, 3>(0, 0) = Eigen::Matrix<Scalar, 3, 3>::Identity();
-    Eigen::Matrix<Scalar, 3, 4> P2 = Eigen::Matrix<Scalar, 3, 4>::Zero();
-    P2.template block<3, 3>(0, 0) = R12.transpose();
-    P2.template block<3, 1>(0, 3) = -R12.transpose() * t12;
-    Vec3 f1 = p0_3d;
-    Vec3 f2 = p1_3d;
+    Eigen::Matrix<Scalar, 3, 4> P1, P2;
+    P1.setIdentity();
+    P2 = T_0_1.inverse().matrix3x4();
 
     Eigen::Matrix<Scalar, 4, 4> A(4, 4);
-    A.row(0) = f1[0] * P1.row(2) - f1[2] * P1.row(0);
-    A.row(1) = f1[1] * P1.row(2) - f1[2] * P1.row(1);
-    A.row(2) = f2[0] * P2.row(2) - f2[2] * P2.row(0);
-    A.row(3) = f2[1] * P2.row(2) - f2[2] * P2.row(1);
+    A.row(0) = f0[0] * P1.row(2) - f0[2] * P1.row(0);
+    A.row(1) = f0[1] * P1.row(2) - f0[2] * P1.row(1);
+    A.row(2) = f1[0] * P2.row(2) - f1[2] * P2.row(0);
+    A.row(3) = f1[1] * P2.row(2) - f1[2] * P2.row(1);
 
     Eigen::JacobiSVD<Eigen::Matrix<Scalar, 4, 4>> mySVD(A, Eigen::ComputeFullV);
     Vec4 worldPoint = mySVD.matrixV().col(3);
     worldPoint /= worldPoint.template head<3>().norm();
 
     // Enforse same direction of bearing vector and initial point
-    if (p0_3d.dot(worldPoint.template head<3>()) < 0) worldPoint *= -1;
+    if (f0.dot(worldPoint.template head<3>()) < 0) worldPoint *= -1;
 
     return worldPoint;
   }
