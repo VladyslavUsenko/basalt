@@ -11,7 +11,7 @@ stages:
   - build
   - test
   - eval
-  - eval_results
+  - results
   - deploy
 
 # template for docker builds with ccache
@@ -88,11 +88,25 @@ stages:
     - basalt_vio --help
     - basalt_vio_sim --help
 
+# template to evaluate on EuRoC sequences
+.eval_euroc_template: &eval_euroc_definition
+  stage: eval
+  parallel: 10
+  tags: [docker, dataset-eval]
+  variables:
+    GIT_STRATEGY: none
+  artifacts:
+    paths:
+    - scripts/eval_full/eval_results/*
+    expire_in: 1 week
+  script:
+    - dpkg -i deb_bionic/*.deb
+    - cd scripts/eval_full
+    - ./run_evaluations.sh
+
 bionic-release-compile:
   <<: *prepare_docker_definition
   <<: *compile_test_package_definition
-  only:
-    - master
   variables:
     CXX_MARCH: 'sandybridge'
     DEB_DIR: deb_bionic
@@ -129,6 +143,8 @@ bionic-relwithdebinfo-compile:
   <<: *compile_test_package_definition
   variables:
     BUILD_TYPE: CiRelWithDebInfo
+  only:
+    - master
 
 elcapitan-relwithdebinfo-compile:
   <<: *compile_test_definition
@@ -176,33 +192,25 @@ xenial-test:
     GIT_STRATEGY: none
 
 # evaluate on EuRoC sequences
-eval_euroc:
-  stage: eval
-  parallel: 10
-  tags: [docker, dataset-eval]
-  variables:
-    GIT_STRATEGY: none
+eval_euroc_master:
+  <<: *eval_euroc_definition
   only:
     - master
-  artifacts:
-    paths:
-    - scripts/eval_full/eval_results/*
-    expire_in: 1 week
-  script:
-    - dpkg -i deb_bionic/*.deb
-    - cd scripts/eval_full
-    - ./run_evaluations.sh
+
+# evaluate on EuRoC sequences
+eval_euroc:
+  <<: *eval_euroc_definition
+  when: manual
+  allow_failure: false
 
 # aggregate results for all EuRoC sequences
 gen_results_euroc:
-  stage: eval_results
+  stage: results
   variables:
     GIT_STRATEGY: none
   tags: 
     - docker
   when: on_success
-  only:
-    - master
   artifacts:
     paths:
     - euroc_results.txt
