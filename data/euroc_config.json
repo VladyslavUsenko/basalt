@@ -30,6 +30,6 @@
         "config.mapper_second_best_test_ratio": 1.2,
         "config.mapper_bow_num_bits": 16,
         "config.mapper_min_triangulation_dist": 0.07,
-        "config.mapper_no_factor_weights": true
+        "config.mapper_no_factor_weights": false
     }
 }
