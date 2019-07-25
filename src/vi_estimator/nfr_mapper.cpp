@@ -182,7 +182,12 @@ bool NfrMapper::extractNonlinearFactors(MargData& m) {
     RollPitchFactor rpf;
     rpf.t_ns = kf_id;
     rpf.R_w_i_meas = T_w_i_kf.so3();
-    rpf.cov_inv = cov_new.block<2, 2>(4, 4).inverse();
+
+    if (!config.mapper_no_factor_weights) {
+      rpf.cov_inv = cov_new.block<2, 2>(4, 4).inverse();
+    } else {
+      rpf.cov_inv.setIdentity();
+    }
 
     roll_pitch_factors.emplace_back(rpf);
   }
@@ -213,7 +218,10 @@ bool NfrMapper::extractNonlinearFactors(MargData& m) {
     rpf.t_j_ns = other_id;
     rpf.T_i_j = T_kf_o;
     rpf.cov_inv.setIdentity();
-    cov_new.ldlt().solveInPlace(rpf.cov_inv);
+
+    if (!config.mapper_no_factor_weights) {
+      cov_new.ldlt().solveInPlace(rpf.cov_inv);
+    }
 
     // std::cout << "rpf.cov_inv\n" << rpf.cov_inv << std::endl;
 
@@ -609,6 +617,9 @@ void NfrMapper::build_tracks() {
 }
 
 void NfrMapper::setup_opt() {
+  const double min_triang_distance2 = config.mapper_min_triangulation_dist *
+                                      config.mapper_min_triangulation_dist;
+
   for (const auto& kv : feature_tracks) {
     if (kv.second.size() < 2) continue;
 
@@ -638,7 +649,7 @@ void NfrMapper::setup_opt() {
 
       Sophus::SE3d T_h_o = T_w_h.inverse() * T_w_o;
 
-      if (T_h_o.translation().squaredNorm() < 0.07 * 0.07) continue;
+      if (T_h_o.translation().squaredNorm() < min_triang_distance2) continue;
 
       Eigen::Vector4d pos_3d =
           triangulate(pos_3d_h.head<3>(), pos_3d_o.head<3>(), T_h_o);

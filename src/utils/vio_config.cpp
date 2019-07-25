@@ -61,6 +61,7 @@ VioConfig::VioConfig() {
   vio_debug = false;
   vio_obs_std_dev = 0.5;
   vio_obs_huber_thresh = 1.0;
+  vio_min_triangulation_dist = 0.05;
 
   mapper_obs_std_dev = 0.25;
   mapper_obs_huber_thresh = 1.5;
@@ -73,6 +74,8 @@ VioConfig::VioConfig() {
   mapper_max_hamming_distance = 70;
   mapper_second_best_test_ratio = 1.2;
   mapper_bow_num_bits = 16;
+  mapper_min_triangulation_dist = 0.07;
+  mapper_no_factor_weights = false;
 }
 
 void VioConfig::save(const std::string& filename) {
@@ -118,6 +121,7 @@ void serialize(Archive& ar, basalt::VioConfig& config) {
 
   ar(CEREAL_NVP(config.vio_obs_std_dev));
   ar(CEREAL_NVP(config.vio_obs_huber_thresh));
+  ar(CEREAL_NVP(config.vio_min_triangulation_dist));
 
   ar(CEREAL_NVP(config.mapper_obs_std_dev));
   ar(CEREAL_NVP(config.mapper_obs_huber_thresh));
@@ -130,5 +134,7 @@ void serialize(Archive& ar, basalt::VioConfig& config) {
   ar(CEREAL_NVP(config.mapper_max_hamming_distance));
   ar(CEREAL_NVP(config.mapper_second_best_test_ratio));
   ar(CEREAL_NVP(config.mapper_bow_num_bits));
+  ar(CEREAL_NVP(config.mapper_min_triangulation_dist));
+  ar(CEREAL_NVP(config.mapper_no_factor_weights));
 }
 }  // namespace cereal

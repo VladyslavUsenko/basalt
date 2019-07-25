@@ -61,6 +61,7 @@ struct VioConfig {
 
   double vio_obs_std_dev;
   double vio_obs_huber_thresh;
+  double vio_min_triangulation_dist;
 
   double mapper_obs_std_dev;
   double mapper_obs_huber_thresh;
@@ -73,5 +74,7 @@ struct VioConfig {
   double mapper_max_hamming_distance;
   double mapper_second_best_test_ratio;
   int mapper_bow_num_bits;
+  double mapper_min_triangulation_dist;
+  bool mapper_no_factor_weights;
 };
 }  // namespace basalt
