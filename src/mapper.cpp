@@ -108,6 +108,7 @@ void detect();
 void match();
 void tracks();
 void optimize();
+void filter();
 
 constexpr int UI_WIDTH = 200;
 
@@ -135,6 +136,10 @@ Button detect_btn("ui.detect", &detect);
 Button match_btn("ui.match", &match);
 Button tracks_btn("ui.tracks", &tracks);
 Button optimize_btn("ui.optimize", &optimize);
+
+pangolin::Var<double> outlier_threshold("ui.outlier_threshold", 3.0, 0.01, 10);
+
+Button filter_btn("ui.filter", &filter);
 Button align_btn("ui.aling_svd", &alignButton);
 
 pangolin::OpenGlRenderState camera;
@@ -324,6 +329,8 @@ int main(int argc, char** argv) {
     detect();
     match();
     tracks();
+    optimize();
+    filter();
     optimize();
 
     if (!result_path.empty()) {
@@ -562,7 +569,7 @@ void load_data(const std::string& calib_path, const std::string& cache_path) {
 
 void computeEdgeVis() {
   edges_vis.clear();
-  for (const auto& kv1 : nrf_mapper->obs) {
+  for (const auto& kv1 : nrf_mapper->lmdb.getObservations()) {
     for (const auto& kv2 : kv1.second) {
       Eigen::Vector3d p1 = nrf_mapper->getFramePoses()
                                .at(kv1.first.frame_id)
@@ -643,4 +650,9 @@ void tracks() {
   //  mapper_points_color,
   //                                            mapper_point_ids);
   computeEdgeVis();
+}
+
+void filter() {
+  nrf_mapper->filterOutliers(outlier_threshold, 4);
+  nrf_mapper->get_current_points(mapper_points, mapper_point_ids);
 }

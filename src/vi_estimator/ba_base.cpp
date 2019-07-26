@@ -120,7 +120,7 @@ void BundleAdjustmentBase::updatePoints(const AbsOrderMap& aom,
 
     Eigen::Vector3d inc_p = rld.Hll.at(lm_idx) * (rld.bl.at(lm_idx) - H_l_p_x);
 
-    KeypointPosition& kpt = kpts[lm_idx];
+    KeypointPosition& kpt = lmdb.getLandmark(lm_idx);
     kpt.dir -= inc_p.head<2>();
     kpt.id -= inc_p[2];
 
@@ -128,10 +128,13 @@ void BundleAdjustmentBase::updatePoints(const AbsOrderMap& aom,
   }
 }
 
-void BundleAdjustmentBase::computeError(double& error) const {
+void BundleAdjustmentBase::computeError(
+    double& error,
+    std::map<int, std::vector<std::pair<TimeCamId, double>>>* outliers,
+    double outlier_threshold) const {
   error = 0;
 
-  for (const auto& kv : obs) {
+  for (const auto& kv : lmdb.getObservations()) {
     const TimeCamId& tcid_h = kv.first;
 
     for (const auto& obs_kv : kv.second) {
@@ -151,7 +154,8 @@ void BundleAdjustmentBase::computeError(double& error) const {
             [&](const auto& cam) {
               for (size_t i = 0; i < obs_kv.second.size(); i++) {
                 const KeypointObservation& kpt_obs = obs_kv.second[i];
-                const KeypointPosition& kpt_pos = kpts.at(kpt_obs.kpt_id);
+                const KeypointPosition& kpt_pos =
+                    lmdb.getLandmark(kpt_obs.kpt_id);
 
                 Eigen::Vector2d res;
 
@@ -159,6 +163,11 @@ void BundleAdjustmentBase::computeError(double& error) const {
 
                 if (valid) {
                   double e = res.norm();
+
+                  if (outliers && e > outlier_threshold) {
+                    (*outliers)[kpt_obs.kpt_id].emplace_back(tcid_t, e);
+                  }
+
                   double huber_weight =
                       e < huber_thresh ? 1.0 : huber_thresh / e;
                   double obs_weight =
@@ -166,6 +175,10 @@ void BundleAdjustmentBase::computeError(double& error) const {
 
                   error +=
                       (2 - huber_weight) * obs_weight * res.transpose() * res;
+                } else {
+                  if (outliers) {
+                    (*outliers)[kpt_obs.kpt_id].emplace_back(tcid_t, -1);
+                  }
                 }
               }
             },
@@ -180,13 +193,19 @@ void BundleAdjustmentBase::computeError(double& error) const {
             [&](const auto& cam) {
               for (size_t i = 0; i < obs_kv.second.size(); i++) {
                 const KeypointObservation& kpt_obs = obs_kv.second[i];
-                const KeypointPosition& kpt_pos = kpts.at(kpt_obs.kpt_id);
+                const KeypointPosition& kpt_pos =
+                    lmdb.getLandmark(kpt_obs.kpt_id);
 
                 Eigen::Vector2d res;
 
                 bool valid = linearizePoint(kpt_obs, kpt_pos, cam, res);
                 if (valid) {
                   double e = res.norm();
+
+                  if (outliers && e > outlier_threshold) {
+                    (*outliers)[kpt_obs.kpt_id].emplace_back(tcid_t, -2);
+                  }
+
                   double huber_weight =
                       e < huber_thresh ? 1.0 : huber_thresh / e;
                   double obs_weight =
@@ -194,6 +213,10 @@ void BundleAdjustmentBase::computeError(double& error) const {
 
                   error +=
                       (2 - huber_weight) * obs_weight * res.transpose() * res;
+                } else {
+                  if (outliers) {
+                    (*outliers)[kpt_obs.kpt_id].emplace_back(tcid_t, -2);
+                  }
                 }
               }
             },
@@ -216,7 +239,7 @@ void BundleAdjustmentBase::linearizeHelper(
   std::vector<TimeCamId> obs_tcid_vec;
   for (const auto& kv : obs_to_lin) {
     obs_tcid_vec.emplace_back(kv.first);
-    rld_vec.emplace_back(kpts.size(), kv.second.size());
+    rld_vec.emplace_back(lmdb.numLandmarks(), kv.second.size());
   }
 
   tbb::parallel_for(
@@ -264,7 +287,8 @@ void BundleAdjustmentBase::linearizeHelper(
                   [&](const auto& cam) {
                     for (size_t i = 0; i < obs_kv.second.size(); i++) {
                       const KeypointObservation& kpt_obs = obs_kv.second[i];
-                      const KeypointPosition& kpt_pos = kpts.at(kpt_obs.kpt_id);
+                      const KeypointPosition& kpt_pos =
+                          lmdb.getLandmark(kpt_obs.kpt_id);
 
                       Eigen::Vector2d res;
                       Eigen::Matrix<double, 2, POSE_SIZE> d_res_d_xi;
@@ -318,7 +342,8 @@ void BundleAdjustmentBase::linearizeHelper(
                   [&](const auto& cam) {
                     for (size_t i = 0; i < obs_kv.second.size(); i++) {
                       const KeypointObservation& kpt_obs = obs_kv.second[i];
-                      const KeypointPosition& kpt_pos = kpts.at(kpt_obs.kpt_id);
+                      const KeypointPosition& kpt_pos =
+                          lmdb.getLandmark(kpt_obs.kpt_id);
 
                       Eigen::Vector2d res;
                       Eigen::Matrix<double, 2, 3> d_res_d_p;
@@ -401,14 +426,10 @@ void BundleAdjustmentBase::get_current_points(
   points.clear();
   ids.clear();
 
-  for (const auto& kv_kpt : kpts) {
-    Eigen::Vector3d pt_cam =
-        StereographicParam<double>::unproject(kv_kpt.second.dir).head<3>();
-    pt_cam /= kv_kpt.second.id;
-
+  for (const auto& tcid_host : lmdb.getHostKfs()) {
     Sophus::SE3d T_w_i;
 
-    int64_t id = kv_kpt.second.kf_id.frame_id;
+    int64_t id = tcid_host.frame_id;
     if (frame_states.count(id) > 0) {
       PoseVelBiasStateWithLin state = frame_states.at(id);
       T_w_i = state.getState().T_w_i;
@@ -421,14 +442,63 @@ void BundleAdjustmentBase::get_current_points(
       std::abort();
     }
 
-    const Sophus::SE3d& T_i_c = calib.T_i_c[kv_kpt.second.kf_id.cam_id];
+    const Sophus::SE3d& T_i_c = calib.T_i_c[tcid_host.cam_id];
+    Eigen::Matrix4d T_w_c = (T_w_i * T_i_c).matrix();
 
-    // std::cerr << "T_w_i\n" << T_w_i.matrix() << std::endl;
+    for (const KeypointPosition& kpt_pos :
+         lmdb.getLandmarksForHost(tcid_host)) {
+      Eigen::Vector4d pt_cam =
+          StereographicParam<double>::unproject(kpt_pos.dir);
+      pt_cam[3] = kpt_pos.id;
 
-    points.emplace_back(T_w_i * T_i_c * pt_cam);
+      Eigen::Vector4d pt_w = T_w_c * pt_cam;
 
-    ids.emplace_back(kv_kpt.first);
+      points.emplace_back(pt_w.head<3>() / pt_w[3]);
+      ids.emplace_back(1);
+    }
   }
+}
+
+void BundleAdjustmentBase::filterOutliers(double outlier_threshold,
+                                          int min_num_obs) {
+  double error;
+  std::map<int, std::vector<std::pair<TimeCamId, double>>> outliers;
+  computeError(error, &outliers, outlier_threshold);
+
+  //  std::cout << "============================================" << std::endl;
+  //  std::cout << "Num landmarks: " << lmdb.numLandmarks() << " with outliners
+  //  "
+  //            << outliers.size() << std::endl;
+
+  for (const auto& kv : outliers) {
+    int num_obs = lmdb.numObservations(kv.first);
+    int num_outliers = kv.second.size();
+
+    bool remove = false;
+
+    if (num_obs - num_outliers < min_num_obs) remove = true;
+
+    //    std::cout << "\tlm_id: " << kv.first << " num_obs: " << num_obs
+    //              << " outliers: " << num_outliers << " [";
+
+    for (const auto& kv2 : kv.second) {
+      if (kv2.second == -2) remove = true;
+
+      //      std::cout << kv2.second << ", ";
+    }
+
+    //    std::cout << "] " << std::endl;
+
+    if (remove) {
+      lmdb.removeLandmark(kv.first);
+    } else {
+      std::set<TimeCamId> outliers;
+      for (const auto& kv2 : kv.second) outliers.emplace(kv2.first);
+      lmdb.removeObservations(kv.first, outliers);
+    }
+  }
+
+  // std::cout << "============================================" << std::endl;
 }
 
 void BundleAdjustmentBase::marginalizeHelper(Eigen::MatrixXd& abs_H,

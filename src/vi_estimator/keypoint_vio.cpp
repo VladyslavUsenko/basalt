@@ -70,8 +70,8 @@ KeypointVioEstimator::KeypointVioEstimator(
   marg_H(5, 5) = prior_weight;
 
   // small prior to avoid jumps in bias
-  marg_H.diagonal().segment<3>(9).array() = 1e1;
-  marg_H.diagonal().segment<3>(12).array() = 1e2;
+  marg_H.diagonal().segment<3>(9).array() = 1e2;
+  marg_H.diagonal().segment<3>(12).array() = 1e3;
 
   std::cout << "marg_H\n" << marg_H << std::endl;
 
@@ -119,6 +119,8 @@ void KeypointVioEstimator::initialize(const Eigen::Vector3d& bg,
 
     ImuData::Ptr data;
     imu_data_queue.pop(data);
+    data->accel = calib.calib_accel_bias.getCalibrated(data->accel);
+    data->gyro = calib.calib_gyro_bias.getCalibrated(data->gyro);
 
     while (true) {
       vision_data_queue.pop(curr_frame);
@@ -163,14 +165,17 @@ void KeypointVioEstimator::initialize(const Eigen::Vector3d& bg,
 
         while (data->t_ns <= prev_frame->t_ns) {
           imu_data_queue.pop(data);
-
           if (!data.get()) break;
+          data->accel = calib.calib_accel_bias.getCalibrated(data->accel);
+          data->gyro = calib.calib_gyro_bias.getCalibrated(data->gyro);
         }
 
         while (data->t_ns <= curr_frame->t_ns) {
           meas->integrate(*data, accel_cov, gyro_cov);
           imu_data_queue.pop(data);
           if (!data.get()) break;
+          data->accel = calib.calib_accel_bias.getCalibrated(data->accel);
+          data->gyro = calib.calib_gyro_bias.getCalibrated(data->gyro);
         }
 
         if (meas->get_start_t_ns() + meas->get_dt_ns() < curr_frame->t_ns) {
@@ -240,15 +245,15 @@ bool KeypointVioEstimator::measure(const OpticalFlowResult::Ptr& opt_flow_meas,
     for (const auto& kv_obs : opt_flow_meas->observations[i]) {
       int kpt_id = kv_obs.first;
 
-      auto it = kpts.find(kpt_id);
-      if (it != kpts.end()) {
-        const TimeCamId& tcid_host = it->second.kf_id;
+      if (lmdb.landmarkExists(kpt_id)) {
+        const TimeCamId& tcid_host = lmdb.getLandmark(kpt_id).kf_id;
 
         KeypointObservation kobs;
         kobs.kpt_id = kpt_id;
         kobs.pos = kv_obs.second.translation().cast<double>();
 
-        obs[tcid_host][tcid_target].push_back(kobs);
+        lmdb.addObservation(tcid_target, kobs);
+        // obs[tcid_host][tcid_target].push_back(kobs);
 
         if (num_points_connected.count(tcid_host.frame_id) == 0) {
           num_points_connected[tcid_host.frame_id] = 0;
@@ -343,7 +348,7 @@ bool KeypointVioEstimator::measure(const OpticalFlowResult::Ptr& opt_flow_meas,
           kpt_pos.kf_id = tcidl;
           kpt_pos.dir = StereographicParam<double>::project(p0_triangulated);
           kpt_pos.id = p0_triangulated[3];
-          kpts[lm_id] = kpt_pos;
+          lmdb.addLandmark(lm_id, kpt_pos);
 
           num_points_added++;
           valid_kp = true;
@@ -352,7 +357,7 @@ bool KeypointVioEstimator::measure(const OpticalFlowResult::Ptr& opt_flow_meas,
 
       if (valid_kp) {
         for (const auto& kv_obs : kp_obs) {
-          obs[tcidl][kv_obs.first].push_back(kv_obs.second);
+          lmdb.addObservation(kv_obs.first, kv_obs.second);
         }
       }
     }
@@ -674,17 +679,16 @@ void KeypointVioEstimator::marginalize(
                  Eigen::map<TimeCamId, Eigen::vector<KeypointObservation>>>
           obs_to_lin;
 
-      for (auto it = obs.cbegin(); it != obs.cend();) {
+      for (auto it = lmdb.getObservations().cbegin();
+           it != lmdb.getObservations().cend();) {
         if (kfs_to_marg.count(it->first.frame_id) > 0) {
           for (auto it2 = it->second.cbegin(); it2 != it->second.cend();
                ++it2) {
             if (it2->first.frame_id <= last_state_to_marg)
               obs_to_lin[it->first].emplace(*it2);
           }
-          it = obs.erase(it);
-        } else {
-          ++it;
         }
+        ++it;
       }
 
       double rld_error;
@@ -700,15 +704,6 @@ void KeypointVioEstimator::marginalize(
         linearizeRel(rld, rel_H, rel_b);
 
         linearizeAbs(rel_H, rel_b, rld, aom, accum);
-      }
-
-      // remove points
-      for (auto it = kpts.cbegin(); it != kpts.cend();) {
-        if (kfs_to_marg.count(it->second.kf_id.frame_id) > 0) {
-          it = kpts.erase(it);
-        } else {
-          ++it;
-        }
       }
     }
 
@@ -809,16 +804,7 @@ void KeypointVioEstimator::marginalize(
       prev_opt_flow_res.erase(id);
     }
 
-    for (auto it = obs.begin(); it != obs.end(); ++it) {
-      for (auto it2 = it->second.cbegin(); it2 != it->second.cend();) {
-        if (poses_to_marg.count(it2->first.frame_id) > 0 ||
-            states_to_marg_all.count(it2->first.frame_id) > 0) {
-          it2 = it->second.erase(it2);
-        } else {
-          ++it2;
-        }
-      }
-    }
+    lmdb.removeKeyframes(kfs_to_marg, poses_to_marg, states_to_marg_all);
 
     AbsOrderMap marg_order_new;
 
@@ -925,7 +911,7 @@ void KeypointVioEstimator::optimize() {
 
       double rld_error;
       Eigen::vector<RelLinData> rld_vec;
-      linearizeHelper(rld_vec, obs, rld_error);
+      linearizeHelper(rld_vec, lmdb.getObservations(), rld_error);
 
       BundleAdjustmentBase::LinearizeAbsReduce<DenseAccumulator<double>> lopt(
           aom);
@@ -1022,6 +1008,10 @@ void KeypointVioEstimator::optimize() {
         }
       }
 
+      if (iter == config.vio_filter_iteration) {
+        filterOutliers(config.vio_outlier_threshold, 4);
+      }
+
       if (inc.array().abs().maxCoeff() < 1e-4) break;
 
       // std::cerr << "LT\n" << LT << std::endl;
@@ -1037,7 +1027,7 @@ void KeypointVioEstimator::optimize() {
 
 void KeypointVioEstimator::computeProjections(
     std::vector<Eigen::vector<Eigen::Vector4d>>& data) const {
-  for (const auto& kv : obs) {
+  for (const auto& kv : lmdb.getObservations()) {
     const TimeCamId& tcid_h = kv.first;
 
     for (const auto& obs_kv : kv.second) {
@@ -1061,7 +1051,8 @@ void KeypointVioEstimator::computeProjections(
             [&](const auto& cam) {
               for (size_t i = 0; i < obs_kv.second.size(); i++) {
                 const KeypointObservation& kpt_obs = obs_kv.second[i];
-                const KeypointPosition& kpt_pos = kpts.at(kpt_obs.kpt_id);
+                const KeypointPosition& kpt_pos =
+                    lmdb.getLandmark(kpt_obs.kpt_id);
 
                 Eigen::Vector2d res;
                 Eigen::Vector4d proj;
@@ -1084,7 +1075,8 @@ void KeypointVioEstimator::computeProjections(
             [&](const auto& cam) {
               for (size_t i = 0; i < obs_kv.second.size(); i++) {
                 const KeypointObservation& kpt_obs = obs_kv.second[i];
-                const KeypointPosition& kpt_pos = kpts.at(kpt_obs.kpt_id);
+                const KeypointPosition& kpt_pos =
+                    lmdb.getLandmark(kpt_obs.kpt_id);
 
                 Eigen::Vector2d res;
                 Eigen::Vector4d proj;

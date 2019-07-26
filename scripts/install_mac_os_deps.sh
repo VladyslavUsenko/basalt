@@ -10,6 +10,7 @@ brew install \
      tbb \
      glew \
      eigen \
-     ccache
+     ccache \
+     lz4
 
 brew install llvm
