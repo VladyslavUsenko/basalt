@@ -34,7 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
 
-#include <basalt/utils/imu_types.h>
+#include <basalt/vi_estimator/landmark_database.h>
 
 #include <tbb/blocked_range.h>
 
@@ -42,22 +42,6 @@ namespace basalt {
 
 class BundleAdjustmentBase {
  public:
-  // keypoint position defined relative to some frame
-  struct KeypointPosition {
-    TimeCamId kf_id;
-    Eigen::Vector2d dir;
-    double id;
-
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  };
-
-  struct KeypointObservation {
-    int kpt_id;
-    Eigen::Vector2d pos;
-
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  };
-
   struct RelLinDataBase {
     std::vector<std::pair<TimeCamId, TimeCamId>> order;
 
@@ -113,7 +97,10 @@ class BundleAdjustmentBase {
     double error;
   };
 
-  void computeError(double& error) const;
+  void computeError(double& error,
+                    std::map<int, std::vector<std::pair<TimeCamId, double>>>*
+                        outliers = nullptr,
+                    double outlier_threshold = 0) const;
 
   void linearizeHelper(
       Eigen::vector<RelLinData>& rld_vec,
@@ -124,6 +111,8 @@ class BundleAdjustmentBase {
 
   static void linearizeRel(const RelLinData& rld, Eigen::MatrixXd& H,
                            Eigen::VectorXd& b);
+
+  void filterOutliers(double outlier_threshold, int min_num_obs);
 
   template <class CamT>
   static bool linearizePoint(
@@ -397,10 +386,7 @@ class BundleAdjustmentBase {
   Eigen::map<int64_t, PoseStateWithLin> frame_poses;
 
   // Point management
-  Eigen::unordered_map<int, KeypointPosition> kpts;
-  Eigen::map<TimeCamId,
-             Eigen::map<TimeCamId, Eigen::vector<KeypointObservation>>>
-      obs;
+  LandmarkDatabase lmdb;
 
   double obs_std_dev;
   double huber_thresh;

@@ -214,6 +214,7 @@ add_library(basalt SHARED
   src/vi_estimator/vio_estimator.cpp
   src/vi_estimator/ba_base.cpp
   src/vi_estimator/nfr_mapper.cpp
+  src/vi_estimator/landmark_database.cpp
   src/utils/keypoints.cpp)
 
 

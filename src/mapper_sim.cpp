@@ -479,7 +479,7 @@ void extractNonlinearFactors(basalt::MargData& m) {
 
 void computeEdgeVis() {
   edges_vis.clear();
-  for (const auto& kv1 : nrf_mapper->obs) {
+  for (const auto& kv1 : nrf_mapper->lmdb.getObservations()) {
     for (const auto& kv2 : kv1.second) {
       Eigen::Vector3d p1 = nrf_mapper->getFramePoses()
                                .at(kv1.first.frame_id)

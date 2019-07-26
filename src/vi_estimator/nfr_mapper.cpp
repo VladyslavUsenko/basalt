@@ -244,7 +244,7 @@ void NfrMapper::optimize(int num_iterations) {
 
     double rld_error;
     Eigen::vector<RelLinData> rld_vec;
-    linearizeHelper(rld_vec, obs, rld_error);
+    linearizeHelper(rld_vec, lmdb.getObservations(), rld_error);
 
     //      SparseHashAccumulator<double> accum;
     //      accum.reset(aom.total_size);
@@ -662,14 +662,15 @@ void NfrMapper::setup_opt() {
       pos.dir = StereographicParam<double>::project(pos_3d);
       pos.id = pos_3d[3];
 
-      kpts[kv.first] = pos;
+      lmdb.addLandmark(kv.first, pos);
 
       for (const auto& obs_kv : kv.second) {
         KeypointObservation ko;
         ko.kpt_id = kv.first;
         ko.pos = feature_corners.at(obs_kv.first).corners[obs_kv.second];
 
-        obs[tcid_h][obs_kv.first].emplace_back(ko);
+        lmdb.addObservation(obs_kv.first, ko);
+        // obs[tcid_h][obs_kv.first].emplace_back(ko);
       }
       break;
     }

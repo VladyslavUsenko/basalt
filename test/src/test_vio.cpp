@@ -338,7 +338,7 @@ TEST(VioTestSuite, LinearizePointsTest) {
   basalt::ExtendedUnifiedCamera<double> cam =
       basalt::ExtendedUnifiedCamera<double>::getTestProjections()[0];
 
-  basalt::KeypointVioEstimator::KeypointPosition kpt_pos;
+  basalt::KeypointPosition kpt_pos;
 
   Eigen::Vector4d point3d;
   cam.unproject(Eigen::Vector2d::Random() * 50, point3d);
@@ -358,7 +358,7 @@ TEST(VioTestSuite, LinearizePointsTest) {
 
   p_trans = T_t_h * p_trans;
 
-  basalt::KeypointVioEstimator::KeypointObservation kpt_obs;
+  basalt::KeypointObservation kpt_obs;
   cam.project(p_trans, kpt_obs.pos);
 
   Eigen::Vector2d res;
@@ -391,7 +391,7 @@ TEST(VioTestSuite, LinearizePointsTest) {
     test_jacobian(
         "d_res_d_p", d_res_d_p,
         [&](const Eigen::Vector3d& x) {
-          basalt::KeypointVioEstimator::KeypointPosition kpt_pos_new = kpt_pos;
+          basalt::KeypointPosition kpt_pos_new = kpt_pos;
 
           kpt_pos_new.dir += x.head<2>();
           kpt_pos_new.id += x[2];

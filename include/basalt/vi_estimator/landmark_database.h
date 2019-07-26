@@ -34,50 +34,74 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
 
-#include <string>
+#include <basalt/utils/imu_types.h>
 
 namespace basalt {
 
-struct VioConfig {
-  VioConfig();
-  void load(const std::string& filename);
-  void save(const std::string& filename);
+// keypoint position defined relative to some frame
+struct KeypointPosition {
+  TimeCamId kf_id;
+  Eigen::Vector2d dir;
+  double id;
 
-  std::string optical_flow_type;
-  int optical_flow_detection_grid_size;
-  float optical_flow_max_recovered_dist2;
-  int optical_flow_pattern;
-  int optical_flow_max_iterations;
-  int optical_flow_levels;
-  float optical_flow_epipolar_error;
-  int optical_flow_skip_frames;
-
-  int vio_max_states;
-  int vio_max_kfs;
-  int vio_min_frames_after_kf;
-  float vio_new_kf_keypoints_thresh;
-  bool vio_debug;
-
-  double vio_outlier_threshold;
-  int vio_filter_iteration;
-  int vio_max_iterations;
-
-  double vio_obs_std_dev;
-  double vio_obs_huber_thresh;
-  double vio_min_triangulation_dist;
-
-  double mapper_obs_std_dev;
-  double mapper_obs_huber_thresh;
-  int mapper_detection_num_points;
-  double mapper_num_frames_to_match;
-  double mapper_frames_to_match_threshold;
-  double mapper_min_matches;
-  double mapper_ransac_threshold;
-  double mapper_min_track_length;
-  double mapper_max_hamming_distance;
-  double mapper_second_best_test_ratio;
-  int mapper_bow_num_bits;
-  double mapper_min_triangulation_dist;
-  bool mapper_no_factor_weights;
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
+
+struct KeypointObservation {
+  int kpt_id;
+  Eigen::Vector2d pos;
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+};
+
+class LandmarkDatabase {
+ public:
+  // Non-const
+  void addLandmark(int lm_id, const KeypointPosition& pos);
+
+  void removeKeyframes(const std::set<FrameId>& kfs_to_marg,
+                       const std::set<FrameId>& poses_to_marg,
+                       const std::set<FrameId>& states_to_marg_all);
+
+  void addObservation(const TimeCamId& tcid_target,
+                      const KeypointObservation& o);
+
+  KeypointPosition& getLandmark(int lm_id);
+
+  // Const
+  const KeypointPosition& getLandmark(int lm_id) const;
+
+  std::vector<TimeCamId> getHostKfs() const;
+
+  std::vector<KeypointPosition> getLandmarksForHost(
+      const TimeCamId& tcid) const;
+
+  const Eigen::map<TimeCamId,
+                   Eigen::map<TimeCamId, Eigen::vector<KeypointObservation>>>&
+  getObservations() const;
+
+  bool landmarkExists(int lm_id) const;
+
+  size_t numLandmarks() const;
+
+  int numObservations() const;
+
+  int numObservations(int lm_id) const;
+
+  void removeLandmark(int lm_id);
+
+  void removeObservations(int lm_id, const std::set<TimeCamId>& obs);
+
+ private:
+  Eigen::unordered_map<int, KeypointPosition> kpts;
+  Eigen::map<TimeCamId,
+             Eigen::map<TimeCamId, Eigen::vector<KeypointObservation>>>
+      obs;
+
+  std::unordered_map<TimeCamId, std::set<int>> host_to_kpts;
+
+  int num_observations = 0;
+  Eigen::unordered_map<int, int> kpts_num_obs;
+};
+
 }  // namespace basalt
