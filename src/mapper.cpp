@@ -325,6 +325,7 @@ int main(int argc, char** argv) {
       std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
   } else {
+    auto time_start = std::chrono::high_resolution_clock::now();
     // optimize();
     detect();
     match();
@@ -333,11 +334,21 @@ int main(int argc, char** argv) {
     filter();
     optimize();
 
+    auto time_end = std::chrono::high_resolution_clock::now();
+
     if (!result_path.empty()) {
       double error = alignButton();
 
+      auto exec_time_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
+          time_end - time_start);
+
       std::ofstream os(result_path);
-      os << error << std::endl;
+      {
+        cereal::JSONOutputArchive ar(os);
+        ar(cereal::make_nvp("rms_ate", error));
+        ar(cereal::make_nvp("num_frames", nrf_mapper->getFramePoses().size()));
+        ar(cereal::make_nvp("exec_time_ns", exec_time_ns.count()));
+      }
       os.close();
     }
   }

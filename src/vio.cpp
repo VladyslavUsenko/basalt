@@ -346,6 +346,8 @@ int main(int argc, char** argv) {
     }));
   }
 
+  auto time_start = std::chrono::high_resolution_clock::now();
+
   if (show_gui) {
     pangolin::CreateWindowAndBind("Main", 1800, 1000);
 
@@ -469,11 +471,22 @@ int main(int argc, char** argv) {
   if (t3.get()) t3->join();
   t4.join();
 
+  auto time_end = std::chrono::high_resolution_clock::now();
+
   if (!result_path.empty()) {
     double error = basalt::alignSVD(vio_t_ns, vio_t_w_i, gt_t_ns, gt_t_w_i);
 
+    auto exec_time_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
+        time_end - time_start);
+
     std::ofstream os(result_path);
-    os << error << std::endl;
+    {
+      cereal::JSONOutputArchive ar(os);
+      ar(cereal::make_nvp("rms_ate", error));
+      ar(cereal::make_nvp("num_frames",
+                          vio_dataset->get_image_timestamps().size()));
+      ar(cereal::make_nvp("exec_time_ns", exec_time_ns.count()));
+    }
     os.close();
   }
 
