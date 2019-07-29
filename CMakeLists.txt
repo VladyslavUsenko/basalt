@@ -247,6 +247,9 @@ target_link_libraries(basalt_opt_flow basalt pangolin)
 add_executable(basalt_vio src/vio.cpp)
 target_link_libraries(basalt_vio basalt pangolin)
 
+add_executable(basalt_time_alignment src/time_alignment.cpp)
+target_link_libraries(basalt_time_alignment basalt pangolin)
+
 find_package(realsense2 QUIET)
 if(realsense2_FOUND)
   add_executable(basalt_rs_t265_record src/rs_t265_record.cpp src/device/rs_t265.cpp)
