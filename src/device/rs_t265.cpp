@@ -236,10 +236,11 @@ std::shared_ptr<basalt::Calibration<double>> RsT265Device::exportCalibration() {
 
     Eigen::Matrix<Scalar, 12, 1> gyro_bias_full;
     gyro_bias_full << intrinsics.data[0][3], intrinsics.data[1][3],
-        intrinsics.data[2][3], intrinsics.data[0][0], intrinsics.data[1][0],
-        intrinsics.data[2][0], intrinsics.data[0][1], intrinsics.data[1][1],
-        intrinsics.data[2][1], intrinsics.data[0][2], intrinsics.data[1][2],
-        intrinsics.data[2][2];
+        intrinsics.data[2][3], intrinsics.data[0][0] - 1.0,
+        intrinsics.data[1][0], intrinsics.data[2][0], intrinsics.data[0][1],
+        intrinsics.data[1][1] - 1.0, intrinsics.data[2][1],
+        intrinsics.data[0][2], intrinsics.data[1][2],
+        intrinsics.data[2][2] - 1.0;
     basalt::CalibGyroBias<Scalar> gyro_bias;
     gyro_bias.getParam() = gyro_bias_full;
     calib->calib_gyro_bias = gyro_bias;
@@ -267,9 +268,10 @@ std::shared_ptr<basalt::Calibration<double>> RsT265Device::exportCalibration() {
     rs2_motion_device_intrinsic intrinsics = accel.get_motion_intrinsics();
     Eigen::Matrix<Scalar, 9, 1> accel_bias_full;
     accel_bias_full << intrinsics.data[0][3], intrinsics.data[1][3],
-        intrinsics.data[2][3], intrinsics.data[0][0], intrinsics.data[1][0],
-        intrinsics.data[2][0], intrinsics.data[1][1], intrinsics.data[2][1],
-        intrinsics.data[2][2];
+        intrinsics.data[2][3], intrinsics.data[0][0] - 1.0,
+        intrinsics.data[1][0], intrinsics.data[2][0],
+        intrinsics.data[1][1] - 1.0, intrinsics.data[2][1],
+        intrinsics.data[2][2] - 1.0;
     basalt::CalibAccelBias<Scalar> accel_bias;
     accel_bias.getParam() = accel_bias_full;
     calib->calib_accel_bias = accel_bias;
