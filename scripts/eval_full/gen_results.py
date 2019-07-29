@@ -50,14 +50,15 @@ for key in datasets[1:]:
         num_frames_mapping.append(float('Inf'))
 
 row_format ="{:>17}" * (len(datasets))
+
+print 'Visual-Inertial Odometry'
 print row_format.format(*datasets)
 
 print row_format.format(*results_vio)
 print row_format.format(*time_vio)
 print row_format.format(*num_frames_vio)
 
-print '\n'
-
+print 'Visual-Inertial Mapping'
 print row_format.format(*datasets)
 
 print row_format.format(*results_mapping)
