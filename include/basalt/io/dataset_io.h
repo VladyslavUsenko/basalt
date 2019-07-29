@@ -127,6 +127,8 @@ class VioDataset {
   virtual const Eigen::vector<GyroData> &get_gyro_data() const = 0;
   virtual const std::vector<int64_t> &get_gt_timestamps() const = 0;
   virtual const Eigen::vector<Sophus::SE3d> &get_gt_pose_data() const = 0;
+  virtual const std::vector<int64_t> &get_device_pose_timestamps() const = 0;
+  virtual const Eigen::vector<Sophus::SE3d> &get_device_pose_data() const = 0;
   virtual int64_t get_mocap_to_imu_offset_ns() const = 0;
   virtual std::vector<ImageData> get_image_data(int64_t t_ns) = 0;
 
