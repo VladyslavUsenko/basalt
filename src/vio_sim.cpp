@@ -595,9 +595,9 @@ void compute_projections() {
 
 void gen_data() {
   std::normal_distribution<> gyro_noise_dist{
-      0, calib.dicreete_time_gyro_noise_std()[0]};
+      0, calib.dicrete_time_gyro_noise_std()[0]};
   std::normal_distribution<> accel_noise_dist{
-      0, calib.dicreete_time_accel_noise_std()[0]};
+      0, calib.dicrete_time_accel_noise_std()[0]};
 
   std::normal_distribution<> gyro_bias_dist{0, calib.gyro_bias_std[0]};
   std::normal_distribution<> accel_bias_dist{0, calib.accel_bias_std[0]};
