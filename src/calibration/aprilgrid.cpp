@@ -60,9 +60,9 @@ AprilGrid::AprilGrid(const std::string &config_path) {
 
   aprilgrid_corner_pos_3d.resize(tagCols * tagRows * 4);
 
-  for (int y = 0; y < tagCols; y++) {
-    for (int x = 0; x < tagRows; x++) {
-      int tag_id = tagRows * y + x;
+  for (int y = 0; y < tagRows; y++) {
+    for (int x = 0; x < tagCols; x++) {
+      int tag_id = tagCols * y + x;
       double x_offset = x * tagSize * (1 + tagSpacing);
       double y_offset = y * tagSize * (1 + tagSpacing);
 
@@ -132,10 +132,10 @@ AprilGrid::AprilGrid(const std::string &config_path) {
 
       double coeff = double(k + 1) / double(num_vign_points + 1);
 
-      aprilgrid_vignette_pos_3d[curr_idx + k * tagCols + i] =
+      aprilgrid_vignette_pos_3d[curr_idx + k * tagRows + i] =
           (p0 + coeff * (p3 - p0));
 
-      aprilgrid_vignette_pos_3d[curr_idx + k * tagCols + i][0] -=
+      aprilgrid_vignette_pos_3d[curr_idx + k * tagRows + i][0] -=
           tagSize * tagSpacing / 2;
     }
   }
