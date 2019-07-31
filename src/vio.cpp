@@ -568,9 +568,11 @@ void draw_scene() {
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   glColor3ubv(cam_color);
-  Eigen::vector<Eigen::Vector3d> sub_gt(vio_t_w_i.begin(),
-                                        vio_t_w_i.begin() + show_frame);
-  pangolin::glDrawLineStrip(sub_gt);
+  if (!vio_t_w_i.empty()) {
+    Eigen::vector<Eigen::Vector3d> sub_gt(vio_t_w_i.begin(),
+                                          vio_t_w_i.begin() + show_frame);
+    pangolin::glDrawLineStrip(sub_gt);
+  }
 
   glColor3ubv(gt_color);
   if (show_gt) pangolin::glDrawLineStrip(gt_t_w_i);

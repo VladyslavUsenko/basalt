@@ -47,6 +47,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #undef private
 
 #include <geometry_msgs/PointStamped.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/Imu.h>
@@ -207,7 +208,8 @@ class RosbagIO : public DatasetIoInterface {
       } else if (info->datatype == std::string("sensor_msgs/Imu")) {
         imu_topic = info->topic;
       } else if (info->datatype ==
-                 std::string("geometry_msgs/TransformStamped")) {
+                     std::string("geometry_msgs/TransformStamped") ||
+                 info->datatype == std::string("geometry_msgs/PoseStamped")) {
         mocap_topic = info->topic;
       } else if (info->datatype == std::string("geometry_msgs/PointStamped")) {
         point_topic = info->topic;
@@ -288,6 +290,26 @@ class RosbagIO : public DatasetIoInterface {
       if (mocap_topic == topic) {
         geometry_msgs::TransformStampedConstPtr mocap_msg =
             m.instantiate<geometry_msgs::TransformStamped>();
+
+        // Try different message type if instantiate did not work
+        if (!mocap_msg) {
+          geometry_msgs::PoseStampedConstPtr mocap_pose_msg =
+              m.instantiate<geometry_msgs::PoseStamped>();
+
+          geometry_msgs::TransformStampedPtr mocap_new_msg(
+              new geometry_msgs::TransformStamped);
+          mocap_new_msg->header = mocap_pose_msg->header;
+          mocap_new_msg->transform.rotation = mocap_pose_msg->pose.orientation;
+          mocap_new_msg->transform.translation.x =
+              mocap_pose_msg->pose.position.x;
+          mocap_new_msg->transform.translation.y =
+              mocap_pose_msg->pose.position.y;
+          mocap_new_msg->transform.translation.z =
+              mocap_pose_msg->pose.position.z;
+
+          mocap_msg = mocap_new_msg;
+        }
+
         int64_t time = mocap_msg->header.stamp.toNSec();
 
         mocap_msgs.push_back(mocap_msg);
@@ -299,6 +321,7 @@ class RosbagIO : public DatasetIoInterface {
       if (point_topic == topic) {
         geometry_msgs::PointStampedConstPtr mocap_msg =
             m.instantiate<geometry_msgs::PointStamped>();
+
         int64_t time = mocap_msg->header.stamp.toNSec();
 
         point_msgs.push_back(mocap_msg);
