@@ -264,7 +264,7 @@ class BundleAdjustmentBase {
     Vec4 worldPoint = mySVD.matrixV().col(3);
     worldPoint /= worldPoint.template head<3>().norm();
 
-    // Enforse same direction of bearing vector and initial point
+    // Enforce same direction of bearing vector and initial point
     if (f0.dot(worldPoint.template head<3>()) < 0) worldPoint *= -1;
 
     return worldPoint;

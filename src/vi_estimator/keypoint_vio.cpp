@@ -113,9 +113,9 @@ void KeypointVioEstimator::initialize(const Eigen::Vector3d& bg,
     IntegratedImuMeasurement::Ptr meas;
 
     const Eigen::Vector3d accel_cov =
-        calib.dicreete_time_accel_noise_std().array().square();
+        calib.dicrete_time_accel_noise_std().array().square();
     const Eigen::Vector3d gyro_cov =
-        calib.dicreete_time_gyro_noise_std().array().square();
+        calib.dicrete_time_gyro_noise_std().array().square();
 
     ImuData::Ptr data;
     imu_data_queue.pop(data);
