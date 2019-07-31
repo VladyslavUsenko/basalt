@@ -153,7 +153,7 @@ struct LinearizeBase {
     } else {
       valid = cam.project(point3d, proj);
     }
-    if (!valid) return;
+    if (!valid || !proj.array().isFinite().all()) return;
 
     Eigen::Vector2d residual = proj - corner_pos;
 
