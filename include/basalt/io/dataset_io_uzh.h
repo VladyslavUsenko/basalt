@@ -68,7 +68,7 @@ class UzhVioDataset : public VioDataset {
   Eigen::vector<Sophus::SE3d>
       device_pose_data;  // TODO: change to eigen aligned
 
-  int64_t mocap_to_imu_offset_ns;
+  int64_t mocap_to_imu_offset_ns = 0;
 
   std::vector<std::unordered_map<int64_t, double>> exposure_times;
 
