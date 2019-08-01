@@ -175,18 +175,16 @@ class UzhIO : public DatasetIoInterface {
               << " left images and " << data->right_image_path.size()
               << std::endl;
 
-    {
-      int64_t t_ns = data->get_image_timestamps()[0];
-      std::cout << t_ns << " " << data->left_image_path.at(t_ns) << " "
-                << data->right_image_path.at(t_ns) << std::endl;
-    }
+    //    {
+    //      int64_t t_ns = data->get_image_timestamps()[0];
+    //      std::cout << t_ns << " " << data->left_image_path.at(t_ns) << " "
+    //                << data->right_image_path.at(t_ns) << std::endl;
+    //    }
 
     read_imu_data(path + "/imu.txt");
 
     std::cout << "Loaded " << data->get_gyro_data().size() << " imu msgs."
               << std::endl;
-
-    {}
 
     if (file_exists(path + "/groundtruth.txt")) {
       read_gt_data_pose(path + "/groundtruth.txt");
@@ -307,7 +305,10 @@ class UzhIO : public DatasetIoInterface {
       ss >> tmp >> timestamp >> pos[0] >> pos[1] >> pos[2] >> q.x() >> q.y() >>
           q.z() >> q.w();
 
-      data->gt_timestamps.emplace_back(timestamp * 1e9);
+      int64_t t_ns = timestamp * 1e9;
+      t_ns += -99902802;
+
+      data->gt_timestamps.emplace_back(t_ns);
       data->gt_pose_data.emplace_back(q, pos);
     }
   }
