@@ -66,17 +66,15 @@ int main(int argc, char **argv) {
   std::string output_gyro_path;
   std::string output_mocap_path;
 
-  bool show_gui = false;
+  bool show_gui = true;
 
   CLI::App app{"Calibrate time offset"};
 
   app.add_option("-d,--dataset-path", dataset_path, "Path to dataset")
       ->required();
-  app.add_option("--calibration", calibration_path, "Path to calibration file")
-      ->required();
+  app.add_option("--calibration", calibration_path, "Path to calibration file");
   app.add_option("--mocap-calibration", mocap_calibration_path,
-                 "Path to mocap calibration file")
-      ->required();
+                 "Path to mocap calibration file");
   app.add_option("--dataset-type", dataset_type, "Dataset type <euroc, bag>.")
       ->required();
 
@@ -101,27 +99,32 @@ int main(int argc, char **argv) {
 
   basalt::VioDatasetPtr vio_dataset;
 
-  std::ifstream is(calibration_path);
+  const bool use_calib =
+      !(calibration_path.empty() || mocap_calibration_path.empty());
 
-  if (is.good()) {
-    cereal::JSONInputArchive archive(is);
-    archive(calib);
-    std::cout << "Loaded calibration from: " << calibration_path << std::endl;
-  } else {
-    std::cerr << "No calibration found" << std::endl;
-    std::abort();
-  }
+  if (use_calib) {
+    std::ifstream is(calibration_path);
 
-  std::ifstream mocap_is(mocap_calibration_path);
+    if (is.good()) {
+      cereal::JSONInputArchive archive(is);
+      archive(calib);
+      std::cout << "Loaded calibration from: " << calibration_path << std::endl;
+    } else {
+      std::cerr << "No calibration found" << std::endl;
+      std::abort();
+    }
 
-  if (mocap_is.good()) {
-    cereal::JSONInputArchive archive(mocap_is);
-    archive(mocap_calib);
-    std::cout << "Loaded mocap calibration from: " << mocap_calibration_path
-              << std::endl;
-  } else {
-    std::cerr << "No mocap calibration found" << std::endl;
-    std::abort();
+    std::ifstream mocap_is(mocap_calibration_path);
+
+    if (mocap_is.good()) {
+      cereal::JSONInputArchive archive(mocap_is);
+      archive(mocap_calib);
+      std::cout << "Loaded mocap calibration from: " << mocap_calibration_path
+                << std::endl;
+    } else {
+      std::cerr << "No mocap calibration found" << std::endl;
+      std::abort();
+    }
   }
 
   basalt::DatasetIoInterfacePtr dataset_io =
@@ -148,7 +151,11 @@ int main(int argc, char **argv) {
       gyro_timestamps.push_back(vio_dataset->get_gyro_data()[i].timestamp_ns);
 
       Eigen::Vector3d measurement = vio_dataset->get_gyro_data()[i].data;
-      gyro_data.push_back(calib.calib_gyro_bias.getCalibrated(measurement));
+      if (use_calib) {
+        gyro_data.push_back(calib.calib_gyro_bias.getCalibrated(measurement));
+      } else {
+        gyro_data.push_back(measurement);
+      }
     }
     std::cout << "saturated gyro measurement count: " << saturation_count
               << std::endl;
@@ -156,7 +163,8 @@ int main(int argc, char **argv) {
 
   // compute rotational velocity from mocap data
   {
-    Sophus::SE3d T_mark_i = mocap_calib.T_i_mark.inverse();
+    Sophus::SE3d T_mark_i;
+    if (use_calib) T_mark_i = mocap_calib.T_i_mark.inverse();
 
     int saturation_count = 0;
     for (size_t i = 1; i < vio_dataset->get_gt_timestamps().size() - 1; i++) {
@@ -373,7 +381,8 @@ int main(int argc, char **argv) {
           std::cout << "Saving aligned dataset in "
                     << dataset_path + "mav0/gt/data.csv" << std::endl;
           // output corrected mocap data
-          Sophus::SE3d T_mark_i = mocap_calib.T_i_mark.inverse();
+          Sophus::SE3d T_mark_i;
+          if (use_calib) T_mark_i = mocap_calib.T_i_mark.inverse();
           fs::create_directory(dataset_path + "mav0/gt/");
           std::ofstream gt_out_stream;
           gt_out_stream.open(dataset_path + "mav0/gt/data.csv");

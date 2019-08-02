@@ -125,6 +125,13 @@ void KeypointVioEstimator::initialize(const Eigen::Vector3d& bg,
     while (true) {
       vision_data_queue.pop(curr_frame);
 
+      if (!curr_frame.get()) {
+        break;
+      }
+
+      // Correct camera time offset
+      // curr_frame->t_ns += calib.cam_time_offset_ns;
+
       if (!initialized) {
         Eigen::Vector3d vel_w_i_init;
         vel_w_i_init.setZero();
@@ -148,10 +155,6 @@ void KeypointVioEstimator::initialize(const Eigen::Vector3d& bg,
         std::cout << "vel_w_i " << vel_w_i_init.transpose() << std::endl;
 
         initialized = true;
-      }
-
-      if (!curr_frame.get()) {
-        break;
       }
 
       if (prev_frame) {
@@ -179,6 +182,7 @@ void KeypointVioEstimator::initialize(const Eigen::Vector3d& bg,
         }
 
         if (meas->get_start_t_ns() + meas->get_dt_ns() < curr_frame->t_ns) {
+          if (!data.get()) break;
           int64_t tmp = data->t_ns;
           data->t_ns = curr_frame->t_ns;
           meas->integrate(*data, accel_cov, gyro_cov);
