@@ -73,9 +73,9 @@ int main(int argc, char **argv) {
   app.add_option("--accel-noise-std", accel_noise_std,
                  "Accelerometer noise std");
 
-  app.add_option("--gyro-bias-std", accel_bias_std,
+  app.add_option("--gyro-bias-std", gyro_bias_std,
                  "Gyroscope bias random walk std");
-  app.add_option("--accel-bias-std", gyro_bias_std,
+  app.add_option("--accel-bias-std", accel_bias_std,
                  "Accelerometer bias random walk std");
 
   app.add_option("--cache-name", cache_dataset_name,
