@@ -66,6 +66,8 @@ struct VioConfig {
   double vio_obs_huber_thresh;
   double vio_min_triangulation_dist;
 
+  bool vio_enforce_realtime;
+
   double mapper_obs_std_dev;
   double mapper_obs_huber_thresh;
   int mapper_detection_num_points;

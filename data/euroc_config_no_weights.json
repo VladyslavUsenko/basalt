@@ -19,7 +19,7 @@
         "config.vio_outlier_threshold": 3.0,
         "config.vio_filter_iteration": 4,
         "config.vio_max_iterations": 7,
-        
+        "config.vio_enforce_realtime": false,
 
         "config.mapper_obs_std_dev": 0.25,
         "config.mapper_obs_huber_thresh": 1.5,

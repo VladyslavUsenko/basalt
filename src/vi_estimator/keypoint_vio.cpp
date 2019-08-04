@@ -125,6 +125,11 @@ void KeypointVioEstimator::initialize(const Eigen::Vector3d& bg,
     while (true) {
       vision_data_queue.pop(curr_frame);
 
+      if (config.vio_enforce_realtime) {
+        // drop current frame if another frame is already in the queue.
+        while (!vision_data_queue.empty()) vision_data_queue.pop(curr_frame);
+      }
+
       if (!curr_frame.get()) {
         break;
       }

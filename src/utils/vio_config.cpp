@@ -66,6 +66,8 @@ VioConfig::VioConfig() {
   vio_filter_iteration = 4;
   vio_max_iterations = 7;
 
+  vio_enforce_realtime = false;
+
   mapper_obs_std_dev = 0.25;
   mapper_obs_huber_thresh = 1.5;
   mapper_detection_num_points = 800;
@@ -127,6 +129,8 @@ void serialize(Archive& ar, basalt::VioConfig& config) {
   ar(CEREAL_NVP(config.vio_obs_std_dev));
   ar(CEREAL_NVP(config.vio_obs_huber_thresh));
   ar(CEREAL_NVP(config.vio_min_triangulation_dist));
+
+  ar(CEREAL_NVP(config.vio_enforce_realtime));
 
   ar(CEREAL_NVP(config.mapper_obs_std_dev));
   ar(CEREAL_NVP(config.mapper_obs_huber_thresh));
