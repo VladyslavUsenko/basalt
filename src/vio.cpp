@@ -72,6 +72,7 @@ bool prev_step();
 void draw_plots();
 void alignButton();
 void alignDeviceButton();
+void saveTrajectoryButton();
 
 // Pangolin variables
 constexpr int UI_WIDTH = 200;
@@ -102,6 +103,10 @@ pangolin::Var<bool> continue_fast("ui.continue_fast", true, false, true);
 
 Button align_se3_btn("ui.align_se3", &alignButton);
 
+pangolin::Var<bool> euroc_fmt("ui.euroc_fmt", true, false, true);
+pangolin::Var<bool> tum_rgbd_fmt("ui.tum_rgbd_fmt", false, false, true);
+Button save_traj_btn("ui.save_traj", &saveTrajectoryButton);
+
 pangolin::Var<bool> follow("ui.follow", true, false, true);
 
 // Visualization variables
@@ -112,6 +117,7 @@ tbb::concurrent_bounded_queue<basalt::PoseVelBiasState::Ptr> out_state_queue;
 
 std::vector<int64_t> vio_t_ns;
 Eigen::vector<Eigen::Vector3d> vio_t_w_i;
+Eigen::vector<Sophus::SE3d> vio_T_w_i;
 
 std::vector<int64_t> gt_t_ns;
 Eigen::vector<Eigen::Vector3d> gt_t_w_i;
@@ -317,6 +323,7 @@ int main(int argc, char** argv) {
 
       vio_t_ns.emplace_back(data->t_ns);
       vio_t_w_i.emplace_back(T_w_i.translation());
+      vio_T_w_i.emplace_back(T_w_i);
 
       if (show_gui) {
         std::vector<float> vals;
@@ -444,6 +451,14 @@ int main(int argc, char** argv) {
       if (show_est_vel.GuiChanged() || show_est_pos.GuiChanged() ||
           show_est_ba.GuiChanged() || show_est_bg.GuiChanged()) {
         draw_plots();
+      }
+
+      if (euroc_fmt.GuiChanged()) {
+        tum_rgbd_fmt = !euroc_fmt;
+      }
+
+      if (tum_rgbd_fmt.GuiChanged()) {
+        euroc_fmt = !tum_rgbd_fmt;
       }
 
       pangolin::FinishFrame();
@@ -674,3 +689,47 @@ void draw_plots() {
 }
 
 void alignButton() { basalt::alignSVD(vio_t_ns, vio_t_w_i, gt_t_ns, gt_t_w_i); }
+
+void saveTrajectoryButton() {
+  if (tum_rgbd_fmt) {
+    std::ofstream os("trajectory.txt");
+
+    os << "# timestamp tx ty tz qx qy qz qw" << std::endl;
+
+    for (size_t i = 0; i < vio_t_ns.size(); i++) {
+      const Sophus::SE3d& pose = vio_T_w_i[i];
+      os << std::scientific << std::setprecision(18) << vio_t_ns[i] * 1e-9
+         << " " << pose.translation().x() << " " << pose.translation().y()
+         << " " << pose.translation().z() << " " << pose.unit_quaternion().x()
+         << " " << pose.unit_quaternion().y() << " "
+         << pose.unit_quaternion().z() << " " << pose.unit_quaternion().w()
+         << std::endl;
+    }
+
+    os.close();
+
+    std::cout
+        << "Saved trajectory in TUM RGB-D Dataset format in trajectory.txt"
+        << std::endl;
+  } else {
+    std::ofstream os("trajectory.csv");
+
+    os << "#timestamp [ns],p_RS_R_x [m],p_RS_R_y [m],p_RS_R_z [m],q_RS_w "
+          "[],q_RS_x [],q_RS_y [],q_RS_z []"
+       << std::endl;
+
+    for (size_t i = 0; i < vio_t_ns.size(); i++) {
+      const Sophus::SE3d& pose = vio_T_w_i[i];
+      os << std::scientific << std::setprecision(18) << vio_t_ns[i] << ","
+         << pose.translation().x() << "," << pose.translation().y() << ","
+         << pose.translation().z() << "," << pose.unit_quaternion().w() << ","
+         << pose.unit_quaternion().x() << "," << pose.unit_quaternion().y()
+         << "," << pose.unit_quaternion().z() << std::endl;
+    }
+
+    os.close();
+
+    std::cout << "Saved trajectory in Euroc Dataset format in trajectory.csv"
+              << std::endl;
+  }
+}
