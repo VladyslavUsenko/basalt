@@ -109,6 +109,7 @@ void match();
 void tracks();
 void optimize();
 void filter();
+void saveTrajectoryButton();
 
 constexpr int UI_WIDTH = 200;
 
@@ -140,7 +141,11 @@ Button optimize_btn("ui.optimize", &optimize);
 pangolin::Var<double> outlier_threshold("ui.outlier_threshold", 3.0, 0.01, 10);
 
 Button filter_btn("ui.filter", &filter);
-Button align_btn("ui.aling_svd", &alignButton);
+Button align_btn("ui.aling_se3", &alignButton);
+
+pangolin::Var<bool> euroc_fmt("ui.euroc_fmt", true, false, true);
+pangolin::Var<bool> tum_rgbd_fmt("ui.tum_rgbd_fmt", false, false, true);
+Button save_traj_btn("ui.save_traj", &saveTrajectoryButton);
 
 pangolin::OpenGlRenderState camera;
 
@@ -291,6 +296,14 @@ int main(int argc, char** argv) {
         } else {
           img_view[0]->Clear();
         }
+      }
+
+      if (euroc_fmt.GuiChanged()) {
+        tum_rgbd_fmt = !euroc_fmt;
+      }
+
+      if (tum_rgbd_fmt.GuiChanged()) {
+        euroc_fmt = !tum_rgbd_fmt;
       }
 
       if (show_frame2.GuiChanged() || show_cam2.GuiChanged()) {
@@ -666,4 +679,48 @@ void tracks() {
 void filter() {
   nrf_mapper->filterOutliers(outlier_threshold, 4);
   nrf_mapper->get_current_points(mapper_points, mapper_point_ids);
+}
+
+void saveTrajectoryButton() {
+  if (tum_rgbd_fmt) {
+    std::ofstream os("keyframeTrajectory.txt");
+
+    os << "# timestamp tx ty tz qx qy qz qw" << std::endl;
+
+    for (const auto& kv : nrf_mapper->getFramePoses()) {
+      const Sophus::SE3d pose = kv.second.getPose();
+      os << std::scientific << std::setprecision(18) << kv.first * 1e-9 << " "
+         << pose.translation().x() << " " << pose.translation().y() << " "
+         << pose.translation().z() << " " << pose.unit_quaternion().x() << " "
+         << pose.unit_quaternion().y() << " " << pose.unit_quaternion().z()
+         << " " << pose.unit_quaternion().w() << std::endl;
+    }
+
+    os.close();
+
+    std::cout << "Saved trajectory in TUM RGB-D Dataset format in "
+                 "keyframeTrajectory.txt"
+              << std::endl;
+  } else {
+    std::ofstream os("keyframeTrajectory.csv");
+
+    os << "#timestamp [ns],p_RS_R_x [m],p_RS_R_y [m],p_RS_R_z [m],q_RS_w "
+          "[],q_RS_x [],q_RS_y [],q_RS_z []"
+       << std::endl;
+
+    for (const auto& kv : nrf_mapper->getFramePoses()) {
+      const Sophus::SE3d pose = kv.second.getPose();
+      os << std::scientific << std::setprecision(18) << kv.first << ","
+         << pose.translation().x() << "," << pose.translation().y() << ","
+         << pose.translation().z() << "," << pose.unit_quaternion().w() << ","
+         << pose.unit_quaternion().x() << "," << pose.unit_quaternion().y()
+         << "," << pose.unit_quaternion().z() << std::endl;
+    }
+
+    os.close();
+
+    std::cout
+        << "Saved trajectory in Euroc Dataset format in keyframeTrajectory.csv"
+        << std::endl;
+  }
 }
