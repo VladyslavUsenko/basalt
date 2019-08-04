@@ -306,7 +306,6 @@ class UzhIO : public DatasetIoInterface {
           q.z() >> q.w();
 
       int64_t t_ns = timestamp * 1e9;
-      t_ns += -99902802;
 
       data->gt_timestamps.emplace_back(t_ns);
       data->gt_pose_data.emplace_back(q, pos);

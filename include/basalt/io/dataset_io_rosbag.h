@@ -165,7 +165,7 @@ class RosbagVioDataset : public VioDataset {
 
 class RosbagIO : public DatasetIoInterface {
  public:
-  RosbagIO(bool with_images) : with_images(with_images) {}
+  RosbagIO() {}
 
   void read(const std::string &path) {
     if (!fs::exists(path))
@@ -176,13 +176,7 @@ class RosbagIO : public DatasetIoInterface {
     data->bag.reset(new rosbag::Bag);
     data->bag->open(path, rosbag::bagmode::Read);
 
-    rosbag::View view(*data->bag, [this](const rosbag::ConnectionInfo *ci) {
-      if (this->with_images)
-        return true;
-      else
-        return ci->datatype == std::string("sensor_msgs/Imu") ||
-               ci->datatype == std::string("geometry_msgs/TransformStamped");
-    });
+    rosbag::View view(*data->bag);
 
     // get topics
     std::vector<const rosbag::ConnectionInfo *> connection_infos =
@@ -405,8 +399,6 @@ class RosbagIO : public DatasetIoInterface {
 
  private:
   std::shared_ptr<RosbagVioDataset> data;
-
-  bool with_images;
 };
 
 }  // namespace basalt
