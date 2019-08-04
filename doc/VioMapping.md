@@ -42,7 +42,7 @@ The buttons in the GUI have the following meaning:
 
 By default the system starts with `continue_fast` enabled. This option visualizes the latest processed frame until the end of the sequence. Alternatively, the `continue` visualizes every frame without skipping. If both options are disabled the system shows the frame that is selected with the `show_frame` slider and the user can move forward and backward with `next_step` and `prev_step` buttons. The `follow` button changes between the static camera and the camera attached to the current frame.
 
-For evaluation the button `align_svd` is used. It aligns the GT trajectory with the current estimate using an SE(3) transformation and prints the transformation and the root-mean-squared absolute trajectory error (RMS ATE).
+For evaluation the button `align_se3` is used. It aligns the GT trajectory with the current estimate using an SE(3) transformation and prints the transformation and the root-mean-squared absolute trajectory error (RMS ATE).
 
 ### Visual-inertial mapping
 To run the mapping tool execute the following command:
@@ -69,7 +69,7 @@ The workflow for the mapping is the following:
 * `match` run the geometric 2D to 2D matching between image frames.
 * `tracks` build tracks from 2D matches and triangulate the points.
 * `optimize` run the optimization.
-* `align_svd` align ground-truth trajectory in SE(3) and print the transformation and the error.
+* `align_se3` align ground-truth trajectory in SE(3) and print the transformation and the error.
 
 The `num_opt_iter` slider controls the maximum number of iterations executed when pressing `optimize`.
 

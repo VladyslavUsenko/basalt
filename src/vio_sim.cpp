@@ -152,7 +152,7 @@ Button next_step_btn("ui.next_step", &next_step);
 
 pangolin::Var<bool> continue_btn("ui.continue", true, false, true);
 
-Button align_step_btn("ui.align_svd", &alignButton);
+Button align_step_btn("ui.align_se3", &alignButton);
 
 int main(int argc, char** argv) {
   srand(1);

@@ -132,7 +132,7 @@ Button optimize_btn("ui.optimize", &optimize);
 Button rand_inc_btn("ui.rand_inc", &randomInc);
 Button rand_yaw_inc_btn("ui.rand_yaw", &randomYawInc);
 Button setup_points_btn("ui.setup_points", &setup_points);
-Button align_svd_btn("ui.align_svd", &alignButton);
+Button align_se3_btn("ui.align_se3", &alignButton);
 
 std::string marg_data_path;
 

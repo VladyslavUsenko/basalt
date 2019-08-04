@@ -100,7 +100,7 @@ Button prev_step_btn("ui.prev_step", &prev_step);
 pangolin::Var<bool> continue_btn("ui.continue", false, false, true);
 pangolin::Var<bool> continue_fast("ui.continue_fast", true, false, true);
 
-Button align_svd_btn("ui.align_svd", &alignButton);
+Button align_se3_btn("ui.align_se3", &alignButton);
 
 pangolin::Var<bool> follow("ui.follow", true, false, true);
 
