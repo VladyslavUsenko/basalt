@@ -101,7 +101,6 @@ pangolin::Var<bool> continue_btn("ui.continue", false, false, true);
 pangolin::Var<bool> continue_fast("ui.continue_fast", true, false, true);
 
 Button align_svd_btn("ui.align_svd", &alignButton);
-Button align_device_svd_btn("ui.align_device_svd", &alignDeviceButton);
 
 pangolin::Var<bool> follow("ui.follow", true, false, true);
 
@@ -116,9 +115,6 @@ Eigen::vector<Eigen::Vector3d> vio_t_w_i;
 
 std::vector<int64_t> gt_t_ns;
 Eigen::vector<Eigen::Vector3d> gt_t_w_i;
-
-std::vector<int64_t> device_pose_t_ns;
-Eigen::vector<Eigen::Vector3d> device_pose_t_w_i;
 
 std::string marg_data_path;
 size_t last_frame_processed = 0;
@@ -246,13 +242,6 @@ int main(int argc, char** argv) {
       gt_t_ns.push_back(vio_dataset->get_gt_timestamps()[i]);
       gt_t_w_i.push_back(vio_dataset->get_gt_pose_data()[i].translation());
     }
-
-    for (size_t i = 0; i < vio_dataset->get_device_pose_data().size(); i++) {
-      device_pose_t_ns.push_back(vio_dataset->get_device_pose_timestamps()[i]);
-      device_pose_t_w_i.push_back(
-          vio_dataset->get_device_pose_data()[i].translation());
-    }
-    std::cout << "Len " << device_pose_t_ns.size() << std::endl;
   }
 
   const int64_t start_t_ns = vio_dataset->get_image_timestamps().front();
@@ -577,10 +566,6 @@ void draw_scene() {
   glColor3ubv(gt_color);
   if (show_gt) pangolin::glDrawLineStrip(gt_t_w_i);
 
-  u_int8_t device_color[3]{150, 150, 0};
-  glColor3ubv(device_color);
-  if (show_device_gt) pangolin::glDrawLineStrip(device_pose_t_w_i);
-
   size_t frame_id = show_frame;
   int64_t t_ns = vio_dataset->get_image_timestamps()[frame_id];
   auto it = vis_map.find(t_ns);
@@ -689,6 +674,3 @@ void draw_plots() {
 }
 
 void alignButton() { basalt::alignSVD(vio_t_ns, vio_t_w_i, gt_t_ns, gt_t_w_i); }
-void alignDeviceButton() {
-  basalt::alignSVD(device_pose_t_ns, device_pose_t_w_i, gt_t_ns, gt_t_w_i);
-}

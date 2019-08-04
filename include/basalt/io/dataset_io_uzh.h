@@ -64,10 +64,6 @@ class UzhVioDataset : public VioDataset {
   std::vector<int64_t> gt_timestamps;        // ordered gt timestamps
   Eigen::vector<Sophus::SE3d> gt_pose_data;  // TODO: change to eigen aligned
 
-  std::vector<int64_t> device_pose_timestamps;  // ordered gt timestamps
-  Eigen::vector<Sophus::SE3d>
-      device_pose_data;  // TODO: change to eigen aligned
-
   int64_t mocap_to_imu_offset_ns = 0;
 
   std::vector<std::unordered_map<int64_t, double>> exposure_times;
@@ -87,12 +83,7 @@ class UzhVioDataset : public VioDataset {
   const Eigen::vector<Sophus::SE3d> &get_gt_pose_data() const {
     return gt_pose_data;
   }
-  const std::vector<int64_t> &get_device_pose_timestamps() const {
-    return device_pose_timestamps;
-  }
-  const Eigen::vector<Sophus::SE3d> &get_device_pose_data() const {
-    return device_pose_data;
-  }
+
   int64_t get_mocap_to_imu_offset_ns() const { return mocap_to_imu_offset_ns; }
 
   std::vector<ImageData> get_image_data(int64_t t_ns) {

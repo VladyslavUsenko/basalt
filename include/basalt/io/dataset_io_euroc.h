@@ -63,10 +63,6 @@ class EurocVioDataset : public VioDataset {
   std::vector<int64_t> gt_timestamps;        // ordered gt timestamps
   Eigen::vector<Sophus::SE3d> gt_pose_data;  // TODO: change to eigen aligned
 
-  std::vector<int64_t> device_pose_timestamps;  // ordered gt timestamps
-  Eigen::vector<Sophus::SE3d>
-      device_pose_data;  // TODO: change to eigen aligned
-
   int64_t mocap_to_imu_offset_ns = 0;
 
   std::vector<std::unordered_map<int64_t, double>> exposure_times;
@@ -86,12 +82,7 @@ class EurocVioDataset : public VioDataset {
   const Eigen::vector<Sophus::SE3d> &get_gt_pose_data() const {
     return gt_pose_data;
   }
-  const std::vector<int64_t> &get_device_pose_timestamps() const {
-    return device_pose_timestamps;
-  }
-  const Eigen::vector<Sophus::SE3d> &get_device_pose_data() const {
-    return device_pose_data;
-  }
+
   int64_t get_mocap_to_imu_offset_ns() const { return mocap_to_imu_offset_ns; }
 
   std::vector<ImageData> get_image_data(int64_t t_ns) {
@@ -178,10 +169,6 @@ class EurocIO : public DatasetIoInterface {
       read_gt_data_pose(path + "/mav0/gt/");
     } else if (file_exists(path + "/mav0/mocap0/data.csv")) {
       read_gt_data_pose(path + "/mav0/mocap0/");
-    }
-
-    if (file_exists(path + "/mav0/realsense0/data.csv")) {
-      read_device_data_pose(path + "/mav0/realsense0/");
     }
 
     data->exposure_times.resize(data->num_cams);
@@ -316,32 +303,8 @@ class EurocIO : public DatasetIoInterface {
     }
   }
 
-  void read_device_data_pose(const std::string &path) {
-    data->device_pose_timestamps.clear();
-    data->device_pose_data.clear();
-
-    std::ifstream f(path + "data.csv");
-    std::string line;
-    while (std::getline(f, line)) {
-      if (line[0] == '#') continue;
-
-      std::stringstream ss(line);
-
-      char tmp;
-      uint64_t timestamp;
-      Eigen::Quaterniond q;
-      Eigen::Vector3d pos;
-
-      ss >> timestamp >> tmp >> pos[0] >> tmp >> pos[1] >> tmp >> pos[2] >>
-          tmp >> q.w() >> tmp >> q.x() >> tmp >> q.y() >> tmp >> q.z();
-
-      data->device_pose_timestamps.emplace_back(timestamp);
-      data->device_pose_data.emplace_back(q, pos);
-    }
-  }
-
   std::shared_ptr<EurocVioDataset> data;
-};
+};  // namespace basalt
 
 }  // namespace basalt
 
