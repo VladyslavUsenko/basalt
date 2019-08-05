@@ -224,6 +224,17 @@ int main(int argc, char** argv) {
 
   if (!config_path.empty()) {
     vio_config.load(config_path);
+
+    if (vio_config.vio_enforce_realtime) {
+      vio_config.vio_enforce_realtime = false;
+      std::cout
+          << "The option vio_config.vio_enforce_realtime was enabled, "
+             "but it should only be used with the live executables (supply "
+             "images at a constant framerate). This executable runs on the "
+             "datasets and processes images as fast as it can, so the option "
+             "will be disabled. "
+          << std::endl;
+    }
   }
 
   load_data(cam_calib_path);
