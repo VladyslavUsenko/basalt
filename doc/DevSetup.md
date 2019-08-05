@@ -16,12 +16,28 @@ On **MacOS** [Homebrew](https://brew.sh/) should install the right version of cl
 brew install clang-format
 ```
 
+### Realsense Drivers (Optional)
+If you want to use the code with Realsense T265 cameras you should install the realsense library.
+
+On **Ubuntu 18.04** run the following commands:
+```
+sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-key C8B3A55A6F3EFCDE
+sudo sh -c 'echo "deb http://realsense-hw-public.s3.amazonaws.com/Debian/apt-repo bionic main" > /etc/apt/sources.list.d/realsense.list'
+sudo apt-get update
+sudo apt-get install librealsense2-dev librealsense2-gl-dev librealsense2-dkms librealsense2-utils librealsense2-dkms
+```
+
+On **MacOS** run:
+```
+brew install librealsense
+```
+
 ### Install and configure QtCreator
 Download and install QtCreator. On **Ubuntu 18.04** run:
 ```
-wget https://download.qt.io/official_releases/qtcreator/4.9/4.9.0/qt-creator-opensource-linux-x86_64-4.9.0.run
-chmod +x qt-creator-opensource-linux-x86_64-4.9.0.run
-./qt-creator-opensource-linux-x86_64-4.9.0.run
+wget https://download.qt.io/official_releases/qtcreator/4.9/4.9.2/qt-creator-opensource-linux-x86_64-4.9.2.run
+chmod +x qt-creator-opensource-linux-x86_64-4.9.2.run
+./qt-creator-opensource-linux-x86_64-4.9.2.run
 ```
 
 On **MacOS** run:
