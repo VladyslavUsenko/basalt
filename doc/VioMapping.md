@@ -44,6 +44,9 @@ By default the system starts with `continue_fast` enabled. This option visualize
 
 For evaluation the button `align_se3` is used. It aligns the GT trajectory with the current estimate using an SE(3) transformation and prints the transformation and the root-mean-squared absolute trajectory error (RMS ATE).
 
+The button `save_traj` saves the trajectory in one of two formats (`euroc_fmt` or `tum_rgbd_fmt`). In EuRoC format each pose is a line in the file and has the following format `timestamp[ns],tx,ty,tz,qw,qx,qy,qz`. TUM RBG-D can be used with [TUM RGB-D](https://vision.in.tum.de/data/datasets/rgbd-dataset/tools) or [UZH](https://github.com/uzh-rpg/rpg_trajectory_evaluation) trajectory evaluation tools and has the following format `timestamp[s] tx ty tz qx qy qz qw`. 
+
+
 ### Visual-inertial mapping
 To run the mapping tool execute the following command:
 ```
@@ -73,6 +76,7 @@ The workflow for the mapping is the following:
 
 The `num_opt_iter` slider controls the maximum number of iterations executed when pressing `optimize`.
 
+The button `save_traj` works similar to the VIO, but saves the keyframe trajectory (subset of frames).
 
 For more systematic evaluation see the evaluation scripts in the [scripts/eval_full](/scripts/eval_full) folder.
 
