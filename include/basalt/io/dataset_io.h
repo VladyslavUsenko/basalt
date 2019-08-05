@@ -157,7 +157,7 @@ namespace cereal {
 
 template <class Archive, class _Scalar, int _Rows, int _Cols, int _Options,
           int _MaxRows, int _MaxCols>
-inline
+static inline
     typename std::enable_if<_Rows == Eigen::Dynamic || _Cols == Eigen::Dynamic,
                             void>::type
     save(Archive &ar, const Eigen::Matrix<_Scalar, _Rows, _Cols, _Options,
@@ -171,7 +171,7 @@ inline
 
 template <class Archive, class _Scalar, int _Rows, int _Cols, int _Options,
           int _MaxRows, int _MaxCols>
-inline
+static inline
     typename std::enable_if<_Rows == Eigen::Dynamic || _Cols == Eigen::Dynamic,
                             void>::type
     load(Archive &ar,

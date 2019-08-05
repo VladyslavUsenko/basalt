@@ -222,7 +222,7 @@ void serialize(Archive& ar, basalt::ImageData& m) {
 }
 
 template <class Archive>
-void serialize(Archive& ar, Eigen::AffineCompact2f& m) {
+static void serialize(Archive& ar, Eigen::AffineCompact2f& m) {
   ar(m.matrix());
 }
 }  // namespace cereal
