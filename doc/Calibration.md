@@ -1,6 +1,6 @@
 # Calibration
 
-Here, we explain how to use the calibration tools with [TUM-VI](https://vision.in.tum.de/data/datasets/visual-inertial-dataset) and [EuRoC](https://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets) datasets as an example.
+Here, we explain how to use the calibration tools with [TUM-VI](https://vision.in.tum.de/data/datasets/visual-inertial-dataset), [EuRoC](https://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets) and [UZH-FPV](http://rpg.ifi.uzh.ch/uzh-fpv.html) datasets as an example.
 
 
 ## TUM-VI dataset
@@ -22,7 +22,7 @@ The command line options have the following meaning:
 * `--dataset-type` type of the datset. Currently only `bag` and `euroc` formats of the datasets are supported.
 * `--result-path` path to the folder where the resulting calibration and intermediate results will be stored.
 * `--aprilgrid` path to the configuration file for the aprilgrid.
-* `--cam-types` camera models for the image streams in the dataset. For more detais see [arXiv:1807.08957](https://arxiv.org/abs/1807.08957).
+* `--cam-types` camera models for the image streams in the dataset. For more details see [arXiv:1807.08957](https://arxiv.org/abs/1807.08957).
 
 After that, you should see the calibration GUI:
 ![tumvi_cam_calib](/doc/img/tumvi_cam_calib.png)
@@ -34,7 +34,7 @@ The buttons in the GUI are located in the order which you should follow to calib
 * `init_cam_poses` computes an initial guess for camera poses given the current intrinsics.
 * `init_cam_extr` computes an initial transformation between the cameras.
 * `init_opt` initializes optimization and shows the projected points given the current calibration and camera poses.
-* `optimize` runs an iteration of the optimization and visualizes the result. You should press this button until the error printed in the console output stops decreasing and the optimization converges.
+* `optimize` runs an iteration of the optimization and visualizes the result. You should press this button until the error printed in the console output stops decreasing and the optimization converges. Alternatively, you can use the `opt_until_converge` checkbox that will run the optimization until it converges automatically.
 * `save_calib` saves the current calibration as `calibration.json` in the result folder.
 * `compute_vign` **(Experimental)** computes a radially-symmetric vignetting for the cameras. For the algorithm to work, **the calibration pattern should be static (camera moving around it) and have a constant lighting throughout the calibration sequence**. If you run `compute_vign` you should press `save_calib` afterwards. The png images with vignetting will also be stored in the result folder.
 
@@ -48,7 +48,7 @@ You can also control the process using the following buttons:
 * `show_ids` toggles the ID visualization for every point.
 * `huber_thresh` controls the threshold for the huber norm in pixels for the optimization.
 * `opt_intr` controls if the optimization can change the intrinsics. For some datasets it might be helpful to disable this option for several first iterations of the optimization.
-* `opt_until_convg` runs the optimization until convergence.
+* `opt_until_converge` runs the optimization until convergence.
 * `stop_thresh` defines the stopping criteria. Optimization will stop when the maximum increment is smaller than this value.
 
 
@@ -69,7 +69,7 @@ The buttons in the GUI are located in the order which you need to follow to cali
 * `load_dataset`, `detect_corners`, `init_cam_poses` same as above.
 * `init_cam_imu` initializes the rotation between camera and IMU by aligning rotation velocities of the camera to the gyro data.
 * `init_opt` initializes the optimization. Shows reprojected corners in magenta and the estimated values from the spline as solid lines below.
-* `optimize` runs an iteration of the optimization. You should press it several times until convergence before proceeding to next steps.
+* `optimize` runs an iteration of the optimization. You should press it several times until convergence before proceeding to next steps. Alternatively, you can use the `opt_until_converge` checkbox that will run the optimization until it converges automatically.
 * `init_mocap` initializes the transformation from the Aprilgrid calibration pattern to the Mocap coordinate system.
 * `save_calib` save the current calibration as `calibration.json` in the result folder.
 * `save_mocap_calib` save the current Mocap to IMU calibration as `mocap_calibration.json` in the result folder.
@@ -122,3 +122,27 @@ After calibrating the camera you can run the camera + IMU calibration. The resul
 basalt_calibrate_imu --dataset-path ~/euroc_calib_data/imu_april.bag --dataset-type bag --aprilgrid /usr/etc/basalt/aprilgrid_6x6.json --result-path ~/euroc_calib_result/ --gyro-noise-std 0.000282 --accel-noise-std 0.016 --gyro-bias-std 0.0001 --accel-bias-std 0.001
 ```
 ![euroc_imu_calib](/doc/img/euroc_imu_calib.png)
+
+
+## UZH dataset
+Download the datasets for camera and camera-IMU calibration:
+```
+mkdir ~/uzh_calib_data
+cd ~/uzh_calib_data
+wget http://rpg.ifi.uzh.ch/datasets/uzh-fpv/calib/indoor_forward_calib_snapdragon_cam.bag
+wget http://rpg.ifi.uzh.ch/datasets/uzh-fpv/calib/indoor_forward_calib_snapdragon_imu.bag
+```
+
+### Camera calibration
+Run the camera calibration:
+```
+basalt_calibrate --dataset-path ~/uzh_calib_data/indoor_forward_calib_snapdragon_cam.bag --dataset-type bag --aprilgrid /usr/etc/basalt/aprilgrid_5x4_uzh.json --result-path ~/uzh_calib_result/ --cam-types ds ds
+```
+![uzh_cam_calib](/doc/img/uzh_cam_calib.png)
+
+### Camera + IMU calibration
+After calibrating the camera you can run the camera + IMU calibration. The result-path should point to the same folder as before:
+```
+basalt_calibrate_imu --dataset-path ~/uzh_calib_data/indoor_forward_calib_snapdragon_imu.bag --dataset-type bag --aprilgrid /usr/etc/basalt/aprilgrid_5x4_uzh.json --result-path ~/uzh_calib_result/ --gyro-noise-std 0.05 --accel-noise-std 0.1 --gyro-bias-std 4e-5 --accel-bias-std 0.002
+```
+![uzh_imu_calib](/doc/img/uzh_imu_calib.png)
