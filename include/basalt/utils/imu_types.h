@@ -116,12 +116,26 @@ struct PoseVelBiasStateWithLin {
 
   friend struct PoseStateWithLin;
 
+  inline void backup() {
+    backup_delta = delta;
+    backup_state_linearized = state_linearized;
+    backup_state_current = state_current;
+  }
+
+  inline void restore() {
+    delta = backup_delta;
+    state_linearized = backup_state_linearized;
+    state_current = backup_state_current;
+  }
+
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
  private:
   bool linearized;
   VecN delta;
-
   PoseVelBiasState state_linearized, state_current;
+
+  VecN backup_delta;
+  PoseVelBiasState backup_state_linearized, backup_state_current;
 
   friend class cereal::access;
 
@@ -190,13 +204,28 @@ struct PoseStateWithLin {
   inline const VecN& getDelta() const { return delta; }
   inline int64_t getT_ns() const { return pose_linearized.t_ns; }
 
+  inline void backup() {
+    backup_delta = delta;
+    backup_pose_linearized = pose_linearized;
+    backup_T_w_i_current = T_w_i_current;
+  }
+
+  inline void restore() {
+    delta = backup_delta;
+    pose_linearized = backup_pose_linearized;
+    T_w_i_current = backup_T_w_i_current;
+  }
+
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
  private:
   bool linearized;
   VecN delta;
-
   PoseState pose_linearized;
   Sophus::SE3d T_w_i_current;
+
+  VecN backup_delta;
+  PoseState backup_pose_linearized;
+  Sophus::SE3d backup_T_w_i_current;
 
   friend class cereal::access;
 
