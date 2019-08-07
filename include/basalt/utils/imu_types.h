@@ -57,7 +57,9 @@ static const Eigen::Vector3d g(0, 0, -9.81);
 static const Eigen::Vector3d g_dir(0, 0, -1);
 }  // namespace constants
 
-struct PoseVelBiasStateWithLin : private PoseVelBiasState {
+struct PoseVelBiasStateWithLin {
+  using VecN = PoseVelBiasState::VecN;
+
   PoseVelBiasStateWithLin() {
     linearized = false;
     delta.setZero();
@@ -67,14 +69,14 @@ struct PoseVelBiasStateWithLin : private PoseVelBiasState {
                           const Eigen::Vector3d& vel_w_i,
                           const Eigen::Vector3d& bias_gyro,
                           const Eigen::Vector3d& bias_accel, bool linearized)
-      : PoseVelBiasState(t_ns, T_w_i, vel_w_i, bias_gyro, bias_accel),
-        linearized(linearized) {
+      : linearized(linearized),
+        state_linearized(t_ns, T_w_i, vel_w_i, bias_gyro, bias_accel) {
     delta.setZero();
-    state_current = *this;
+    state_current = state_linearized;
   }
 
   PoseVelBiasStateWithLin(const PoseVelBiasState& other)
-      : PoseVelBiasState(other), linearized(false) {
+      : linearized(false), state_linearized(other) {
     delta.setZero();
     state_current = other;
   }
@@ -88,27 +90,29 @@ struct PoseVelBiasStateWithLin : private PoseVelBiasState {
 
   void applyInc(const VecN& inc) {
     if (!linearized) {
-      PoseVelBiasState::applyInc(inc);
+      state_linearized.applyInc(inc);
     } else {
       delta += inc;
-      state_current = *this;
+      state_current = state_linearized;
       state_current.applyInc(delta);
     }
   }
 
   inline const PoseVelBiasState& getState() const {
     if (!linearized) {
-      return *this;
+      return state_linearized;
     } else {
       return state_current;
     }
   }
 
-  inline const PoseVelBiasState& getStateLin() const { return *this; }
+  inline const PoseVelBiasState& getStateLin() const {
+    return state_linearized;
+  }
 
   inline bool isLinearized() const { return linearized; }
   inline const VecN& getDelta() const { return delta; }
-  inline int64_t getT_ns() const { return t_ns; }
+  inline int64_t getT_ns() const { return state_linearized.t_ns; }
 
   friend struct PoseStateWithLin;
 
@@ -117,86 +121,92 @@ struct PoseVelBiasStateWithLin : private PoseVelBiasState {
   bool linearized;
   VecN delta;
 
-  PoseVelBiasState state_current;
+  PoseVelBiasState state_linearized, state_current;
 
   friend class cereal::access;
 
   template <class Archive>
   void serialize(Archive& ar) {
-    ar(T_w_i);
-    ar(vel_w_i);
-    ar(bias_gyro);
-    ar(bias_accel);
+    ar(state_linearized.T_w_i);
+    ar(state_linearized.vel_w_i);
+    ar(state_linearized.bias_gyro);
+    ar(state_linearized.bias_accel);
     ar(state_current.T_w_i);
     ar(state_current.vel_w_i);
     ar(state_current.bias_gyro);
     ar(state_current.bias_accel);
     ar(delta);
     ar(linearized);
-    ar(t_ns);
+    ar(state_linearized.t_ns);
   }
 };
 
-struct PoseStateWithLin : private PoseState {
+struct PoseStateWithLin {
+  using VecN = PoseState::VecN;
+
   PoseStateWithLin() {
     linearized = false;
     delta.setZero();
   };
 
   PoseStateWithLin(int64_t t_ns, const Sophus::SE3d& T_w_i)
-      : PoseState(t_ns, T_w_i), linearized(false) {
+      : linearized(false), pose_linearized(t_ns, T_w_i) {
     delta.setZero();
     T_w_i_current = T_w_i;
   }
 
   PoseStateWithLin(const PoseVelBiasStateWithLin& other)
-      : PoseState(other.t_ns, other.T_w_i),
-        linearized(other.linearized),
-        delta(other.delta.head<6>()) {
-    T_w_i_current = T_w_i;
-    incPose(delta, T_w_i_current);
+      : linearized(other.linearized),
+        delta(other.delta.head<6>()),
+        pose_linearized(other.state_linearized.t_ns,
+                        other.state_linearized.T_w_i) {
+    T_w_i_current = pose_linearized.T_w_i;
+    PoseState::incPose(delta, T_w_i_current);
   }
 
   inline const Sophus::SE3d& getPose() const {
     if (!linearized) {
-      return T_w_i;
+      return pose_linearized.T_w_i;
     } else {
       return T_w_i_current;
     }
   }
 
-  inline const Sophus::SE3d& getPoseLin() const { return T_w_i; }
+  inline const Sophus::SE3d& getPoseLin() const {
+    return pose_linearized.T_w_i;
+  }
 
   inline void applyInc(const VecN& inc) {
     if (!linearized) {
-      incPose(inc, T_w_i);
+      PoseState::incPose(inc, pose_linearized.T_w_i);
     } else {
       delta += inc;
-      T_w_i_current = T_w_i;
-      incPose(delta, T_w_i_current);
+      T_w_i_current = pose_linearized.T_w_i;
+      PoseState::incPose(delta, T_w_i_current);
     }
   }
 
   inline bool isLinearized() const { return linearized; }
   inline const VecN& getDelta() const { return delta; }
-  inline int64_t getT_ns() const { return t_ns; }
+  inline int64_t getT_ns() const { return pose_linearized.t_ns; }
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
  private:
   bool linearized;
   VecN delta;
 
+  PoseState pose_linearized;
   Sophus::SE3d T_w_i_current;
 
   friend class cereal::access;
 
   template <class Archive>
   void serialize(Archive& ar) {
-    ar(T_w_i);
+    ar(pose_linearized.T_w_i);
     ar(T_w_i_current);
     ar(delta);
     ar(linearized);
-    ar(t_ns);
+    ar(pose_linearized.t_ns);
   }
 };
 
