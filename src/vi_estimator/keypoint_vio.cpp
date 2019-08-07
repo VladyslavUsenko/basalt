@@ -971,6 +971,9 @@ void KeypointVioEstimator::optimize() {
       };
       tbb::parallel_for(keys_range, update_points_func);
 
+      // backup();
+      // restore();
+
       if (config.vio_debug) {
         double after_update_marg_prior_error = 0;
         double after_update_vision_error = 0, after_update_imu_error = 0,

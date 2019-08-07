@@ -106,6 +106,14 @@ class LandmarkDatabase {
 
   void removeObservations(int lm_id, const std::set<TimeCamId>& obs);
 
+  inline void backup() {
+    for (auto& kv : kpts) kv.second.backup();
+  }
+
+  inline void restore() {
+    for (auto& kv : kpts) kv.second.restore();
+  }
+
  private:
   Eigen::unordered_map<int, KeypointPosition> kpts;
   Eigen::map<TimeCamId,

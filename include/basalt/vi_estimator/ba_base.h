@@ -368,6 +368,18 @@ class BundleAdjustmentBase {
     AccumT accum;
   };
 
+  inline void backup() {
+    for (auto& kv : frame_states) kv.second.backup();
+    for (auto& kv : frame_poses) kv.second.backup();
+    lmdb.backup();
+  }
+
+  inline void restore() {
+    for (auto& kv : frame_states) kv.second.restore();
+    for (auto& kv : frame_poses) kv.second.backup();
+    lmdb.restore();
+  }
+
   // protected:
   PoseStateWithLin getPoseStateWithLin(int64_t t_ns) const {
     auto it = frame_poses.find(t_ns);
