@@ -53,7 +53,11 @@ KeypointVioEstimator::KeypointVioEstimator(
       frames_after_kf(0),
       g(g),
       initialized(false),
-      config(config) {
+      config(config),
+      lambda(1e-6),
+      min_lambda(1e-12),
+      max_lambda(10),
+      lambda_vee(2) {
   this->obs_std_dev = config.vio_obs_std_dev;
   this->huber_thresh = config.vio_obs_huber_thresh;
   this->calib = calib;
@@ -941,38 +945,99 @@ void KeypointVioEstimator::optimize() {
       double error_total =
           rld_error + imu_error + marg_prior_error + ba_error + bg_error;
 
+      std::cout << "[LINEARIZE] Error: " << error_total << " num points "
+                << std::endl;
+
       lopt.accum.setup_solver();
       Eigen::VectorXd Hdiag = lopt.accum.Hdiagonal();
-      Hdiag *= 1e-12;
-      for (int i = 0; i < Hdiag.size(); i++)
-        Hdiag[i] = std::max(Hdiag[i], 1e-12);
 
-      const Eigen::VectorXd inc = lopt.accum.solve(&Hdiag);
+      bool converged = false;
+      bool step = false;
+      int max_iter = 10;
 
-      // apply increment to poses
-      for (auto& kv : frame_poses) {
-        int idx = aom.abs_order_map.at(kv.first).first;
-        kv.second.applyInc(-inc.segment<POSE_SIZE>(idx));
-      }
+      while (!step && max_iter > 0 && !converged) {
+        Eigen::VectorXd Hdiag_lambda = Hdiag * lambda;
+        for (int i = 0; i < Hdiag_lambda.size(); i++)
+          Hdiag_lambda[i] = std::max(Hdiag_lambda[i], min_lambda);
 
-      // apply increment to states
-      for (auto& kv : frame_states) {
-        int idx = aom.abs_order_map.at(kv.first).first;
-        kv.second.applyInc(-inc.segment<POSE_VEL_BIAS_SIZE>(idx));
-      }
+        const Eigen::VectorXd inc = lopt.accum.solve(&Hdiag_lambda);
+        double max_inc = inc.array().abs().maxCoeff();
+        if (max_inc < 1e-4) converged = true;
 
-      // Update points
-      tbb::blocked_range<size_t> keys_range(0, rld_vec.size());
-      auto update_points_func = [&](const tbb::blocked_range<size_t>& r) {
-        for (size_t i = r.begin(); i != r.end(); ++i) {
-          const auto& rld = rld_vec[i];
-          updatePoints(aom, rld, inc);
+        backup();
+
+        // apply increment to poses
+        for (auto& kv : frame_poses) {
+          int idx = aom.abs_order_map.at(kv.first).first;
+          kv.second.applyInc(-inc.segment<POSE_SIZE>(idx));
         }
-      };
-      tbb::parallel_for(keys_range, update_points_func);
 
-      // backup();
-      // restore();
+        // apply increment to states
+        for (auto& kv : frame_states) {
+          int idx = aom.abs_order_map.at(kv.first).first;
+          kv.second.applyInc(-inc.segment<POSE_VEL_BIAS_SIZE>(idx));
+        }
+
+        // Update points
+        tbb::blocked_range<size_t> keys_range(0, rld_vec.size());
+        auto update_points_func = [&](const tbb::blocked_range<size_t>& r) {
+          for (size_t i = r.begin(); i != r.end(); ++i) {
+            const auto& rld = rld_vec[i];
+            updatePoints(aom, rld, inc);
+          }
+        };
+        tbb::parallel_for(keys_range, update_points_func);
+
+        double after_update_marg_prior_error = 0;
+        double after_update_vision_error = 0, after_update_imu_error = 0,
+               after_bg_error = 0, after_ba_error = 0;
+
+        computeError(after_update_vision_error);
+        computeImuError(aom, after_update_imu_error, after_bg_error,
+                        after_ba_error, frame_states, imu_meas,
+                        gyro_bias_weight, accel_bias_weight, g);
+        computeMargPriorError(after_update_marg_prior_error);
+
+        double after_error_total =
+            after_update_vision_error + after_update_imu_error +
+            after_update_marg_prior_error + after_bg_error + after_ba_error;
+
+        double f_diff = (error_total - after_error_total);
+        double l_diff = 0.5 * inc.dot(inc * lambda + lopt.accum.getB());
+
+        std::cout << "f_diff " << f_diff << " l_diff " << l_diff << std::endl;
+
+        double step_quality = f_diff / l_diff;
+
+        if (step_quality < 0) {
+          std::cout << "\t[REJECTED] lambda:" << lambda
+                    << " step_quality: " << step_quality
+                    << " max_inc: " << max_inc
+                    << " Error: " << after_error_total << std::endl;
+          lambda = std::min(max_lambda, lambda_vee * lambda);
+          lambda_vee *= 2;
+
+          restore();
+        } else {
+          std::cout << "\t[ACCEPTED] lambda:" << lambda
+                    << " step_quality: " << step_quality
+                    << " max_inc: " << max_inc
+                    << " Error: " << after_error_total << std::endl;
+
+          lambda = std::max(
+              min_lambda,
+              lambda *
+                  std::max(1.0 / 3, 1 - std::pow(2 * step_quality - 1, 3.0)));
+          lambda_vee = 2;
+
+          step = true;
+        }
+        max_iter--;
+      }
+
+      if (converged) {
+        std::cout << "[CONVERGED]" << std::endl;
+      }
 
       if (config.vio_debug) {
         double after_update_marg_prior_error = 0;
@@ -1009,8 +1074,7 @@ void KeypointVioEstimator::optimize() {
                   << " bg_error: " << after_bg_error
                   << " ba_error: " << after_ba_error
                   << " marg prior: " << after_update_marg_prior_error
-                  << " total: " << after_error_total << " max_inc "
-                  << inc.array().abs().maxCoeff() << " error_diff "
+                  << " total: " << after_error_total << " error_diff "
                   << error_diff << " time : " << elapsed.count()
                   << "(us),  num_states " << frame_states.size()
                   << " num_poses " << frame_poses.size() << std::endl;
@@ -1024,7 +1088,7 @@ void KeypointVioEstimator::optimize() {
         filterOutliers(config.vio_outlier_threshold, 4);
       }
 
-      if (inc.array().abs().maxCoeff() < 1e-4) break;
+      if (converged) break;
 
       // std::cerr << "LT\n" << LT << std::endl;
       // std::cerr << "z_p\n" << z_p.transpose() << std::endl;
