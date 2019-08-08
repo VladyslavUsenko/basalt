@@ -37,6 +37,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <tbb/parallel_for.h>
 
+#include <mutex>
+
 namespace basalt {
 
 Sophus::SE3d BundleAdjustmentBase::computeRelPose(const Sophus::SE3d& T_w_i_h,
@@ -129,101 +131,119 @@ void BundleAdjustmentBase::updatePoints(const AbsOrderMap& aom,
 }
 
 void BundleAdjustmentBase::computeError(
-    double& error,
+    double& error_all,
     std::map<int, std::vector<std::pair<TimeCamId, double>>>* outliers,
     double outlier_threshold) const {
-  error = 0;
+  error_all = 0;
 
+  std::vector<TimeCamId> obs_tcid_vec;
   for (const auto& kv : lmdb.getObservations()) {
-    const TimeCamId& tcid_h = kv.first;
-
-    for (const auto& obs_kv : kv.second) {
-      const TimeCamId& tcid_t = obs_kv.first;
-
-      if (tcid_h != tcid_t) {
-        PoseStateWithLin state_h = getPoseStateWithLin(tcid_h.frame_id);
-        PoseStateWithLin state_t = getPoseStateWithLin(tcid_t.frame_id);
-
-        Sophus::SE3d T_t_h_sophus =
-            computeRelPose(state_h.getPose(), calib.T_i_c[tcid_h.cam_id],
-                           state_t.getPose(), calib.T_i_c[tcid_t.cam_id]);
-
-        Eigen::Matrix4d T_t_h = T_t_h_sophus.matrix();
-
-        std::visit(
-            [&](const auto& cam) {
-              for (size_t i = 0; i < obs_kv.second.size(); i++) {
-                const KeypointObservation& kpt_obs = obs_kv.second[i];
-                const KeypointPosition& kpt_pos =
-                    lmdb.getLandmark(kpt_obs.kpt_id);
-
-                Eigen::Vector2d res;
-
-                bool valid = linearizePoint(kpt_obs, kpt_pos, T_t_h, cam, res);
-
-                if (valid) {
-                  double e = res.norm();
-
-                  if (outliers && e > outlier_threshold) {
-                    (*outliers)[kpt_obs.kpt_id].emplace_back(tcid_t, e);
-                  }
-
-                  double huber_weight =
-                      e < huber_thresh ? 1.0 : huber_thresh / e;
-                  double obs_weight =
-                      huber_weight / (obs_std_dev * obs_std_dev);
-
-                  error +=
-                      (2 - huber_weight) * obs_weight * res.transpose() * res;
-                } else {
-                  if (outliers) {
-                    (*outliers)[kpt_obs.kpt_id].emplace_back(tcid_t, -1);
-                  }
-                }
-              }
-            },
-            calib.intrinsics[tcid_t.cam_id].variant);
-
-      } else {
-        // target and host are the same
-        // residual does not depend on the pose
-        // it just depends on the point
-
-        std::visit(
-            [&](const auto& cam) {
-              for (size_t i = 0; i < obs_kv.second.size(); i++) {
-                const KeypointObservation& kpt_obs = obs_kv.second[i];
-                const KeypointPosition& kpt_pos =
-                    lmdb.getLandmark(kpt_obs.kpt_id);
-
-                Eigen::Vector2d res;
-
-                bool valid = linearizePoint(kpt_obs, kpt_pos, cam, res);
-                if (valid) {
-                  double e = res.norm();
-
-                  if (outliers && e > outlier_threshold) {
-                    (*outliers)[kpt_obs.kpt_id].emplace_back(tcid_t, -2);
-                  }
-
-                  double huber_weight =
-                      e < huber_thresh ? 1.0 : huber_thresh / e;
-                  double obs_weight =
-                      huber_weight / (obs_std_dev * obs_std_dev);
-
-                  error +=
-                      (2 - huber_weight) * obs_weight * res.transpose() * res;
-                } else {
-                  if (outliers) {
-                    (*outliers)[kpt_obs.kpt_id].emplace_back(tcid_t, -2);
-                  }
-                }
-              }
-            },
-            calib.intrinsics[tcid_t.cam_id].variant);
-      }
-    }
+    obs_tcid_vec.emplace_back(kv.first);
   }
+
+  std::mutex res_mutex;
+
+  tbb::parallel_for(
+      tbb::blocked_range<size_t>(0, obs_tcid_vec.size()),
+      [&](const tbb::blocked_range<size_t>& range) {
+        double error = 0;
+
+        for (size_t r = range.begin(); r != range.end(); ++r) {
+          auto kv = lmdb.getObservations().find(obs_tcid_vec[r]);
+          const TimeCamId& tcid_h = kv->first;
+
+          for (const auto& obs_kv : kv->second) {
+            const TimeCamId& tcid_t = obs_kv.first;
+
+            if (tcid_h != tcid_t) {
+              PoseStateWithLin state_h = getPoseStateWithLin(tcid_h.frame_id);
+              PoseStateWithLin state_t = getPoseStateWithLin(tcid_t.frame_id);
+
+              Sophus::SE3d T_t_h_sophus =
+                  computeRelPose(state_h.getPose(), calib.T_i_c[tcid_h.cam_id],
+                                 state_t.getPose(), calib.T_i_c[tcid_t.cam_id]);
+
+              Eigen::Matrix4d T_t_h = T_t_h_sophus.matrix();
+
+              std::visit(
+                  [&](const auto& cam) {
+                    for (size_t i = 0; i < obs_kv.second.size(); i++) {
+                      const KeypointObservation& kpt_obs = obs_kv.second[i];
+                      const KeypointPosition& kpt_pos =
+                          lmdb.getLandmark(kpt_obs.kpt_id);
+
+                      Eigen::Vector2d res;
+
+                      bool valid =
+                          linearizePoint(kpt_obs, kpt_pos, T_t_h, cam, res);
+
+                      if (valid) {
+                        double e = res.norm();
+
+                        if (outliers && e > outlier_threshold) {
+                          (*outliers)[kpt_obs.kpt_id].emplace_back(tcid_t, e);
+                        }
+
+                        double huber_weight =
+                            e < huber_thresh ? 1.0 : huber_thresh / e;
+                        double obs_weight =
+                            huber_weight / (obs_std_dev * obs_std_dev);
+
+                        error += (2 - huber_weight) * obs_weight *
+                                 res.transpose() * res;
+                      } else {
+                        if (outliers) {
+                          (*outliers)[kpt_obs.kpt_id].emplace_back(tcid_t, -1);
+                        }
+                      }
+                    }
+                  },
+                  calib.intrinsics[tcid_t.cam_id].variant);
+
+            } else {
+              // target and host are the same
+              // residual does not depend on the pose
+              // it just depends on the point
+
+              std::visit(
+                  [&](const auto& cam) {
+                    for (size_t i = 0; i < obs_kv.second.size(); i++) {
+                      const KeypointObservation& kpt_obs = obs_kv.second[i];
+                      const KeypointPosition& kpt_pos =
+                          lmdb.getLandmark(kpt_obs.kpt_id);
+
+                      Eigen::Vector2d res;
+
+                      bool valid = linearizePoint(kpt_obs, kpt_pos, cam, res);
+                      if (valid) {
+                        double e = res.norm();
+
+                        if (outliers && e > outlier_threshold) {
+                          (*outliers)[kpt_obs.kpt_id].emplace_back(tcid_t, -2);
+                        }
+
+                        double huber_weight =
+                            e < huber_thresh ? 1.0 : huber_thresh / e;
+                        double obs_weight =
+                            huber_weight / (obs_std_dev * obs_std_dev);
+
+                        error += (2 - huber_weight) * obs_weight *
+                                 res.transpose() * res;
+                      } else {
+                        if (outliers) {
+                          (*outliers)[kpt_obs.kpt_id].emplace_back(tcid_t, -2);
+                        }
+                      }
+                    }
+                  },
+                  calib.intrinsics[tcid_t.cam_id].variant);
+            }
+          }
+        }
+
+        std::scoped_lock l(res_mutex);
+        error_all += error;
+      });
 }
 
 void BundleAdjustmentBase::linearizeHelper(
@@ -465,8 +485,9 @@ void BundleAdjustmentBase::filterOutliers(double outlier_threshold,
   std::map<int, std::vector<std::pair<TimeCamId, double>>> outliers;
   computeError(error, &outliers, outlier_threshold);
 
-  //  std::cout << "============================================" << std::endl;
-  //  std::cout << "Num landmarks: " << lmdb.numLandmarks() << " with outliners
+  //  std::cout << "============================================" <<
+  //  std::endl; std::cout << "Num landmarks: " << lmdb.numLandmarks() << "
+  //  with outliners
   //  "
   //            << outliers.size() << std::endl;
 
@@ -498,7 +519,8 @@ void BundleAdjustmentBase::filterOutliers(double outlier_threshold,
     }
   }
 
-  // std::cout << "============================================" << std::endl;
+  // std::cout << "============================================" <<
+  // std::endl;
 }
 
 void BundleAdjustmentBase::marginalizeHelper(Eigen::MatrixXd& abs_H,
@@ -552,7 +574,8 @@ void BundleAdjustmentBase::marginalizeHelper(Eigen::MatrixXd& abs_H,
 
   //  H_mm_inv = abs_H.bottomRightCorner(marg_size, marg_size)
   //                 .fullPivHouseholderQr()
-  //                 .solve(Eigen::MatrixXd::Identity(marg_size, marg_size));
+  //                 .solve(Eigen::MatrixXd::Identity(marg_size,
+  //                 marg_size));
 
   abs_H.topRightCorner(keep_size, marg_size) *= H_mm_inv;
 
