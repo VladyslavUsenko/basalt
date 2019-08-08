@@ -55,7 +55,7 @@ KeypointVioEstimator::KeypointVioEstimator(
       initialized(false),
       config(config),
       lambda(1e-6),
-      min_lambda(1e-12),
+      min_lambda(1e-14),
       max_lambda(100),
       lambda_vee(2) {
   this->obs_std_dev = config.vio_obs_std_dev;
