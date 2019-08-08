@@ -47,7 +47,7 @@ NfrMapper::NfrMapper(const Calibration<double>& calib, const VioConfig& config)
     : config(config),
       lambda(1e-10),
       min_lambda(1e-32),
-      max_lambda(100),
+      max_lambda(1000),
       lambda_vee(2) {
   this->calib = calib;
   this->obs_std_dev = config.mapper_obs_std_dev;
@@ -288,7 +288,7 @@ void NfrMapper::optimize(int num_iterations) {
     lopt.accum.print_info = true;
 
     lopt.accum.setup_solver();
-    Eigen::VectorXd Hdiag = lopt.accum.Hdiagonal();
+    const Eigen::VectorXd Hdiag = lopt.accum.Hdiagonal();
 
     bool converged = false;
     bool step = false;
