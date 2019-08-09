@@ -138,6 +138,14 @@ void KeypointVioEstimator::initialize(const Eigen::Vector3d& bg,
       // curr_frame->t_ns += calib.cam_time_offset_ns;
 
       if (!initialized) {
+        while (data->t_ns < curr_frame->t_ns) {
+          imu_data_queue.pop(data);
+          if (!data.get()) break;
+          data->accel = calib.calib_accel_bias.getCalibrated(data->accel);
+          data->gyro = calib.calib_gyro_bias.getCalibrated(data->gyro);
+          std::cout << "Skipping IMU data.." << std::endl;
+        }
+
         Eigen::Vector3d vel_w_i_init;
         vel_w_i_init.setZero();
 
