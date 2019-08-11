@@ -62,14 +62,14 @@ print '\nVisual-Inertial Odometry'
 print row_format.format(*datasets_short)
 
 print row_format.format(*vio['ate'])
-print row_format.format(*vio['time'])
+#print row_format.format(*vio['time'])
 print row_format.format(*vio['num_frames'])
 
 print '\nVisual-Inertial Mapping'
 print row_format.format(*datasets_short)
 
 print row_format.format(*mapping['ate'])
-print row_format.format(*mapping['time'])
+#print row_format.format(*mapping['time'])
 print row_format.format(*mapping['num_frames'])
 
 
@@ -77,6 +77,6 @@ print '\nPose-Graph optimization (Identity weights for all factors)'
 print row_format.format(*datasets_short)
 
 print row_format.format(*pose_graph['ate'])
-print row_format.format(*pose_graph['time'])
+#print row_format.format(*pose_graph['time'])
 print row_format.format(*pose_graph['num_frames'])
 
