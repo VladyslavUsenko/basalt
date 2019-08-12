@@ -9,6 +9,7 @@
 #include <basalt/utils/common_types.h>
 
 #include <tbb/concurrent_unordered_map.h>
+#include <tbb/concurrent_vector.h>
 
 namespace basalt {
 
@@ -61,8 +62,8 @@ class HashBow {
   inline void add_to_database(const TimeCamId& tcid,
                               const HashBowVector& bow_vector) {
     for (const auto& kv : bow_vector) {
-      std::pair<TimeCamId, double> p = std::make_pair(tcid, kv.second);
-      inverted_index.emplace(kv.first, p);
+      // std::pair<TimeCamId, double> p = std::make_pair(tcid, kv.second);
+      inverted_index[kv.first].emplace_back(tcid, kv.second);
     }
   }
 
@@ -75,14 +76,15 @@ class HashBow {
     std::unordered_map<TimeCamId, double, tbb::tbb_hash<TimeCamId>> scores;
 
     for (const auto& kv : bow_vector) {
-      const auto range_it = inverted_index.equal_range(kv.first);
+      const auto range_it = inverted_index.find(kv.first);
 
-      for (auto it = range_it.first; it != range_it.second; ++it) {
-        // if there is a maximum query time select only the frames that have
-        // timestamp below max_t_ns
-        if (!max_t_ns || it->second.first.frame_id < (*max_t_ns))
-          scores[it->second.first] += kv.second * it->second.second;
-      }
+      if (range_it != inverted_index.end())
+        for (const auto& v : range_it->second) {
+          // if there is a maximum query time select only the frames that have
+          // timestamp below max_t_ns
+          if (!max_t_ns || v.first.frame_id < (*max_t_ns))
+            scores[v.first] += kv.second * v.second;
+        }
     }
 
     results.reserve(scores.size());
@@ -152,8 +154,9 @@ class HashBow {
 
   size_t num_bits;
 
-  tbb::concurrent_unordered_multimap<FeatureHash, std::pair<TimeCamId, double>,
-                                     std::hash<FeatureHash>>
+  tbb::concurrent_unordered_map<
+      FeatureHash, tbb::concurrent_vector<std::pair<TimeCamId, double>>,
+      std::hash<FeatureHash>>
       inverted_index;
 };
 
