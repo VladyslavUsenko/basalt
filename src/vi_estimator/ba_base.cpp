@@ -465,8 +465,9 @@ void BundleAdjustmentBase::filterOutliers(double outlier_threshold,
   std::map<int, std::vector<std::pair<TimeCamId, double>>> outliers;
   computeError(error, &outliers, outlier_threshold);
 
-  //  std::cout << "============================================" << std::endl;
-  //  std::cout << "Num landmarks: " << lmdb.numLandmarks() << " with outliners
+  //  std::cout << "============================================" <<
+  //  std::endl; std::cout << "Num landmarks: " << lmdb.numLandmarks() << "
+  //  with outliners
   //  "
   //            << outliers.size() << std::endl;
 
@@ -498,7 +499,8 @@ void BundleAdjustmentBase::filterOutliers(double outlier_threshold,
     }
   }
 
-  // std::cout << "============================================" << std::endl;
+  // std::cout << "============================================" <<
+  // std::endl;
 }
 
 void BundleAdjustmentBase::marginalizeHelper(Eigen::MatrixXd& abs_H,
@@ -552,7 +554,8 @@ void BundleAdjustmentBase::marginalizeHelper(Eigen::MatrixXd& abs_H,
 
   //  H_mm_inv = abs_H.bottomRightCorner(marg_size, marg_size)
   //                 .fullPivHouseholderQr()
-  //                 .solve(Eigen::MatrixXd::Identity(marg_size, marg_size));
+  //                 .solve(Eigen::MatrixXd::Identity(marg_size,
+  //                 marg_size));
 
   abs_H.topRightCorner(keep_size, marg_size) *= H_mm_inv;
 

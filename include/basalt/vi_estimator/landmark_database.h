@@ -44,7 +44,21 @@ struct KeypointPosition {
   Eigen::Vector2d dir;
   double id;
 
+  inline void backup() {
+    backup_dir = dir;
+    backup_id = id;
+  }
+
+  inline void restore() {
+    dir = backup_dir;
+    id = backup_id;
+  }
+
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+ private:
+  Eigen::Vector2d backup_dir;
+  double backup_id;
 };
 
 struct KeypointObservation {
@@ -91,6 +105,14 @@ class LandmarkDatabase {
   void removeLandmark(int lm_id);
 
   void removeObservations(int lm_id, const std::set<TimeCamId>& obs);
+
+  inline void backup() {
+    for (auto& kv : kpts) kv.second.backup();
+  }
+
+  inline void restore() {
+    for (auto& kv : kpts) kv.second.restore();
+  }
 
  private:
   Eigen::unordered_map<int, KeypointPosition> kpts;

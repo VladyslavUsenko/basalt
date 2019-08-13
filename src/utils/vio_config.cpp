@@ -68,6 +68,10 @@ VioConfig::VioConfig() {
 
   vio_enforce_realtime = false;
 
+  vio_use_lm = false;
+  vio_lm_lambda_min = 1e-32;
+  vio_lm_lambda_max = 1e2;
+
   mapper_obs_std_dev = 0.25;
   mapper_obs_huber_thresh = 1.5;
   mapper_detection_num_points = 800;
@@ -81,6 +85,10 @@ VioConfig::VioConfig() {
   mapper_bow_num_bits = 16;
   mapper_min_triangulation_dist = 0.07;
   mapper_no_factor_weights = false;
+
+  mapper_use_lm = false;
+  mapper_lm_lambda_min = 1e-32;
+  mapper_lm_lambda_max = 1e2;
 }
 
 void VioConfig::save(const std::string& filename) {
@@ -132,6 +140,10 @@ void serialize(Archive& ar, basalt::VioConfig& config) {
 
   ar(CEREAL_NVP(config.vio_enforce_realtime));
 
+  ar(CEREAL_NVP(config.vio_use_lm));
+  ar(CEREAL_NVP(config.vio_lm_lambda_min));
+  ar(CEREAL_NVP(config.vio_lm_lambda_max));
+
   ar(CEREAL_NVP(config.mapper_obs_std_dev));
   ar(CEREAL_NVP(config.mapper_obs_huber_thresh));
   ar(CEREAL_NVP(config.mapper_detection_num_points));
@@ -145,5 +157,9 @@ void serialize(Archive& ar, basalt::VioConfig& config) {
   ar(CEREAL_NVP(config.mapper_bow_num_bits));
   ar(CEREAL_NVP(config.mapper_min_triangulation_dist));
   ar(CEREAL_NVP(config.mapper_no_factor_weights));
+
+  ar(CEREAL_NVP(config.mapper_use_lm));
+  ar(CEREAL_NVP(config.mapper_lm_lambda_min));
+  ar(CEREAL_NVP(config.mapper_lm_lambda_max));
 }
 }  // namespace cereal

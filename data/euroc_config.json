@@ -20,6 +20,9 @@
         "config.vio_filter_iteration": 4,
         "config.vio_max_iterations": 7,
         "config.vio_enforce_realtime": false,
+        "config.vio_use_lm": false,
+        "config.vio_lm_lambda_min": 1e-32,
+        "config.vio_lm_lambda_max": 1e2,
 
         "config.mapper_obs_std_dev": 0.25,
         "config.mapper_obs_huber_thresh": 1.5,
@@ -33,6 +36,9 @@
         "config.mapper_second_best_test_ratio": 1.2,
         "config.mapper_bow_num_bits": 16,
         "config.mapper_min_triangulation_dist": 0.07,
-        "config.mapper_no_factor_weights": false
+        "config.mapper_no_factor_weights": false,
+        "config.mapper_use_lm": false,
+        "config.mapper_lm_lambda_min": 1e-32,
+        "config.mapper_lm_lambda_max": 1e3
     }
 }

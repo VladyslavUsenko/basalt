@@ -228,6 +228,8 @@ class KeypointVioEstimator : public VioEstimatorBase,
 
   VioConfig config;
 
+  double lambda, min_lambda, max_lambda, lambda_vee;
+
   int64_t msckf_kf_id;
 
   std::shared_ptr<std::thread> processing_thread;

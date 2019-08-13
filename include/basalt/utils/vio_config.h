@@ -68,6 +68,10 @@ struct VioConfig {
 
   bool vio_enforce_realtime;
 
+  bool vio_use_lm;
+  double vio_lm_lambda_min;
+  double vio_lm_lambda_max;
+
   double mapper_obs_std_dev;
   double mapper_obs_huber_thresh;
   int mapper_detection_num_points;
@@ -81,5 +85,9 @@ struct VioConfig {
   int mapper_bow_num_bits;
   double mapper_min_triangulation_dist;
   bool mapper_no_factor_weights;
+
+  bool mapper_use_lm;
+  double mapper_lm_lambda_min;
+  double mapper_lm_lambda_max;
 };
 }  // namespace basalt

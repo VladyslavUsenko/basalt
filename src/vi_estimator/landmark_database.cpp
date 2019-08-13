@@ -155,6 +155,8 @@ void LandmarkDatabase::removeLandmark(int lm_id) {
 
   host_to_kpts.at(it->second.kf_id).erase(lm_id);
 
+  std::set<TimeCamId> to_remove;
+
   for (auto &kv : obs.at(it->second.kf_id)) {
     int idx = -1;
     for (size_t i = 0; i < kv.second.size(); ++i) {
@@ -165,12 +167,20 @@ void LandmarkDatabase::removeLandmark(int lm_id) {
     }
 
     if (idx >= 0) {
+      BASALT_ASSERT(kv.second.size() > 0);
+
       std::swap(kv.second[idx], kv.second[kv.second.size() - 1]);
       kv.second.resize(kv.second.size() - 1);
 
       num_observations--;
       kpts_num_obs.at(lm_id)--;
+
+      if (kv.second.size() == 0) to_remove.insert(kv.first);
     }
+  }
+
+  for (const auto &v : to_remove) {
+    obs.at(it->second.kf_id).erase(v);
   }
 
   BASALT_ASSERT_STREAM(kpts_num_obs.at(lm_id) == 0, kpts_num_obs.at(lm_id));
@@ -183,6 +193,8 @@ void LandmarkDatabase::removeObservations(int lm_id,
   auto it = kpts.find(lm_id);
   BASALT_ASSERT(it != kpts.end());
 
+  std::set<TimeCamId> to_remove;
+
   for (auto &kv : obs.at(it->second.kf_id)) {
     if (outliers.count(kv.first) > 0) {
       int idx = -1;
@@ -193,13 +205,20 @@ void LandmarkDatabase::removeObservations(int lm_id,
         }
       }
       BASALT_ASSERT(idx >= 0);
+      BASALT_ASSERT(kv.second.size() > 0);
 
       std::swap(kv.second[idx], kv.second[kv.second.size() - 1]);
       kv.second.resize(kv.second.size() - 1);
 
       num_observations--;
       kpts_num_obs.at(lm_id)--;
+
+      if (kv.second.size() == 0) to_remove.insert(kv.first);
     }
+  }
+
+  for (const auto &v : to_remove) {
+    obs.at(it->second.kf_id).erase(v);
   }
 }
 

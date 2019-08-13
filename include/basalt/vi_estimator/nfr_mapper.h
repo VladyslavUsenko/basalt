@@ -205,5 +205,7 @@ class NfrMapper : public BundleAdjustmentBase {
   std::shared_ptr<HashBow<256>> hash_bow_database;
 
   VioConfig config;
+
+  double lambda, min_lambda, max_lambda, lambda_vee;
 };
 }  // namespace basalt
