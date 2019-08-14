@@ -31,6 +31,12 @@ pose_graph = {
 'num_frames' : ['PG Num. KFs']
 }
 
+pure_ba = {
+'ate' : ['PG RMS ATE [m]'],
+'time' : ['PG Time [s]'],
+'num_frames' : ['PG Num. KFs']
+}
+
 out_dir = sys.argv[1]
 
 def load_data(x, prefix, key):
@@ -52,6 +58,7 @@ for key in datasets[1:]:
     load_data(vio, 'vio', key)
     load_data(mapping, 'mapper', key)
     load_data(pose_graph, 'mapper_no_weights', key)
+    load_data(pure_ba, 'mapper_no_factors', key)
 
 
 row_format ="{:>17}" + "{:>13}" * (len(datasets)-1)
@@ -79,4 +86,13 @@ print row_format.format(*datasets_short)
 print row_format.format(*pose_graph['ate'])
 #print row_format.format(*pose_graph['time'])
 print row_format.format(*pose_graph['num_frames'])
+
+
+print '\nPure BA optimization (no factors from the recovery used)'
+print row_format.format(*datasets_short)
+
+print row_format.format(*pure_ba['ate'])
+#print row_format.format(*pure_ba['time'])
+print row_format.format(*pure_ba['num_frames'])
+
 

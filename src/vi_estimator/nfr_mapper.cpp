@@ -273,8 +273,11 @@ void NfrMapper::optimize(int num_iterations) {
         rel_pose_factors.begin(), rel_pose_factors.end());
 
     tbb::parallel_reduce(range, lopt);
-    tbb::parallel_reduce(range1, lopt);
-    tbb::parallel_reduce(range2, lopt);
+
+    if (config.mapper_use_factors) {
+      tbb::parallel_reduce(range1, lopt);
+      tbb::parallel_reduce(range2, lopt);
+    }
 
     double error_total = rld_error + lopt.rel_error + lopt.roll_pitch_error;
 
@@ -329,8 +332,10 @@ void NfrMapper::optimize(int num_iterations) {
         double after_roll_pitch_error = 0;
 
         computeError(after_update_vision_error);
-        computeRelPose(after_rel_error);
-        computeRollPitch(after_roll_pitch_error);
+        if (config.mapper_use_factors) {
+          computeRelPose(after_rel_error);
+          computeRollPitch(after_roll_pitch_error);
+        }
 
         double after_error_total = after_update_vision_error + after_rel_error +
                                    after_roll_pitch_error;

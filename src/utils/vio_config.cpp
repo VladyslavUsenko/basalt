@@ -85,6 +85,7 @@ VioConfig::VioConfig() {
   mapper_bow_num_bits = 16;
   mapper_min_triangulation_dist = 0.07;
   mapper_no_factor_weights = false;
+  mapper_use_factors = true;
 
   mapper_use_lm = false;
   mapper_lm_lambda_min = 1e-32;
@@ -157,6 +158,7 @@ void serialize(Archive& ar, basalt::VioConfig& config) {
   ar(CEREAL_NVP(config.mapper_bow_num_bits));
   ar(CEREAL_NVP(config.mapper_min_triangulation_dist));
   ar(CEREAL_NVP(config.mapper_no_factor_weights));
+  ar(CEREAL_NVP(config.mapper_use_factors));
 
   ar(CEREAL_NVP(config.mapper_use_lm));
   ar(CEREAL_NVP(config.mapper_lm_lambda_min));
