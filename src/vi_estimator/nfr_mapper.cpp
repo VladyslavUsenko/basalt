@@ -292,7 +292,7 @@ void NfrMapper::optimize(int num_iterations) {
 
     bool converged = false;
 
-    if (config.vio_use_lm) {  // Use Levenberg–Marquardt
+    if (config.mapper_use_lm) {  // Use Levenberg–Marquardt
       bool step = false;
       int max_iter = 10;
 
@@ -336,15 +336,9 @@ void NfrMapper::optimize(int num_iterations) {
                                    after_roll_pitch_error;
 
         double f_diff = (error_total - after_error_total);
-        double l_diff = 0.5 * inc.dot(inc * lambda + lopt.accum.getB());
 
-        std::cout << "f_diff " << f_diff << " l_diff " << l_diff << std::endl;
-
-        double step_quality = f_diff / l_diff;
-
-        if (step_quality < 0) {
-          std::cout << "\t[REJECTED] lambda:" << lambda
-                    << " step_quality: " << step_quality
+        if (f_diff < 0) {
+          std::cout << "\t[REJECTED] lambda:" << lambda << " f_diff: " << f_diff
                     << " max_inc: " << max_inc
                     << " vision_error: " << after_update_vision_error
                     << " rel_error: " << after_rel_error
@@ -355,18 +349,14 @@ void NfrMapper::optimize(int num_iterations) {
 
           restore();
         } else {
-          std::cout << "\t[ACCEPTED] lambda:" << lambda
-                    << " step_quality: " << step_quality
+          std::cout << "\t[ACCEPTED] lambda:" << lambda << " f_diff: " << f_diff
                     << " max_inc: " << max_inc
                     << " vision_error: " << after_update_vision_error
                     << " rel_error: " << after_rel_error
                     << " roll_pitch_error: " << after_roll_pitch_error
                     << " total: " << after_error_total << std::endl;
 
-          lambda = std::max(
-              min_lambda,
-              lambda *
-                  std::max(1.0 / 3, 1 - std::pow(2 * step_quality - 1, 3.0)));
+          lambda = std::max(min_lambda, lambda / 3);
           lambda_vee = 2;
 
           step = true;

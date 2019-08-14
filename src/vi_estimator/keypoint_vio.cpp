@@ -1014,18 +1014,11 @@ void KeypointVioEstimator::optimize() {
               after_update_marg_prior_error + after_bg_error + after_ba_error;
 
           double f_diff = (error_total - after_error_total);
-          double l_diff = 0.5 * inc.dot(inc * lambda + lopt.accum.getB());
 
-          // std::cout << "f_diff " << f_diff << " l_diff " << l_diff <<
-          // std::endl;
-
-          double step_quality = f_diff / l_diff;
-
-          if (step_quality < 0) {
+          if (f_diff < 0) {
             if (config.vio_debug)
               std::cout << "\t[REJECTED] lambda:" << lambda
-                        << " step_quality: " << step_quality
-                        << " max_inc: " << max_inc
+                        << " f_diff: " << f_diff << " max_inc: " << max_inc
                         << " Error: " << after_error_total << std::endl;
             lambda = std::min(max_lambda, lambda_vee * lambda);
             lambda_vee *= 2;
@@ -1034,14 +1027,10 @@ void KeypointVioEstimator::optimize() {
           } else {
             if (config.vio_debug)
               std::cout << "\t[ACCEPTED] lambda:" << lambda
-                        << " step_quality: " << step_quality
-                        << " max_inc: " << max_inc
+                        << " f_diff: " << f_diff << " max_inc: " << max_inc
                         << " Error: " << after_error_total << std::endl;
 
-            lambda = std::max(
-                min_lambda,
-                lambda *
-                    std::max(1.0 / 3, 1 - std::pow(2 * step_quality - 1, 3.0)));
+            lambda = std::max(min_lambda, lambda / 3);
             lambda_vee = 2;
 
             step = true;
