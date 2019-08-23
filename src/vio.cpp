@@ -84,6 +84,7 @@ pangolin::Plotter* plotter;
 
 pangolin::Var<int> show_frame("ui.show_frame", 0, 0, 1500);
 
+pangolin::Var<bool> show_flow("ui.show_flow", false, false, true);
 pangolin::Var<bool> show_obs("ui.show_obs", true, false, true);
 pangolin::Var<bool> show_ids("ui.show_ids", false, false, true);
 
@@ -105,6 +106,7 @@ Button align_se3_btn("ui.align_se3", &alignButton);
 
 pangolin::Var<bool> euroc_fmt("ui.euroc_fmt", true, false, true);
 pangolin::Var<bool> tum_rgbd_fmt("ui.tum_rgbd_fmt", false, false, true);
+pangolin::Var<bool> kitti_fmt("ui.kitti_fmt", false, false, true);
 Button save_traj_btn("ui.save_traj", &saveTrajectoryButton);
 
 pangolin::Var<bool> follow("ui.follow", true, false, true);
@@ -187,7 +189,9 @@ int main(int argc, char** argv) {
   std::string dataset_type;
   std::string config_path;
   std::string result_path;
+  std::string trajectory_fmt;
   int num_threads = 0;
+  bool use_imu = true;
 
   CLI::App app{"App description"};
 
@@ -211,6 +215,9 @@ int main(int argc, char** argv) {
                  "Path to result file where the system will write RMSE ATE.");
   app.add_option("--num-threads", num_threads, "Number of threads.");
   app.add_option("--step-by-step", step_by_step, "Path to config file.");
+  app.add_option("--save-trajectory", trajectory_fmt,
+                 "Save trajectory. Supported formats <tum, euroc, kitti>");
+  app.add_option("--use-imu", use_imu, "Use IMU.");
 
   if (num_threads > 0) {
     tbb::task_scheduler_init init(num_threads);
@@ -246,8 +253,6 @@ int main(int argc, char** argv) {
     dataset_io->read(dataset_path);
 
     vio_dataset = dataset_io->get_data();
-    vio_dataset->get_image_timestamps().erase(
-        vio_dataset->get_image_timestamps().begin());
 
     show_frame.Meta().range[1] = vio_dataset->get_image_timestamps().size() - 1;
     show_frame.Meta().gui_changed = true;
@@ -264,7 +269,7 @@ int main(int argc, char** argv) {
   const int64_t start_t_ns = vio_dataset->get_image_timestamps().front();
   {
     vio = basalt::VioEstimatorFactory::getVioEstimator(
-        vio_config, calib, 0.0001, basalt::constants::g);
+        vio_config, calib, 0.0001, basalt::constants::g, use_imu);
     vio->initialize(Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero());
 
     opt_flow_ptr->output_queue = &vio->vision_data_queue;
@@ -424,7 +429,12 @@ int main(int argc, char** argv) {
         auto it = vis_map.find(t_ns);
 
         if (it != vis_map.end()) {
-          auto T_w_i = it->second->states.back();
+          Sophus::SE3d T_w_i;
+          if (!it->second->states.empty()) {
+            T_w_i = it->second->states.back();
+          } else if (!it->second->frames.empty()) {
+            T_w_i = it->second->frames.back();
+          }
           T_w_i.so3() = Sophus::SO3d();
 
           camera.Follow(T_w_i.matrix());
@@ -451,9 +461,10 @@ int main(int argc, char** argv) {
           fmt.gltype = GL_UNSIGNED_SHORT;
           fmt.scalable_internal_format = GL_LUMINANCE16;
 
-          img_view[cam_id]->SetImage(
-              img_vec[cam_id].img->ptr, img_vec[cam_id].img->w,
-              img_vec[cam_id].img->h, img_vec[cam_id].img->pitch, fmt);
+          if (img_vec[cam_id].img.get())
+            img_view[cam_id]->SetImage(
+                img_vec[cam_id].img->ptr, img_vec[cam_id].img->w,
+                img_vec[cam_id].img->h, img_vec[cam_id].img->pitch, fmt);
         }
 
         draw_plots();
@@ -465,11 +476,21 @@ int main(int argc, char** argv) {
       }
 
       if (euroc_fmt.GuiChanged()) {
-        tum_rgbd_fmt = !euroc_fmt;
+        euroc_fmt = true;
+        tum_rgbd_fmt = false;
+        kitti_fmt = false;
       }
 
       if (tum_rgbd_fmt.GuiChanged()) {
-        euroc_fmt = !tum_rgbd_fmt;
+        tum_rgbd_fmt = true;
+        euroc_fmt = false;
+        kitti_fmt = false;
+      }
+
+      if (kitti_fmt.GuiChanged()) {
+        kitti_fmt = true;
+        euroc_fmt = false;
+        tum_rgbd_fmt = false;
       }
 
       pangolin::FinishFrame();
@@ -504,6 +525,28 @@ int main(int argc, char** argv) {
   if (t5.get()) t5->join();
 
   auto time_end = std::chrono::high_resolution_clock::now();
+
+  if (!trajectory_fmt.empty()) {
+    std::cout << "Saving trajectory..." << std::endl;
+
+    if (trajectory_fmt == "kitti") {
+      kitti_fmt = true;
+      euroc_fmt = false;
+      tum_rgbd_fmt = false;
+    }
+    if (trajectory_fmt == "euroc") {
+      euroc_fmt = true;
+      kitti_fmt = false;
+      tum_rgbd_fmt = false;
+    }
+    if (trajectory_fmt == "tum") {
+      tum_rgbd_fmt = true;
+      euroc_fmt = false;
+      kitti_fmt = false;
+    }
+
+    saveTrajectoryButton();
+  }
 
   if (!result_path.empty()) {
     double error = basalt::alignSVD(vio_t_ns, vio_t_w_i, gt_t_ns, gt_t_w_i);
@@ -574,6 +617,38 @@ void draw_image_overlay(pangolin::View& v, size_t cam_id) {
           .Draw(5, 20);
     }
   }
+
+  if (show_flow) {
+    glLineWidth(1.0);
+    glColor3f(1.0, 0.0, 0.0);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    if (it != vis_map.end()) {
+      const Eigen::map<basalt::KeypointId, Eigen::AffineCompact2f>& kp_map =
+          it->second->opt_flow_res->observations[cam_id];
+
+      for (const auto& kv : kp_map) {
+        Eigen::MatrixXf transformed_patch =
+            kv.second.linear() * opt_flow_ptr->patch_coord;
+        transformed_patch.colwise() += kv.second.translation();
+
+        for (int i = 0; i < transformed_patch.cols(); i++) {
+          const Eigen::Vector2f c = transformed_patch.col(i);
+          pangolin::glDrawCirclePerimeter(c[0], c[1], 0.5f);
+        }
+
+        const Eigen::Vector2f c = kv.second.translation();
+
+        if (show_ids)
+          pangolin::GlFont::I().Text("%d", kv.first).Draw(5 + c[0], 5 + c[1]);
+      }
+
+      pangolin::GlFont::I()
+          .Text("%d opt_flow patches", kp_map.size())
+          .Draw(5, 20);
+    }
+  }
 }
 
 void draw_scene() {
@@ -597,6 +672,15 @@ void draw_scene() {
   auto it = vis_map.find(t_ns);
 
   if (it != vis_map.end()) {
+    for (size_t i = 0; i < calib.T_i_c.size(); i++)
+      if (!it->second->states.empty()) {
+        render_camera((it->second->states.back() * calib.T_i_c[i]).matrix(),
+                      2.0f, cam_color, 0.1f);
+      } else if (!it->second->frames.empty()) {
+        render_camera((it->second->frames.back() * calib.T_i_c[i]).matrix(),
+                      2.0f, cam_color, 0.1f);
+      }
+
     for (const auto& p : it->second->states)
       for (size_t i = 0; i < calib.T_i_c.size(); i++)
         render_camera((p * calib.T_i_c[i]).matrix(), 2.0f, state_color, 0.1f);
@@ -604,10 +688,6 @@ void draw_scene() {
     for (const auto& p : it->second->frames)
       for (size_t i = 0; i < calib.T_i_c.size(); i++)
         render_camera((p * calib.T_i_c[i]).matrix(), 2.0f, pose_color, 0.1f);
-
-    for (size_t i = 0; i < calib.T_i_c.size(); i++)
-      render_camera((it->second->states.back() * calib.T_i_c[i]).matrix(), 2.0f,
-                    cam_color, 0.1f);
 
     glColor3ubv(pose_color);
     pangolin::glDrawPoints(it->second->points);
@@ -722,7 +802,7 @@ void saveTrajectoryButton() {
     std::cout
         << "Saved trajectory in TUM RGB-D Dataset format in trajectory.txt"
         << std::endl;
-  } else {
+  } else if (euroc_fmt) {
     std::ofstream os("trajectory.csv");
 
     os << "#timestamp [ns],p_RS_R_x [m],p_RS_R_y [m],p_RS_R_z [m],q_RS_w "
@@ -738,9 +818,21 @@ void saveTrajectoryButton() {
          << "," << pose.unit_quaternion().z() << std::endl;
     }
 
-    os.close();
-
     std::cout << "Saved trajectory in Euroc Dataset format in trajectory.csv"
               << std::endl;
+  } else {
+    std::ofstream os("trajectory_kitti.txt");
+
+    for (size_t i = 0; i < vio_t_ns.size(); i++) {
+      Eigen::Matrix<double, 3, 4> mat = vio_T_w_i[i].matrix3x4();
+      os << std::scientific << std::setprecision(12) << mat.row(0) << " "
+         << mat.row(1) << " " << mat.row(2) << " " << std::endl;
+    }
+
+    os.close();
+
+    std::cout
+        << "Saved trajectory in KITTI Dataset format in trajectory_kitti.txt"
+        << std::endl;
   }
 }

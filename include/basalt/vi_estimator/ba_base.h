@@ -237,6 +237,26 @@ class BundleAdjustmentBase {
                                 Eigen::MatrixXd& marg_H,
                                 Eigen::VectorXd& marg_b);
 
+  void computeDelta(const AbsOrderMap& marg_order,
+                    Eigen::VectorXd& delta) const;
+
+  void linearizeMargPrior(const AbsOrderMap& marg_order,
+                          const Eigen::MatrixXd& marg_H,
+                          const Eigen::VectorXd& marg_b, const AbsOrderMap& aom,
+                          Eigen::MatrixXd& abs_H, Eigen::VectorXd& abs_b,
+                          double& marg_prior_error) const;
+
+  void computeMargPriorError(const AbsOrderMap& marg_order,
+                             const Eigen::MatrixXd& marg_H,
+                             const Eigen::VectorXd& marg_b,
+                             double& marg_prior_error) const;
+
+  static Eigen::VectorXd checkNullspace(
+      const Eigen::MatrixXd& marg_H, const Eigen::VectorXd& marg_b,
+      const AbsOrderMap& marg_order,
+      const Eigen::map<int64_t, PoseVelBiasStateWithLin>& frame_states,
+      const Eigen::map<int64_t, PoseStateWithLin>& frame_poses);
+
   /// Triangulates the point and returns homogenous representation. First 3
   /// components - unit-length direction vector. Last component inverse
   /// distance.

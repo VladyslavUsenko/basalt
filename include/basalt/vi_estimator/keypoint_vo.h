@@ -53,19 +53,19 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace basalt {
 
-class KeypointVioEstimator : public VioEstimatorBase,
-                             public BundleAdjustmentBase {
+class KeypointVoEstimator : public VioEstimatorBase,
+                            public BundleAdjustmentBase {
  public:
-  typedef std::shared_ptr<KeypointVioEstimator> Ptr;
+  typedef std::shared_ptr<KeypointVoEstimator> Ptr;
 
   static const int N = 9;
   typedef Eigen::Matrix<double, N, 1> VecN;
   typedef Eigen::Matrix<double, N, N> MatNN;
   typedef Eigen::Matrix<double, N, 3> MatN3;
 
-  KeypointVioEstimator(double int_std_dev, const Eigen::Vector3d& g,
-                       const basalt::Calibration<double>& calib,
-                       const VioConfig& config);
+  KeypointVoEstimator(double int_std_dev,
+                      const basalt::Calibration<double>& calib,
+                      const VioConfig& config);
 
   void initialize(int64_t t_ns, const Sophus::SE3d& T_w_i,
                   const Eigen::Vector3d& vel_w_i, const Eigen::Vector3d& bg,
@@ -73,29 +73,12 @@ class KeypointVioEstimator : public VioEstimatorBase,
 
   void initialize(const Eigen::Vector3d& bg, const Eigen::Vector3d& ba);
 
-  virtual ~KeypointVioEstimator() { processing_thread->join(); }
+  virtual ~KeypointVoEstimator() { processing_thread->join(); }
 
   void addIMUToQueue(const ImuData::Ptr& data);
   void addVisionToQueue(const OpticalFlowResult::Ptr& data);
 
-  bool measure(const OpticalFlowResult::Ptr& data,
-               const IntegratedImuMeasurement::Ptr& meas);
-
-  static void linearizeAbsIMU(
-      const AbsOrderMap& aom, Eigen::MatrixXd& abs_H, Eigen::VectorXd& abs_b,
-      double& imu_error, double& bg_error, double& ba_error,
-      const Eigen::map<int64_t, PoseVelBiasStateWithLin>& states,
-      const Eigen::map<int64_t, IntegratedImuMeasurement>& imu_meas,
-      const Eigen::Vector3d& gyro_bias_weight,
-      const Eigen::Vector3d& accel_bias_weight, const Eigen::Vector3d& g);
-
-  static void computeImuError(
-      const AbsOrderMap& aom, double& imu_error, double& bg_error,
-      double& ba_error,
-      const Eigen::map<int64_t, PoseVelBiasStateWithLin>& states,
-      const Eigen::map<int64_t, IntegratedImuMeasurement>& imu_meas,
-      const Eigen::Vector3d& gyro_bias_weight,
-      const Eigen::Vector3d& accel_bias_weight, const Eigen::Vector3d& g);
+  bool measure(const OpticalFlowResult::Ptr& data, bool add_frame);
 
   // int64_t propagate();
   // void addNewState(int64_t data_t_ns);
@@ -187,9 +170,6 @@ class KeypointVioEstimator : public VioEstimatorBase,
   std::set<int64_t> kf_ids;
 
   int64_t last_state_t_ns;
-  Eigen::map<int64_t, IntegratedImuMeasurement> imu_meas;
-
-  const Eigen::Vector3d g;
 
   // Input
 
@@ -210,7 +190,6 @@ class KeypointVioEstimator : public VioEstimatorBase,
   Sophus::SE3d T_w_i_init;
 
   bool initialized;
-  bool opt_started;
 
   VioConfig config;
 

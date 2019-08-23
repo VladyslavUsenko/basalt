@@ -104,6 +104,21 @@ stages:
     - cd scripts/eval_full
     - ./run_evaluations.sh
 
+.eval_euroc_template: &eval_kitti_definition
+  stage: eval
+  parallel: 10
+  tags: [docker, dataset-eval]
+  variables:
+    GIT_STRATEGY: none
+  artifacts:
+    paths:
+    - scripts/eval_full/eval_results_kitti/*
+    expire_in: 1 week
+  script:
+    - dpkg -i deb_bionic/*.deb
+    - cd scripts/eval_full
+    - ./run_evaluations_kitti.sh
+
 bionic-release-compile:
   <<: *prepare_docker_definition
   <<: *compile_test_package_definition
@@ -205,8 +220,22 @@ eval_euroc:
     - master
   allow_failure: false
 
+# evaluate on KITTI sequences
+eval_kitti_master:
+  <<: *eval_kitti_definition
+  only:
+    - master
+
+# evaluate on KITTI sequences
+eval_kitti:
+  <<: *eval_kitti_definition
+  when: manual
+  except:
+    - master
+  allow_failure: false
+
 # aggregate results for all EuRoC sequences
-gen_results_euroc:
+gen_results:
   stage: results
   variables:
     GIT_STRATEGY: none
@@ -216,11 +245,15 @@ gen_results_euroc:
   artifacts:
     paths:
     - euroc_results.txt
+    - kitti_results.txt
   script:
     - cd scripts/eval_full
     - ./gen_results.py eval_results > euroc_results.txt
     - cat euroc_results.txt
+    - ./gen_results_kitti.py eval_results_kitti > kitti_results.txt
+    - cat kitti_results.txt
     - mv euroc_results.txt ../../
+    - mv kitti_results.txt ../../
 
 # deploy deb packages
 deploy:

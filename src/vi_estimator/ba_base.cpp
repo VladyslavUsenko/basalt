@@ -569,4 +569,185 @@ void BundleAdjustmentBase::marginalizeHelper(Eigen::MatrixXd& abs_H,
   abs_H.resize(0, 0);
   abs_b.resize(0);
 }
+
+void BundleAdjustmentBase::computeDelta(const AbsOrderMap& marg_order,
+                                        Eigen::VectorXd& delta) const {
+  size_t marg_size = marg_order.total_size;
+  delta.setZero(marg_size);
+  for (const auto& kv : marg_order.abs_order_map) {
+    if (kv.second.second == POSE_SIZE) {
+      BASALT_ASSERT(frame_poses.at(kv.first).isLinearized());
+      delta.segment<POSE_SIZE>(kv.second.first) =
+          frame_poses.at(kv.first).getDelta();
+    } else if (kv.second.second == POSE_VEL_BIAS_SIZE) {
+      BASALT_ASSERT(frame_states.at(kv.first).isLinearized());
+      delta.segment<POSE_VEL_BIAS_SIZE>(kv.second.first) =
+          frame_states.at(kv.first).getDelta();
+    } else {
+      BASALT_ASSERT(false);
+    }
+  }
+}
+
+void BundleAdjustmentBase::linearizeMargPrior(const AbsOrderMap& marg_order,
+                                              const Eigen::MatrixXd& marg_H,
+                                              const Eigen::VectorXd& marg_b,
+                                              const AbsOrderMap& aom,
+                                              Eigen::MatrixXd& abs_H,
+                                              Eigen::VectorXd& abs_b,
+                                              double& marg_prior_error) const {
+  // Assumed to be in the top left corner
+
+  BASALT_ASSERT(size_t(marg_H.cols()) == marg_order.total_size);
+
+  // Check if the order of variables is the same.
+  for (const auto& kv : marg_order.abs_order_map)
+    BASALT_ASSERT(aom.abs_order_map.at(kv.first) == kv.second);
+
+  size_t marg_size = marg_order.total_size;
+  abs_H.topLeftCorner(marg_size, marg_size) += marg_H;
+
+  Eigen::VectorXd delta;
+  computeDelta(marg_order, delta);
+
+  abs_b.head(marg_size) += marg_b;
+  abs_b.head(marg_size) += marg_H * delta;
+
+  marg_prior_error = 0.5 * delta.transpose() * marg_H * delta;
+  marg_prior_error += delta.transpose() * marg_b;
+}
+
+void BundleAdjustmentBase::computeMargPriorError(
+    const AbsOrderMap& marg_order, const Eigen::MatrixXd& marg_H,
+    const Eigen::VectorXd& marg_b, double& marg_prior_error) const {
+  BASALT_ASSERT(size_t(marg_H.cols()) == marg_order.total_size);
+
+  Eigen::VectorXd delta;
+  computeDelta(marg_order, delta);
+
+  marg_prior_error = 0.5 * delta.transpose() * marg_H * delta;
+  marg_prior_error += delta.transpose() * marg_b;
+}
+
+Eigen::VectorXd BundleAdjustmentBase::checkNullspace(
+    const Eigen::MatrixXd& H, const Eigen::VectorXd& b,
+    const AbsOrderMap& order,
+    const Eigen::map<int64_t, PoseVelBiasStateWithLin>& frame_states,
+    const Eigen::map<int64_t, PoseStateWithLin>& frame_poses) {
+  BASALT_ASSERT(size_t(H.cols()) == order.total_size);
+  size_t marg_size = order.total_size;
+
+  Eigen::VectorXd inc_x, inc_y, inc_z, inc_roll, inc_pitch, inc_yaw;
+  inc_x.setZero(marg_size);
+  inc_y.setZero(marg_size);
+  inc_z.setZero(marg_size);
+  inc_roll.setZero(marg_size);
+  inc_pitch.setZero(marg_size);
+  inc_yaw.setZero(marg_size);
+
+  int num_trans = 0;
+  Eigen::Vector3d mean_trans;
+  mean_trans.setZero();
+
+  // Compute mean translation
+  for (const auto& kv : order.abs_order_map) {
+    Eigen::Vector3d trans;
+    if (kv.second.second == POSE_SIZE) {
+      mean_trans += frame_poses.at(kv.first).getPoseLin().translation();
+      num_trans++;
+    } else if (kv.second.second == POSE_VEL_BIAS_SIZE) {
+      mean_trans += frame_states.at(kv.first).getStateLin().T_w_i.translation();
+      num_trans++;
+    } else {
+      std::cerr << "Unknown size of the state: " << kv.second.second
+                << std::endl;
+      std::abort();
+    }
+  }
+  mean_trans /= num_trans;
+
+  double eps = 0.01;
+
+  // Compute nullspace increments
+  for (const auto& kv : order.abs_order_map) {
+    inc_x(kv.second.first + 0) = eps;
+    inc_y(kv.second.first + 1) = eps;
+    inc_z(kv.second.first + 2) = eps;
+    inc_roll(kv.second.first + 3) = eps;
+    inc_pitch(kv.second.first + 4) = eps;
+    inc_yaw(kv.second.first + 5) = eps;
+
+    Eigen::Vector3d trans;
+    if (kv.second.second == POSE_SIZE) {
+      trans = frame_poses.at(kv.first).getPoseLin().translation();
+    } else if (kv.second.second == POSE_VEL_BIAS_SIZE) {
+      trans = frame_states.at(kv.first).getStateLin().T_w_i.translation();
+    } else {
+      BASALT_ASSERT(false);
+    }
+
+    trans -= mean_trans;
+
+    Eigen::Matrix3d J = -Sophus::SO3d::hat(trans);
+    J *= eps;
+
+    inc_roll.segment<3>(kv.second.first) = J.col(0);
+    inc_pitch.segment<3>(kv.second.first) = J.col(1);
+    inc_yaw.segment<3>(kv.second.first) = J.col(2);
+
+    if (kv.second.second == POSE_VEL_BIAS_SIZE) {
+      Eigen::Vector3d vel = frame_states.at(kv.first).getStateLin().vel_w_i;
+      Eigen::Matrix3d J_vel = -Sophus::SO3d::hat(vel);
+      J_vel *= eps;
+
+      inc_roll.segment<3>(kv.second.first + POSE_SIZE) = J_vel.col(0);
+      inc_pitch.segment<3>(kv.second.first + POSE_SIZE) = J_vel.col(1);
+      inc_yaw.segment<3>(kv.second.first + POSE_SIZE) = J_vel.col(2);
+    }
+  }
+
+  inc_x.normalize();
+  inc_y.normalize();
+  inc_z.normalize();
+  inc_roll.normalize();
+  inc_pitch.normalize();
+  inc_yaw.normalize();
+
+  //  std::cout << "inc_x   " << inc_x.transpose() << std::endl;
+  //  std::cout << "inc_y   " << inc_y.transpose() << std::endl;
+  //  std::cout << "inc_z   " << inc_z.transpose() << std::endl;
+  //  std::cout << "inc_yaw " << inc_yaw.transpose() << std::endl;
+
+  Eigen::VectorXd inc_random;
+  inc_random.setRandom(marg_size);
+  inc_random.normalize();
+
+  Eigen::VectorXd xHx(7), xb(7);
+  xHx[0] = 0.5 * inc_x.transpose() * H * inc_x;
+  xHx[1] = 0.5 * inc_y.transpose() * H * inc_y;
+  xHx[2] = 0.5 * inc_z.transpose() * H * inc_z;
+  xHx[3] = 0.5 * inc_roll.transpose() * H * inc_roll;
+  xHx[4] = 0.5 * inc_pitch.transpose() * H * inc_pitch;
+  xHx[5] = 0.5 * inc_yaw.transpose() * H * inc_yaw;
+  xHx[6] = 0.5 * inc_random.transpose() * H * inc_random;
+
+  xb[0] = inc_x.transpose() * b;
+  xb[1] = inc_y.transpose() * b;
+  xb[2] = inc_z.transpose() * b;
+  xb[3] = inc_roll.transpose() * b;
+  xb[4] = inc_pitch.transpose() * b;
+  xb[5] = inc_yaw.transpose() * b;
+  xb[6] = inc_random.transpose() * b;
+
+  std::cout << "nullspace x_trans: " << xHx[0] << " + " << xb[0] << std::endl;
+  std::cout << "nullspace y_trans: " << xHx[1] << " + " << xb[1] << std::endl;
+  std::cout << "nullspace z_trans: " << xHx[2] << " + " << xb[2] << std::endl;
+  std::cout << "nullspace roll   : " << xHx[3] << " + " << xb[3] << std::endl;
+  std::cout << "nullspace pitch  : " << xHx[4] << " + " << xb[4] << std::endl;
+  std::cout << "nullspace yaw    : " << xHx[5] << " + " << xb[5] << std::endl;
+  std::cout << "nullspace random : " << xHx[6] << " + " << xb[6] << std::endl;
+
+  return xHx + xb;
+}
+
 }  // namespace basalt

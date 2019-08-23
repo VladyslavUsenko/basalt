@@ -211,6 +211,7 @@ add_library(basalt SHARED
   src/optical_flow/optical_flow.cpp
   src/vi_estimator/keypoint_vio.cpp
   src/vi_estimator/keypoint_vio_linearize.cpp
+  src/vi_estimator/keypoint_vo.cpp
   src/vi_estimator/vio_estimator.cpp
   src/vi_estimator/ba_base.cpp
   src/vi_estimator/nfr_mapper.cpp
@@ -250,6 +251,9 @@ target_link_libraries(basalt_vio basalt pangolin)
 add_executable(basalt_time_alignment src/time_alignment.cpp)
 target_link_libraries(basalt_time_alignment basalt pangolin)
 
+add_executable(basalt_kitti_eval src/kitti_eval.cpp)
+target_link_libraries(basalt_kitti_eval)
+
 find_package(realsense2 QUIET)
 if(realsense2_FOUND)
   add_executable(basalt_rs_t265_record src/rs_t265_record.cpp src/device/rs_t265.cpp)
@@ -261,7 +265,7 @@ endif()
 
 
 
-install(TARGETS basalt_calibrate basalt_calibrate_imu basalt_vio_sim basalt_mapper_sim basalt_mapper_sim_naive basalt_mapper basalt_opt_flow basalt_vio basalt
+install(TARGETS basalt_calibrate basalt_calibrate_imu basalt_vio_sim basalt_mapper_sim basalt_mapper_sim_naive basalt_mapper basalt_opt_flow basalt_vio basalt_kitti_eval basalt
   EXPORT BasaltTargets
   RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
   LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
