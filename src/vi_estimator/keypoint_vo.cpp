@@ -34,7 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <basalt/utils/assert.h>
-#include <basalt/vi_estimator/keypoint_vio.h>
+#include <basalt/vi_estimator/keypoint_vo.h>
 
 #include <basalt/optimization/accumulator.h>
 
@@ -46,12 +46,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace basalt {
 
-KeypointVioEstimator::KeypointVioEstimator(
-    double int_std_dev, const Eigen::Vector3d& g,
-    const basalt::Calibration<double>& calib, const VioConfig& config)
+KeypointVoEstimator::KeypointVoEstimator(
+    double int_std_dev, const basalt::Calibration<double>& calib,
+    const VioConfig& config)
     : take_kf(true),
       frames_after_kf(0),
-      g(g),
       initialized(false),
       config(config),
       lambda(config.vio_lm_lambda_min),
@@ -63,19 +62,13 @@ KeypointVioEstimator::KeypointVioEstimator(
   this->calib = calib;
 
   // Setup marginalization
-  marg_H.setZero(POSE_VEL_BIAS_SIZE, POSE_VEL_BIAS_SIZE);
-  marg_b.setZero(POSE_VEL_BIAS_SIZE);
+  marg_H.setZero(POSE_SIZE, POSE_SIZE);
+  marg_b.setZero(POSE_SIZE);
 
   double prior_weight = 1.0 / (int_std_dev * int_std_dev);
 
-  // prior on position
-  marg_H.diagonal().head<3>().setConstant(prior_weight);
-  // prior on yaw
-  marg_H(5, 5) = prior_weight;
-
-  // small prior to avoid jumps in bias
-  marg_H.diagonal().segment<3>(9).array() = 1e2;
-  marg_H.diagonal().segment<3>(12).array() = 1e3;
+  // prior on pose
+  marg_H.diagonal().setConstant(prior_weight);
 
   std::cout << "marg_H\n" << marg_H << std::endl;
 
@@ -85,46 +78,34 @@ KeypointVioEstimator::KeypointVioEstimator(
   max_states = config.vio_max_states;
   max_kfs = config.vio_max_kfs;
 
-  opt_started = false;
-
   vision_data_queue.set_capacity(10);
   imu_data_queue.set_capacity(300);
 }
 
-void KeypointVioEstimator::initialize(int64_t t_ns, const Sophus::SE3d& T_w_i,
-                                      const Eigen::Vector3d& vel_w_i,
-                                      const Eigen::Vector3d& bg,
-                                      const Eigen::Vector3d& ba) {
+void KeypointVoEstimator::initialize(int64_t t_ns, const Sophus::SE3d& T_w_i,
+                                     const Eigen::Vector3d& vel_w_i,
+                                     const Eigen::Vector3d& bg,
+                                     const Eigen::Vector3d& ba) {
+  UNUSED(vel_w_i);
+  UNUSED(bg);
+  UNUSED(ba);
+
   initialized = true;
   T_w_i_init = T_w_i;
 
   last_state_t_ns = t_ns;
-  imu_meas[t_ns] = IntegratedImuMeasurement(t_ns, bg, ba);
-  frame_states[t_ns] =
-      PoseVelBiasStateWithLin(t_ns, T_w_i, vel_w_i, bg, ba, true);
+  frame_poses[t_ns] = PoseStateWithLin(t_ns, T_w_i, true);
 
-  marg_order.abs_order_map[t_ns] = std::make_pair(0, POSE_VEL_BIAS_SIZE);
-  marg_order.total_size = POSE_VEL_BIAS_SIZE;
+  marg_order.abs_order_map[t_ns] = std::make_pair(0, POSE_SIZE);
+  marg_order.total_size = POSE_SIZE;
   marg_order.items = 1;
-
-  initialize(bg, ba);
 }
 
-void KeypointVioEstimator::initialize(const Eigen::Vector3d& bg,
-                                      const Eigen::Vector3d& ba) {
+void KeypointVoEstimator::initialize(const Eigen::Vector3d& bg,
+                                     const Eigen::Vector3d& ba) {
   auto proc_func = [&, bg, ba] {
     OpticalFlowResult::Ptr prev_frame, curr_frame;
-    IntegratedImuMeasurement::Ptr meas;
-
-    const Eigen::Vector3d accel_cov =
-        calib.dicrete_time_accel_noise_std().array().square();
-    const Eigen::Vector3d gyro_cov =
-        calib.dicrete_time_gyro_noise_std().array().square();
-
-    ImuData::Ptr data;
-    imu_data_queue.pop(data);
-    data->accel = calib.calib_accel_bias.getCalibrated(data->accel);
-    data->gyro = calib.calib_gyro_bias.getCalibrated(data->gyro);
+    bool add_pose = false;
 
     while (true) {
       vision_data_queue.pop(curr_frame);
@@ -141,73 +122,35 @@ void KeypointVioEstimator::initialize(const Eigen::Vector3d& bg,
       // Correct camera time offset
       // curr_frame->t_ns += calib.cam_time_offset_ns;
 
+      while (!imu_data_queue.empty()) {
+        ImuData::Ptr d;
+        imu_data_queue.pop(d);
+      }
+
       if (!initialized) {
-        while (data->t_ns < curr_frame->t_ns) {
-          imu_data_queue.pop(data);
-          if (!data.get()) break;
-          data->accel = calib.calib_accel_bias.getCalibrated(data->accel);
-          data->gyro = calib.calib_gyro_bias.getCalibrated(data->gyro);
-          // std::cout << "Skipping IMU data.." << std::endl;
-        }
-
         Eigen::Vector3d vel_w_i_init;
-        vel_w_i_init.setZero();
-
-        T_w_i_init.setQuaternion(Eigen::Quaterniond::FromTwoVectors(
-            data->accel, Eigen::Vector3d::UnitZ()));
 
         last_state_t_ns = curr_frame->t_ns;
-        imu_meas[last_state_t_ns] =
-            IntegratedImuMeasurement(last_state_t_ns, bg, ba);
-        frame_states[last_state_t_ns] = PoseVelBiasStateWithLin(
-            last_state_t_ns, T_w_i_init, vel_w_i_init, bg, ba, true);
+
+        frame_poses[last_state_t_ns] =
+            PoseStateWithLin(last_state_t_ns, T_w_i_init, true);
 
         marg_order.abs_order_map[last_state_t_ns] =
-            std::make_pair(0, POSE_VEL_BIAS_SIZE);
-        marg_order.total_size = POSE_VEL_BIAS_SIZE;
+            std::make_pair(0, POSE_SIZE);
+        marg_order.total_size = POSE_SIZE;
         marg_order.items = 1;
 
         std::cout << "Setting up filter: t_ns " << last_state_t_ns << std::endl;
         std::cout << "T_w_i\n" << T_w_i_init.matrix() << std::endl;
-        std::cout << "vel_w_i " << vel_w_i_init.transpose() << std::endl;
 
         initialized = true;
       }
 
       if (prev_frame) {
-        // preintegrate measurements
-
-        auto last_state = frame_states.at(last_state_t_ns);
-
-        meas.reset(new IntegratedImuMeasurement(
-            prev_frame->t_ns, last_state.getState().bias_gyro,
-            last_state.getState().bias_accel));
-
-        while (data->t_ns <= prev_frame->t_ns) {
-          imu_data_queue.pop(data);
-          if (!data.get()) break;
-          data->accel = calib.calib_accel_bias.getCalibrated(data->accel);
-          data->gyro = calib.calib_gyro_bias.getCalibrated(data->gyro);
-        }
-
-        while (data->t_ns <= curr_frame->t_ns) {
-          meas->integrate(*data, accel_cov, gyro_cov);
-          imu_data_queue.pop(data);
-          if (!data.get()) break;
-          data->accel = calib.calib_accel_bias.getCalibrated(data->accel);
-          data->gyro = calib.calib_gyro_bias.getCalibrated(data->gyro);
-        }
-
-        if (meas->get_start_t_ns() + meas->get_dt_ns() < curr_frame->t_ns) {
-          if (!data.get()) break;
-          int64_t tmp = data->t_ns;
-          data->t_ns = curr_frame->t_ns;
-          meas->integrate(*data, accel_cov, gyro_cov);
-          data->t_ns = tmp;
-        }
+        add_pose = true;
       }
 
-      measure(curr_frame, meas);
+      measure(curr_frame, add_pose);
       prev_frame = curr_frame;
     }
 
@@ -223,34 +166,19 @@ void KeypointVioEstimator::initialize(const Eigen::Vector3d& bg,
   processing_thread.reset(new std::thread(proc_func));
 }
 
-void KeypointVioEstimator::addIMUToQueue(const ImuData::Ptr& data) {
-  imu_data_queue.emplace(data);
-}
-
-void KeypointVioEstimator::addVisionToQueue(
-    const OpticalFlowResult::Ptr& data) {
+void KeypointVoEstimator::addVisionToQueue(const OpticalFlowResult::Ptr& data) {
   vision_data_queue.push(data);
 }
 
-bool KeypointVioEstimator::measure(const OpticalFlowResult::Ptr& opt_flow_meas,
-                                   const IntegratedImuMeasurement::Ptr& meas) {
-  if (meas.get()) {
-    BASALT_ASSERT(frame_states[last_state_t_ns].getState().t_ns ==
-                  meas->get_start_t_ns());
-    BASALT_ASSERT(opt_flow_meas->t_ns ==
-                  meas->get_dt_ns() + meas->get_start_t_ns());
-
-    PoseVelBiasState next_state = frame_states.at(last_state_t_ns).getState();
-
-    meas->predictState(frame_states.at(last_state_t_ns).getState(), g,
-                       next_state);
+bool KeypointVoEstimator::measure(const OpticalFlowResult::Ptr& opt_flow_meas,
+                                  const bool add_pose) {
+  if (add_pose) {
+    const PoseStateWithLin& curr_state = frame_poses.at(last_state_t_ns);
 
     last_state_t_ns = opt_flow_meas->t_ns;
-    next_state.t_ns = opt_flow_meas->t_ns;
 
-    frame_states[last_state_t_ns] = next_state;
-
-    imu_meas[meas->get_start_t_ns()] = *meas;
+    PoseStateWithLin next_state(opt_flow_meas->t_ns, curr_state.getPose());
+    frame_poses[last_state_t_ns] = next_state;
   }
 
   // save results
@@ -392,9 +320,11 @@ bool KeypointVioEstimator::measure(const OpticalFlowResult::Ptr& opt_flow_meas,
   marginalize(num_points_connected);
 
   if (out_state_queue) {
-    PoseVelBiasStateWithLin p = frame_states.at(last_state_t_ns);
+    const PoseStateWithLin& p = frame_poses.at(last_state_t_ns);
 
-    PoseVelBiasState::Ptr data(new PoseVelBiasState(p.getState()));
+    PoseVelBiasState::Ptr data(
+        new PoseVelBiasState(p.getT_ns(), p.getPose(), Eigen::Vector3d::Zero(),
+                             Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero()));
 
     out_state_queue->push(data);
   }
@@ -404,9 +334,7 @@ bool KeypointVioEstimator::measure(const OpticalFlowResult::Ptr& opt_flow_meas,
 
     data->t_ns = last_state_t_ns;
 
-    for (const auto& kv : frame_states) {
-      data->states.emplace_back(kv.second.getState().T_w_i);
-    }
+    BASALT_ASSERT(frame_states.empty());
 
     for (const auto& kv : frame_poses) {
       data->frames.emplace_back(kv.second.getPose());
@@ -427,68 +355,46 @@ bool KeypointVioEstimator::measure(const OpticalFlowResult::Ptr& opt_flow_meas,
   return true;
 }
 
-void KeypointVioEstimator::checkMargNullspace() const {
+void KeypointVoEstimator::checkMargNullspace() const {
   checkNullspace(marg_H, marg_b, marg_order, frame_states, frame_poses);
 }
 
-void KeypointVioEstimator::marginalize(
+void KeypointVoEstimator::marginalize(
     const std::map<int64_t, int>& num_points_connected) {
-  if (!opt_started) return;
+  BASALT_ASSERT(frame_states.empty());
 
-  if (frame_poses.size() > max_kfs || frame_states.size() >= max_states) {
+  if (true) {
     // Marginalize
-
-    const int states_to_remove = frame_states.size() - max_states + 1;
-
-    auto it = frame_states.cbegin();
-    for (int i = 0; i < states_to_remove; i++) it++;
-    int64_t last_state_to_marg = it->first;
 
     AbsOrderMap aom;
 
-    // remove all frame_poses that are not kfs
-    std::set<int64_t> poses_to_marg;
+    // remove all frame_poses that are not kfs and not the current frame
+    std::set<int64_t> non_kf_poses;
     for (const auto& kv : frame_poses) {
-      aom.abs_order_map[kv.first] = std::make_pair(aom.total_size, POSE_SIZE);
+      if (kf_ids.count(kv.first) == 0 && kv.first != last_state_t_ns) {
+        non_kf_poses.emplace(kv.first);
+      } else {
+        aom.abs_order_map[kv.first] = std::make_pair(aom.total_size, POSE_SIZE);
 
-      if (kf_ids.count(kv.first) == 0) poses_to_marg.emplace(kv.first);
+        // Check that we have the same order as marginalization
+        if (marg_order.abs_order_map.count(kv.first) > 0)
+          BASALT_ASSERT(marg_order.abs_order_map.at(kv.first) ==
+                        aom.abs_order_map.at(kv.first));
 
-      // Check that we have the same order as marginalization
-      BASALT_ASSERT(marg_order.abs_order_map.at(kv.first) ==
-                    aom.abs_order_map.at(kv.first));
-
-      aom.total_size += POSE_SIZE;
-      aom.items++;
+        aom.total_size += POSE_SIZE;
+        aom.items++;
+      }
     }
 
-    std::set<int64_t> states_to_marg_vel_bias;
-    std::set<int64_t> states_to_marg_all;
-    for (const auto& kv : frame_states) {
-      if (kv.first > last_state_to_marg) break;
-
-      if (kv.first != last_state_to_marg) {
-        if (kf_ids.count(kv.first) > 0) {
-          states_to_marg_vel_bias.emplace(kv.first);
-        } else {
-          states_to_marg_all.emplace(kv.first);
-        }
-      }
-
-      aom.abs_order_map[kv.first] =
-          std::make_pair(aom.total_size, POSE_VEL_BIAS_SIZE);
-
-      // Check that we have the same order as marginalization
-      if (aom.items < marg_order.abs_order_map.size())
-        BASALT_ASSERT(marg_order.abs_order_map.at(kv.first) ==
-                      aom.abs_order_map.at(kv.first));
-
-      aom.total_size += POSE_VEL_BIAS_SIZE;
-      aom.items++;
+    for (int64_t id : non_kf_poses) {
+      frame_poses.erase(id);
+      lmdb.removeFrame(id);
+      prev_opt_flow_res.erase(id);
     }
 
     auto kf_ids_all = kf_ids;
     std::set<int64_t> kfs_to_marg;
-    while (kf_ids.size() > max_kfs && !states_to_marg_vel_bias.empty()) {
+    while (kf_ids.size() > max_kfs) {
       int64_t id_to_marg = -1;
 
       {
@@ -527,10 +433,9 @@ void KeypointVioEstimator::marginalize(
           }
 
           double score =
-              std::sqrt(
-                  (frame_poses.at(ids[i]).getPose().translation() -
-                   frame_states.at(last_kf).getState().T_w_i.translation())
-                      .norm()) *
+              std::sqrt((frame_poses.at(ids[i]).getPose().translation() -
+                         frame_poses.at(last_kf).getPose().translation())
+                            .norm()) *
               denom;
 
           if (score < min_score) {
@@ -543,7 +448,7 @@ void KeypointVioEstimator::marginalize(
       }
 
       kfs_to_marg.emplace(id_to_marg);
-      poses_to_marg.emplace(id_to_marg);
+      non_kf_poses.emplace(id_to_marg);
 
       kf_ids.erase(id_to_marg);
     }
@@ -555,191 +460,156 @@ void KeypointVioEstimator::marginalize(
     //    marg_order.print_order();
 
     if (config.vio_debug) {
-      std::cout << "states_to_remove " << states_to_remove << std::endl;
-      std::cout << "poses_to_marg.size() " << poses_to_marg.size() << std::endl;
-      std::cout << "states_to_marg.size() " << states_to_marg_all.size()
-                << std::endl;
-      std::cout << "state_to_marg_vel_bias.size() "
-                << states_to_marg_vel_bias.size() << std::endl;
+      std::cout << "non_kf_poses.size() " << non_kf_poses.size() << std::endl;
+      for (const auto& v : non_kf_poses) std::cout << v << ' ';
+      std::cout << std::endl;
+
       std::cout << "kfs_to_marg.size() " << kfs_to_marg.size() << std::endl;
+      for (const auto& v : kfs_to_marg) std::cout << v << ' ';
+      std::cout << std::endl;
+
+      std::cout << "last_state_t_ns " << last_state_t_ns << std::endl;
+
+      std::cout << "frame_poses.size() " << frame_poses.size() << std::endl;
+      for (const auto& v : frame_poses) std::cout << v.first << ' ';
+      std::cout << std::endl;
     }
 
-    size_t asize = aom.total_size;
+    if (!kfs_to_marg.empty()) {
+      // Marginalize only if last state is a keyframe
+      BASALT_ASSERT(kf_ids_all.count(last_state_t_ns) > 0);
 
-    double marg_prior_error;
-    double imu_error, bg_error, ba_error;
+      size_t asize = aom.total_size;
+      double marg_prior_error;
 
-    DenseAccumulator accum;
-    accum.reset(asize);
-
-    {
-      // Linearize points
-
-      Eigen::map<TimeCamId,
-                 Eigen::map<TimeCamId, Eigen::vector<KeypointObservation>>>
-          obs_to_lin;
-
-      for (auto it = lmdb.getObservations().cbegin();
-           it != lmdb.getObservations().cend();) {
-        if (kfs_to_marg.count(it->first.frame_id) > 0) {
-          for (auto it2 = it->second.cbegin(); it2 != it->second.cend();
-               ++it2) {
-            if (it2->first.frame_id <= last_state_to_marg)
-              obs_to_lin[it->first].emplace(*it2);
-          }
-        }
-        ++it;
-      }
-
-      double rld_error;
-      Eigen::vector<RelLinData> rld_vec;
-
-      linearizeHelper(rld_vec, obs_to_lin, rld_error);
-
-      for (auto& rld : rld_vec) {
-        rld.invert_keypoint_hessians();
-
-        Eigen::MatrixXd rel_H;
-        Eigen::VectorXd rel_b;
-        linearizeRel(rld, rel_H, rel_b);
-
-        linearizeAbs(rel_H, rel_b, rld, aom, accum);
-      }
-    }
-
-    linearizeAbsIMU(aom, accum.getH(), accum.getB(), imu_error, bg_error,
-                    ba_error, frame_states, imu_meas, gyro_bias_weight,
-                    accel_bias_weight, g);
-    linearizeMargPrior(marg_order, marg_H, marg_b, aom, accum.getH(),
-                       accum.getB(), marg_prior_error);
-
-    // Save marginalization prior
-    if (out_marg_queue && !kfs_to_marg.empty()) {
-      // int64_t kf_id = *kfs_to_marg.begin();
+      DenseAccumulator accum;
+      accum.reset(asize);
 
       {
-        MargData::Ptr m(new MargData);
-        m->aom = aom;
-        m->abs_H = accum.getH();
-        m->abs_b = accum.getB();
-        m->frame_poses = frame_poses;
-        m->frame_states = frame_states;
-        m->kfs_all = kf_ids_all;
-        m->kfs_to_marg = kfs_to_marg;
+        // Linearize points
 
-        for (int64_t t : m->kfs_all) {
-          m->opt_flow_res.emplace_back(prev_opt_flow_res.at(t));
+        Eigen::map<TimeCamId,
+                   Eigen::map<TimeCamId, Eigen::vector<KeypointObservation>>>
+            obs_to_lin;
+
+        for (auto it = lmdb.getObservations().cbegin();
+             it != lmdb.getObservations().cend();) {
+          if (kfs_to_marg.count(it->first.frame_id) > 0) {
+            for (auto it2 = it->second.cbegin(); it2 != it->second.cend();
+                 ++it2) {
+              obs_to_lin[it->first].emplace(*it2);
+            }
+          }
+          ++it;
         }
 
-        out_marg_queue->push(m);
-      }
-    }
+        double rld_error;
+        Eigen::vector<RelLinData> rld_vec;
 
-    std::set<int> idx_to_keep, idx_to_marg;
-    for (const auto& kv : aom.abs_order_map) {
-      if (kv.second.second == POSE_SIZE) {
-        int start_idx = kv.second.first;
-        if (poses_to_marg.count(kv.first) == 0) {
-          for (size_t i = 0; i < POSE_SIZE; i++)
-            idx_to_keep.emplace(start_idx + i);
-        } else {
-          for (size_t i = 0; i < POSE_SIZE; i++)
-            idx_to_marg.emplace(start_idx + i);
-        }
-      } else {
-        BASALT_ASSERT(kv.second.second == POSE_VEL_BIAS_SIZE);
-        // state
-        int start_idx = kv.second.first;
-        if (states_to_marg_all.count(kv.first) > 0) {
-          for (size_t i = 0; i < POSE_VEL_BIAS_SIZE; i++)
-            idx_to_marg.emplace(start_idx + i);
-        } else if (states_to_marg_vel_bias.count(kv.first) > 0) {
-          for (size_t i = 0; i < POSE_SIZE; i++)
-            idx_to_keep.emplace(start_idx + i);
-          for (size_t i = POSE_SIZE; i < POSE_VEL_BIAS_SIZE; i++)
-            idx_to_marg.emplace(start_idx + i);
-        } else {
-          BASALT_ASSERT(kv.first == last_state_to_marg);
-          for (size_t i = 0; i < POSE_VEL_BIAS_SIZE; i++)
-            idx_to_keep.emplace(start_idx + i);
+        linearizeHelper(rld_vec, obs_to_lin, rld_error);
+
+        for (auto& rld : rld_vec) {
+          rld.invert_keypoint_hessians();
+
+          Eigen::MatrixXd rel_H;
+          Eigen::VectorXd rel_b;
+          linearizeRel(rld, rel_H, rel_b);
+
+          linearizeAbs(rel_H, rel_b, rld, aom, accum);
         }
       }
-    }
 
-    if (config.vio_debug) {
-      std::cout << "keeping " << idx_to_keep.size() << " marg "
-                << idx_to_marg.size() << " total " << asize << std::endl;
-      std::cout << "last_state_to_marg " << last_state_to_marg
-                << " frame_poses " << frame_poses.size() << " frame_states "
-                << frame_states.size() << std::endl;
-    }
+      linearizeMargPrior(marg_order, marg_H, marg_b, aom, accum.getH(),
+                         accum.getB(), marg_prior_error);
 
-    Eigen::MatrixXd marg_H_new;
-    Eigen::VectorXd marg_b_new;
-    marginalizeHelper(accum.getH(), accum.getB(), idx_to_keep, idx_to_marg,
-                      marg_H_new, marg_b_new);
+      // Save marginalization prior
+      if (out_marg_queue && !kfs_to_marg.empty()) {
+        // int64_t kf_id = *kfs_to_marg.begin();
 
-    {
-      BASALT_ASSERT(frame_states.at(last_state_to_marg).isLinearized() ==
-                    false);
-      frame_states.at(last_state_to_marg).setLinTrue();
-    }
+        {
+          MargData::Ptr m(new MargData);
+          m->aom = aom;
+          m->abs_H = accum.getH();
+          m->abs_b = accum.getB();
+          m->frame_poses = frame_poses;
+          m->frame_states = frame_states;
+          m->kfs_all = kf_ids_all;
+          m->kfs_to_marg = kfs_to_marg;
 
-    for (const int64_t id : states_to_marg_all) {
-      frame_states.erase(id);
-      imu_meas.erase(id);
-      prev_opt_flow_res.erase(id);
-    }
+          for (int64_t t : m->kfs_all) {
+            m->opt_flow_res.emplace_back(prev_opt_flow_res.at(t));
+          }
 
-    for (const int64_t id : states_to_marg_vel_bias) {
-      const PoseVelBiasStateWithLin& state = frame_states.at(id);
-      PoseStateWithLin pose(state);
+          out_marg_queue->push(m);
+        }
+      }
 
-      frame_poses[id] = pose;
-      frame_states.erase(id);
-      imu_meas.erase(id);
-    }
+      std::set<int> idx_to_keep, idx_to_marg;
+      for (const auto& kv : aom.abs_order_map) {
+        if (kv.second.second == POSE_SIZE) {
+          int start_idx = kv.second.first;
+          if (kfs_to_marg.count(kv.first) == 0) {
+            for (size_t i = 0; i < POSE_SIZE; i++)
+              idx_to_keep.emplace(start_idx + i);
+          } else {
+            for (size_t i = 0; i < POSE_SIZE; i++)
+              idx_to_marg.emplace(start_idx + i);
+          }
+        } else {
+          BASALT_ASSERT(false);
+        }
+      }
 
-    for (const int64_t id : poses_to_marg) {
-      frame_poses.erase(id);
-      prev_opt_flow_res.erase(id);
-    }
+      if (config.vio_debug) {
+        std::cout << "keeping " << idx_to_keep.size() << " marg "
+                  << idx_to_marg.size() << " total " << asize << std::endl;
+        std::cout << " frame_poses " << frame_poses.size() << " frame_states "
+                  << frame_states.size() << std::endl;
+      }
 
-    lmdb.removeKeyframes(kfs_to_marg, poses_to_marg, states_to_marg_all);
+      Eigen::MatrixXd marg_H_new;
+      Eigen::VectorXd marg_b_new;
+      marginalizeHelper(accum.getH(), accum.getB(), idx_to_keep, idx_to_marg,
+                        marg_H_new, marg_b_new);
 
-    AbsOrderMap marg_order_new;
+      for (auto& kv : frame_poses) {
+        if (!kv.second.isLinearized()) kv.second.setLinTrue();
+      }
 
-    for (const auto& kv : frame_poses) {
-      marg_order_new.abs_order_map[kv.first] =
-          std::make_pair(marg_order_new.total_size, POSE_SIZE);
+      for (const int64_t id : kfs_to_marg) {
+        frame_poses.erase(id);
+        prev_opt_flow_res.erase(id);
+      }
 
-      marg_order_new.total_size += POSE_SIZE;
-      marg_order_new.items++;
-    }
+      lmdb.removeKeyframes(kfs_to_marg, kfs_to_marg, kfs_to_marg);
 
-    {
-      marg_order_new.abs_order_map[last_state_to_marg] =
-          std::make_pair(marg_order_new.total_size, POSE_VEL_BIAS_SIZE);
-      marg_order_new.total_size += POSE_VEL_BIAS_SIZE;
-      marg_order_new.items++;
-    }
+      AbsOrderMap marg_order_new;
 
-    marg_H = marg_H_new;
-    marg_b = marg_b_new;
-    marg_order = marg_order_new;
+      for (const auto& kv : frame_poses) {
+        marg_order_new.abs_order_map[kv.first] =
+            std::make_pair(marg_order_new.total_size, POSE_SIZE);
 
-    BASALT_ASSERT(size_t(marg_H.cols()) == marg_order.total_size);
+        marg_order_new.total_size += POSE_SIZE;
+        marg_order_new.items++;
+      }
 
-    Eigen::VectorXd delta;
-    computeDelta(marg_order, delta);
-    marg_b -= marg_H * delta;
+      marg_H = marg_H_new;
+      marg_b = marg_b_new;
+      marg_order = marg_order_new;
 
-    if (config.vio_debug) {
-      std::cout << "marginalizaon done!!" << std::endl;
+      BASALT_ASSERT(size_t(marg_H.cols()) == marg_order.total_size);
 
-      std::cout << "======== Marg nullspace ==========" << std::endl;
-      checkMargNullspace();
-      std::cout << "=================================" << std::endl;
+      Eigen::VectorXd delta;
+      computeDelta(marg_order, delta);
+      marg_b -= marg_H * delta;
+
+      if (config.vio_debug) {
+        std::cout << "marginalizaon done!!" << std::endl;
+
+        std::cout << "======== Marg nullspace ==========" << std::endl;
+        checkMargNullspace();
+        std::cout << "=================================" << std::endl;
+      }
     }
 
     //    std::cout << "new marg prior order" << std::endl;
@@ -747,14 +617,13 @@ void KeypointVioEstimator::marginalize(
   }
 }
 
-void KeypointVioEstimator::optimize() {
+void KeypointVoEstimator::optimize() {
   if (config.vio_debug) {
     std::cout << "=================================" << std::endl;
   }
 
-  if (opt_started || frame_states.size() > 4) {
+  if (true) {
     // Optimize
-    opt_started = true;
 
     AbsOrderMap aom;
 
@@ -762,25 +631,15 @@ void KeypointVioEstimator::optimize() {
       aom.abs_order_map[kv.first] = std::make_pair(aom.total_size, POSE_SIZE);
 
       // Check that we have the same order as marginalization
-      BASALT_ASSERT(marg_order.abs_order_map.at(kv.first) ==
-                    aom.abs_order_map.at(kv.first));
+      if (marg_order.abs_order_map.count(kv.first) > 0)
+        BASALT_ASSERT(marg_order.abs_order_map.at(kv.first) ==
+                      aom.abs_order_map.at(kv.first));
 
       aom.total_size += POSE_SIZE;
       aom.items++;
     }
 
-    for (const auto& kv : frame_states) {
-      aom.abs_order_map[kv.first] =
-          std::make_pair(aom.total_size, POSE_VEL_BIAS_SIZE);
-
-      // Check that we have the same order as marginalization
-      if (aom.items < marg_order.abs_order_map.size())
-        BASALT_ASSERT(marg_order.abs_order_map.at(kv.first) ==
-                      aom.abs_order_map.at(kv.first));
-
-      aom.total_size += POSE_VEL_BIAS_SIZE;
-      aom.items++;
-    }
+    BASALT_ASSERT(frame_states.empty());
 
     //    std::cout << "opt order" << std::endl;
     //    aom.print_order();
@@ -804,15 +663,10 @@ void KeypointVioEstimator::optimize() {
       tbb::parallel_reduce(range, lopt);
 
       double marg_prior_error = 0;
-      double imu_error = 0, bg_error = 0, ba_error = 0;
-      linearizeAbsIMU(aom, lopt.accum.getH(), lopt.accum.getB(), imu_error,
-                      bg_error, ba_error, frame_states, imu_meas,
-                      gyro_bias_weight, accel_bias_weight, g);
       linearizeMargPrior(marg_order, marg_H, marg_b, aom, lopt.accum.getH(),
                          lopt.accum.getB(), marg_prior_error);
 
-      double error_total =
-          rld_error + imu_error + marg_prior_error + ba_error + bg_error;
+      double error_total = rld_error + marg_prior_error;
 
       if (config.vio_debug)
         std::cout << "[LINEARIZE] Error: " << error_total << " num points "
@@ -844,11 +698,7 @@ void KeypointVioEstimator::optimize() {
             kv.second.applyInc(-inc.segment<POSE_SIZE>(idx));
           }
 
-          // apply increment to states
-          for (auto& kv : frame_states) {
-            int idx = aom.abs_order_map.at(kv.first).first;
-            kv.second.applyInc(-inc.segment<POSE_VEL_BIAS_SIZE>(idx));
-          }
+          BASALT_ASSERT(frame_states.empty());
 
           // Update points
           tbb::blocked_range<size_t> keys_range(0, rld_vec.size());
@@ -861,19 +711,15 @@ void KeypointVioEstimator::optimize() {
           tbb::parallel_for(keys_range, update_points_func);
 
           double after_update_marg_prior_error = 0;
-          double after_update_vision_error = 0, after_update_imu_error = 0,
-                 after_bg_error = 0, after_ba_error = 0;
+          double after_update_vision_error = 0;
 
           computeError(after_update_vision_error);
-          computeImuError(aom, after_update_imu_error, after_bg_error,
-                          after_ba_error, frame_states, imu_meas,
-                          gyro_bias_weight, accel_bias_weight, g);
+
           computeMargPriorError(marg_order, marg_H, marg_b,
                                 after_update_marg_prior_error);
 
           double after_error_total =
-              after_update_vision_error + after_update_imu_error +
-              after_update_marg_prior_error + after_bg_error + after_ba_error;
+              after_update_vision_error + after_update_marg_prior_error;
 
           double f_diff = (error_total - after_error_total);
 
@@ -937,19 +783,15 @@ void KeypointVioEstimator::optimize() {
 
       if (config.vio_debug) {
         double after_update_marg_prior_error = 0;
-        double after_update_vision_error = 0, after_update_imu_error = 0,
-               after_bg_error = 0, after_ba_error = 0;
+        double after_update_vision_error = 0;
 
         computeError(after_update_vision_error);
-        computeImuError(aom, after_update_imu_error, after_bg_error,
-                        after_ba_error, frame_states, imu_meas,
-                        gyro_bias_weight, accel_bias_weight, g);
+
         computeMargPriorError(marg_order, marg_H, marg_b,
                               after_update_marg_prior_error);
 
         double after_error_total =
-            after_update_vision_error + after_update_imu_error +
-            after_update_marg_prior_error + after_bg_error + after_ba_error;
+            after_update_vision_error + after_update_marg_prior_error;
 
         double error_diff = error_total - after_error_total;
 
@@ -960,16 +802,11 @@ void KeypointVioEstimator::optimize() {
 
         std::cout << "iter " << iter
                   << " before_update_error: vision: " << rld_error
-                  << " imu: " << imu_error << " bg_error: " << bg_error
-                  << " ba_error: " << ba_error
                   << " marg_prior: " << marg_prior_error
                   << " total: " << error_total << std::endl;
 
         std::cout << "iter " << iter << "  after_update_error: vision: "
                   << after_update_vision_error
-                  << " imu: " << after_update_imu_error
-                  << " bg_error: " << after_bg_error
-                  << " ba_error: " << after_ba_error
                   << " marg prior: " << after_update_marg_prior_error
                   << " total: " << after_error_total << " error_diff "
                   << error_diff << " time : " << elapsed.count()
@@ -998,7 +835,7 @@ void KeypointVioEstimator::optimize() {
   }
 }  // namespace basalt
 
-void KeypointVioEstimator::computeProjections(
+void KeypointVoEstimator::computeProjections(
     std::vector<Eigen::vector<Eigen::Vector4d>>& data) const {
   for (const auto& kv : lmdb.getObservations()) {
     const TimeCamId& tcid_h = kv.first;

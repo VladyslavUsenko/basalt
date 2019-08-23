@@ -168,8 +168,8 @@ int main(int argc, char** argv) {
   opt_flow_ptr = basalt::OpticalFlowFactory::getOpticalFlow(vio_config, calib);
   t265_device->image_data_queue = &opt_flow_ptr->input_queue;
 
-  vio = basalt::VioEstimatorFactory::getVioEstimator(vio_config, calib, 0.0001,
-                                                     basalt::constants::g);
+  vio = basalt::VioEstimatorFactory::getVioEstimator(
+      vio_config, calib, 0.0001, basalt::constants::g, true);
   vio->initialize(Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero());
   t265_device->imu_data_queue = &vio->imu_data_queue;
 

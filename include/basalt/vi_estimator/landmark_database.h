@@ -73,6 +73,8 @@ class LandmarkDatabase {
   // Non-const
   void addLandmark(int lm_id, const KeypointPosition& pos);
 
+  void removeFrame(const FrameId& frame);
+
   void removeKeyframes(const std::set<FrameId>& kfs_to_marg,
                        const std::set<FrameId>& poses_to_marg,
                        const std::set<FrameId>& states_to_marg_all);

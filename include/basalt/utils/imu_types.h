@@ -86,7 +86,11 @@ struct PoseVelBiasStateWithLin {
     delta.setZero();
   }
 
-  void setLinTrue() { linearized = true; }
+  void setLinTrue() {
+    linearized = true;
+    BASALT_ASSERT(delta.isApproxToConstant(0));
+    state_current = state_linearized;
+  }
 
   void applyInc(const VecN& inc) {
     if (!linearized) {
@@ -163,8 +167,9 @@ struct PoseStateWithLin {
     delta.setZero();
   };
 
-  PoseStateWithLin(int64_t t_ns, const Sophus::SE3d& T_w_i)
-      : linearized(false), pose_linearized(t_ns, T_w_i) {
+  PoseStateWithLin(int64_t t_ns, const Sophus::SE3d& T_w_i,
+                   bool linearized = false)
+      : linearized(linearized), pose_linearized(t_ns, T_w_i) {
     delta.setZero();
     T_w_i_current = T_w_i;
   }
@@ -176,6 +181,12 @@ struct PoseStateWithLin {
                         other.state_linearized.T_w_i) {
     T_w_i_current = pose_linearized.T_w_i;
     PoseState::incPose(delta, T_w_i_current);
+  }
+
+  void setLinTrue() {
+    linearized = true;
+    BASALT_ASSERT(delta.isApproxToConstant(0));
+    T_w_i_current = pose_linearized.T_w_i;
   }
 
   inline const Sophus::SE3d& getPose() const {

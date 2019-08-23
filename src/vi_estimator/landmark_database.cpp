@@ -42,6 +42,20 @@ void LandmarkDatabase::addLandmark(int lm_id, const KeypointPosition &pos) {
   host_to_kpts[pos.kf_id].emplace(lm_id);
 }
 
+void LandmarkDatabase::removeFrame(const FrameId &frame) {
+  for (auto it = obs.begin(); it != obs.end(); ++it) {
+    for (auto it2 = it->second.cbegin(); it2 != it->second.cend();) {
+      if (it2->first.frame_id == frame) {
+        for (const auto &v : it2->second) kpts_num_obs.at(v.kpt_id)--;
+
+        it2 = it->second.erase(it2);
+      } else {
+        ++it2;
+      }
+    }
+  }
+}
+
 void LandmarkDatabase::removeKeyframes(
     const std::set<FrameId> &kfs_to_marg,
     const std::set<FrameId> &poses_to_marg,

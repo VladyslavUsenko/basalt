@@ -36,18 +36,20 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <basalt/vi_estimator/vio_estimator.h>
 
 #include <basalt/vi_estimator/keypoint_vio.h>
+#include <basalt/vi_estimator/keypoint_vo.h>
 
 namespace basalt {
 
 VioEstimatorBase::Ptr VioEstimatorFactory::getVioEstimator(
     const VioConfig& config, const Calibration<double>& cam, double int_std_dev,
-    const Eigen::Vector3d& g) {
-  KeypointVioEstimator::Ptr res;
+    const Eigen::Vector3d& g, bool use_imu) {
+  VioEstimatorBase::Ptr res;
 
-  res.reset(new KeypointVioEstimator(int_std_dev, g, cam, config));
-
-  res->setMaxKfs(config.vio_max_kfs);
-  res->setMaxStates(config.vio_max_states);
+  if (use_imu) {
+    res.reset(new KeypointVioEstimator(int_std_dev, g, cam, config));
+  } else {
+    res.reset(new KeypointVoEstimator(int_std_dev, cam, config));
+  }
 
   return res;
 }
@@ -79,7 +81,7 @@ double alignSVD(const std::vector<int64_t>& filter_t_ns,
     BASALT_ASSERT_STREAM(int_t_ns > 0, "int_t_ns " << int_t_ns);
 
     // Skip if the interval between gt larger than 100ms
-    if (int_t_ns > 1e8) continue;
+    if (int_t_ns > 1.1e8) continue;
 
     double ratio = dt_ns / int_t_ns;
 

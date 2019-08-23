@@ -101,7 +101,8 @@ class VioEstimatorFactory {
   static VioEstimatorBase::Ptr getVioEstimator(const VioConfig& config,
                                                const Calibration<double>& cam,
                                                double int_std_dev,
-                                               const Eigen::Vector3d& g);
+                                               const Eigen::Vector3d& g,
+                                               bool use_imu);
 };
 
 double alignSVD(const std::vector<int64_t>& filter_t_ns,

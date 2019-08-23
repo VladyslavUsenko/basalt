@@ -37,42 +37,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace basalt {
 
-void KeypointVioEstimator::linearizeMargPrior(const AbsOrderMap& aom,
-                                              Eigen::MatrixXd& abs_H,
-                                              Eigen::VectorXd& abs_b,
-                                              double& marg_prior_error) const {
-  // Assumed to be in the top left corner
-
-  BASALT_ASSERT(size_t(marg_H.cols()) == marg_order.total_size);
-
-  // Check if the order of variables is the same.
-  for (const auto& kv : marg_order.abs_order_map)
-    BASALT_ASSERT(aom.abs_order_map.at(kv.first) == kv.second);
-
-  size_t marg_size = marg_order.total_size;
-  abs_H.topLeftCorner(marg_size, marg_size) += marg_H;
-
-  Eigen::VectorXd delta;
-  computeDelta(marg_order, delta);
-
-  abs_b.head(marg_size) += marg_b;
-  abs_b.head(marg_size) += marg_H * delta;
-
-  marg_prior_error = 0.5 * delta.transpose() * marg_H * delta;
-  marg_prior_error += delta.transpose() * marg_b;
-}
-
-void KeypointVioEstimator::computeMargPriorError(
-    double& marg_prior_error) const {
-  BASALT_ASSERT(size_t(marg_H.cols()) == marg_order.total_size);
-
-  Eigen::VectorXd delta;
-  computeDelta(marg_order, delta);
-
-  marg_prior_error = 0.5 * delta.transpose() * marg_H * delta;
-  marg_prior_error += delta.transpose() * marg_b;
-}
-
 void KeypointVioEstimator::linearizeAbsIMU(
     const AbsOrderMap& aom, Eigen::MatrixXd& abs_H, Eigen::VectorXd& abs_b,
     double& imu_error, double& bg_error, double& ba_error,

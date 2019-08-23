@@ -66,6 +66,7 @@ constexpr int UI_WIDTH = 200;
 void draw_image_overlay(pangolin::View& v, size_t cam_id);
 void load_data(const std::string& calib_path);
 bool next_step();
+bool prev_step();
 
 pangolin::Var<int> show_frame("ui.show_frame", 0, 0, 1500);
 pangolin::Var<bool> show_obs("ui.show_obs", true, false, true);
@@ -73,6 +74,7 @@ pangolin::Var<bool> show_ids("ui.show_ids", false, false, true);
 
 using Button = pangolin::Var<std::function<void(void)>>;
 Button next_step_btn("ui.next_step", &next_step);
+Button prev_step_btn("ui.prev_step", &prev_step);
 pangolin::Var<bool> continue_btn("ui.continue", true, false, true);
 
 // Opt flow variables
@@ -336,6 +338,16 @@ void load_data(const std::string& calib_path) {
 bool next_step() {
   if (show_frame < int(vio_dataset->get_image_timestamps().size()) - 1) {
     show_frame = show_frame + 1;
+    show_frame.Meta().gui_changed = true;
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool prev_step() {
+  if (show_frame > 0) {
+    show_frame = show_frame - 1;
     show_frame.Meta().gui_changed = true;
     return true;
   } else {
