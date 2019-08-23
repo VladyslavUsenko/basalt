@@ -112,7 +112,7 @@ std::string marg_data_path;
 
 // VIO vars
 basalt::Calibration<double> calib;
-basalt::KeypointVioEstimator::Ptr vio;
+basalt::VioEstimatorBase::Ptr vio;
 
 // Visualization vars
 std::unordered_map<int64_t, basalt::VioVisualizationData::Ptr> vis_map;
@@ -154,6 +154,8 @@ pangolin::Var<bool> continue_btn("ui.continue", true, false, true);
 
 Button align_step_btn("ui.align_se3", &alignButton);
 
+bool use_imu = true;
+
 int main(int argc, char** argv) {
   srand(1);
 
@@ -176,6 +178,7 @@ int main(int argc, char** argv) {
                  "Path to result file where the system will write RMSE ATE.");
 
   app.add_option("--num-points", NUM_POINTS, "Number of points in simulation.");
+  app.add_option("--use-imu", use_imu, "Use IMU.");
 
   try {
     app.parse(argc, argv);
@@ -209,10 +212,10 @@ int main(int argc, char** argv) {
       data->accel = noisy_accel[i];
       data->gyro = noisy_gyro[i];
 
-      vio->addIMUToQueue(data);
+      vio->imu_data_queue.push(data);
     }
 
-    vio->addIMUToQueue(nullptr);
+    vio->imu_data_queue.push(nullptr);
 
     std::cout << "Finished t0" << std::endl;
   });
@@ -234,10 +237,10 @@ int main(int argc, char** argv) {
         }
       }
 
-      vio->addVisionToQueue(data);
+      vio->vision_data_queue.push(data);
     }
 
-    vio->addVisionToQueue(nullptr);
+    vio->vision_data_queue.push(nullptr);
 
     std::cout << "Finished t1" << std::endl;
   });
@@ -875,12 +878,11 @@ void setup_vio() {
 
   basalt::VioConfig config;
 
-  vio.reset(new basalt::KeypointVioEstimator(0.0001, g, calib, config));
+  // vio.reset(new basalt::KeypointVioEstimator(0.0001, g, calib, config));
+  vio = basalt::VioEstimatorFactory::getVioEstimator(
+      config, calib, 0.0001, basalt::constants::g, use_imu);
   vio->initialize(t_init_ns, T_w_i_init, vel_w_i_init, gt_gyro_bias.front(),
                   gt_accel_bias.front());
-
-  vio->setMaxStates(3);
-  vio->setMaxKfs(5);
 
   // int iteration = 0;
   vio_data_log.Clear();

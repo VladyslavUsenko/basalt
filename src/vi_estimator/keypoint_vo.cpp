@@ -99,6 +99,8 @@ void KeypointVoEstimator::initialize(int64_t t_ns, const Sophus::SE3d& T_w_i,
   marg_order.abs_order_map[t_ns] = std::make_pair(0, POSE_SIZE);
   marg_order.total_size = POSE_SIZE;
   marg_order.items = 1;
+
+  initialize(bg, ba);
 }
 
 void KeypointVoEstimator::initialize(const Eigen::Vector3d& bg,
