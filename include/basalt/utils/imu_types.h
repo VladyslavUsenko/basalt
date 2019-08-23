@@ -274,6 +274,7 @@ struct MargData {
   Eigen::map<int64_t, PoseStateWithLin> frame_poses;
   std::set<int64_t> kfs_all;
   std::set<int64_t> kfs_to_marg;
+  bool use_imu;
 
   std::vector<OpticalFlowResult::Ptr> opt_flow_res;
 };
@@ -316,6 +317,7 @@ void serialize(Archive& ar, basalt::MargData& m) {
   ar(m.frame_states);
   ar(m.kfs_all);
   ar(m.kfs_to_marg);
+  ar(m.use_imu);
 }
 
 }  // namespace cereal

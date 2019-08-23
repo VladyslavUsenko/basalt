@@ -626,6 +626,7 @@ void KeypointVioEstimator::marginalize(
         m->frame_states = frame_states;
         m->kfs_all = kf_ids_all;
         m->kfs_to_marg = kfs_to_marg;
+        m->use_imu = true;
 
         for (int64_t t : m->kfs_all) {
           m->opt_flow_res.emplace_back(prev_opt_flow_res.at(t));

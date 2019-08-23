@@ -122,17 +122,19 @@ void NfrMapper::processMargData(MargData& m) {
     //                << std::endl;
   }
 
-  Eigen::MatrixXd marg_H_new;
-  Eigen::VectorXd marg_b_new;
-  BundleAdjustmentBase::marginalizeHelper(m.abs_H, m.abs_b, idx_to_keep,
-                                          idx_to_marg, marg_H_new, marg_b_new);
+  if (!idx_to_marg.empty()) {
+    Eigen::MatrixXd marg_H_new;
+    Eigen::VectorXd marg_b_new;
+    BundleAdjustmentBase::marginalizeHelper(
+        m.abs_H, m.abs_b, idx_to_keep, idx_to_marg, marg_H_new, marg_b_new);
 
-  //    std::cout << "new rank " << marg_H_new.fullPivLu().rank() << " size "
-  //              << marg_H_new.cols() << std::endl;
+    //    std::cout << "new rank " << marg_H_new.fullPivLu().rank() << " size "
+    //              << marg_H_new.cols() << std::endl;
 
-  m.abs_H = marg_H_new;
-  m.abs_b = marg_b_new;
-  m.aom = aom_new;
+    m.abs_H = marg_H_new;
+    m.abs_b = marg_b_new;
+    m.aom = aom_new;
+  }
 
   BASALT_ASSERT(m.aom.total_size == size_t(m.abs_H.cols()));
 
@@ -193,7 +195,9 @@ bool NfrMapper::extractNonlinearFactors(MargData& m) {
       rpf.cov_inv.setIdentity();
     }
 
-    roll_pitch_factors.emplace_back(rpf);
+    if (m.use_imu) {
+      roll_pitch_factors.emplace_back(rpf);
+    }
   }
 
   for (int64_t other_id : m.kfs_all) {
