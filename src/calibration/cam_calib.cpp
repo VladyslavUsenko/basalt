@@ -557,29 +557,94 @@ void CamCalib::initCamExtrinsics() {
     return;
   }
 
+  // Camera graph. Stores the edge from i to j with weight w and timestamp. i
+  // and j should be sorted;
+  std::map<std::pair<size_t, size_t>, std::pair<int, int64_t>> cam_graph;
+
+  // Construct the graph.
   for (size_t i = 0; i < vio_dataset->get_image_timestamps().size(); i++) {
     int64_t timestamp_ns = vio_dataset->get_image_timestamps()[i];
 
-    TimeCamId tcid0(timestamp_ns, 0);
+    for (size_t cam_i = 0; cam_i < vio_dataset->get_num_cams(); cam_i++) {
+      TimeCamId tcid_i(timestamp_ns, cam_i);
 
-    if (calib_init_poses.find(tcid0) == calib_init_poses.end()) continue;
+      auto it = calib_init_poses.find(tcid_i);
+      if (it == calib_init_poses.end() || it->second.num_inliers < MIN_CORNERS)
+        continue;
 
-    Sophus::SE3d T_a_c0 = calib_init_poses.at(tcid0).T_a_c;
+      for (size_t cam_j = cam_i + 1; cam_j < vio_dataset->get_num_cams();
+           cam_j++) {
+        TimeCamId tcid_j(timestamp_ns, cam_j);
 
-    bool success = true;
+        auto it2 = calib_init_poses.find(tcid_j);
+        if (it2 == calib_init_poses.end() ||
+            it2->second.num_inliers < MIN_CORNERS)
+          continue;
 
-    for (size_t j = 1; j < vio_dataset->get_num_cams(); j++) {
-      TimeCamId tcid(timestamp_ns, j);
+        std::pair<size_t, size_t> edge_id(cam_i, cam_j);
 
-      auto cd = calib_init_poses.find(tcid);
-      if (cd != calib_init_poses.end() && cd->second.num_inliers > 0) {
-        calib_opt->calib->T_i_c[j] = T_a_c0.inverse() * cd->second.T_a_c;
-      } else {
-        success = false;
+        int curr_weight = cam_graph[edge_id].first;
+        int new_weight =
+            std::min(it->second.num_inliers, it2->second.num_inliers);
+
+        if (curr_weight < new_weight) {
+          cam_graph[edge_id] = std::make_pair(new_weight, timestamp_ns);
+        }
+      }
+    }
+  }
+
+  std::vector<bool> cameras_initialized(vio_dataset->get_num_cams(), false);
+  cameras_initialized[0] = true;
+  size_t last_camera = 0;
+  calib_opt->calib->T_i_c[0] = Sophus::SE3d();  // Identity
+
+  auto next_max_weight_edge = [&](size_t cam_id) {
+    int max_weight = -1;
+    std::pair<int, int64_t> res(-1, -1);
+
+    for (size_t i = 0; i < vio_dataset->get_num_cams(); i++) {
+      if (cameras_initialized[i]) continue;
+
+      std::pair<size_t, size_t> edge_id;
+
+      if (i < cam_id) {
+        edge_id = std::make_pair(i, cam_id);
+      } else if (i > cam_id) {
+        edge_id = std::make_pair(cam_id, i);
+      }
+
+      auto it = cam_graph.find(edge_id);
+      if (it != cam_graph.end() && max_weight < it->second.first) {
+        max_weight = it->second.first;
+        res.first = i;
+        res.second = it->second.second;
       }
     }
 
-    if (success) break;
+    return res;
+  };
+
+  for (size_t i = 0; i < vio_dataset->get_num_cams() - 1; i++) {
+    std::pair<int, int64_t> res = next_max_weight_edge(last_camera);
+
+    std::cout << "Initializing camera pair " << last_camera << " " << res.first
+              << std::endl;
+
+    if (res.first >= 0) {
+      size_t new_camera = res.first;
+
+      TimeCamId tcid_last(res.second, last_camera);
+      TimeCamId tcid_new(res.second, new_camera);
+
+      calib_opt->calib->T_i_c[new_camera] =
+          calib_opt->calib->T_i_c[last_camera] *
+          calib_init_poses.at(tcid_last).T_a_c.inverse() *
+          calib_init_poses.at(tcid_new).T_a_c;
+
+      last_camera = new_camera;
+      cameras_initialized[last_camera] = true;
+    }
   }
 
   std::cout << "Done camera extrinsics initialization:" << std::endl;
@@ -587,7 +652,7 @@ void CamCalib::initCamExtrinsics() {
     std::cout << "T_c0_c" << j << ":\n"
               << calib_opt->calib->T_i_c[j].matrix() << std::endl;
   }
-}
+}  // namespace basalt
 
 void CamCalib::initOptimization() {
   if (!calib_opt) {
@@ -605,40 +670,58 @@ void CamCalib::initOptimization() {
 
   calib_opt->setAprilgridCorners3d(april_grid.aprilgrid_corner_pos_3d);
 
-  std::set<uint64_t> invalid_timestamps;
+  std::unordered_set<TimeCamId> invalid_frames;
   for (const auto &kv : calib_corners) {
     if (kv.second.corner_ids.size() < MIN_CORNERS)
-      invalid_timestamps.insert(kv.first.frame_id);
-  }
-
-  for (const auto &kv : calib_corners) {
-    if (invalid_timestamps.find(kv.first.frame_id) == invalid_timestamps.end())
-      calib_opt->addAprilgridMeasurement(kv.first.frame_id, kv.first.cam_id,
-                                         kv.second.corners,
-                                         kv.second.corner_ids);
+      invalid_frames.insert(kv.first);
   }
 
   for (size_t j = 0; j < vio_dataset->get_image_timestamps().size(); ++j) {
     int64_t timestamp_ns = vio_dataset->get_image_timestamps()[j];
 
+    int max_inliers = -1;
+    int max_inliers_idx = -1;
+
     for (size_t cam_id = 0; cam_id < calib_opt->calib->T_i_c.size(); cam_id++) {
       TimeCamId tcid(timestamp_ns, cam_id);
       const auto cp_it = calib_init_poses.find(tcid);
-
       if (cp_it != calib_init_poses.end()) {
-        calib_opt->addPoseMeasurement(
-            timestamp_ns,
-            cp_it->second.T_a_c * calib_opt->calib->T_i_c[cam_id].inverse());
-        break;
+        if ((int)cp_it->second.num_inliers > max_inliers) {
+          max_inliers = cp_it->second.num_inliers;
+          max_inliers_idx = cam_id;
+        }
       }
     }
+
+    if (max_inliers >= (int)MIN_CORNERS) {
+      TimeCamId tcid(timestamp_ns, max_inliers_idx);
+      const auto cp_it = calib_init_poses.find(tcid);
+
+      // Initial pose
+      calib_opt->addPoseMeasurement(
+          timestamp_ns, cp_it->second.T_a_c *
+                            calib_opt->calib->T_i_c[max_inliers_idx].inverse());
+    } else {
+      // Set all frames invalid if we do not have initial pose
+      for (size_t cam_id = 0; cam_id < calib_opt->calib->T_i_c.size();
+           cam_id++) {
+        invalid_frames.emplace(timestamp_ns, cam_id);
+      }
+    }
+  }
+
+  for (const auto &kv : calib_corners) {
+    if (invalid_frames.count(kv.first) == 0)
+      calib_opt->addAprilgridMeasurement(kv.first.frame_id, kv.first.cam_id,
+                                         kv.second.corners,
+                                         kv.second.corner_ids);
   }
 
   calib_opt->init();
   computeProjections();
 
   std::cout << "Initialized optimization." << std::endl;
-}
+}  // namespace basalt
 
 void CamCalib::loadDataset() {
   basalt::DatasetIoInterfacePtr dataset_io =
