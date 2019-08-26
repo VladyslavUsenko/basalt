@@ -56,7 +56,7 @@ make -j8
 NOTE: It is possible to compile the code on Ubuntu 16.04, but you need to install cmake-3.10 or higher and gcc-7. See corresponding [Dockerfile](docker/b_image_xenial/Dockerfile) as an example.
 
 ## Usage
-* [Camera, IMU and Mocap calibration. (TUM-VI, Euroc and UZH-FPV datasets)](doc/Calibration.md)
+* [Camera, IMU and Mocap calibration. (TUM-VI, Euroc, UZH-FPV and Kalibr datasets)](doc/Calibration.md)
 * [Visual-inertial odometry and mapping. (TUM-VI and Euroc datasets)](doc/VioMapping.md)
 * [Simulation tools to test different components of the system.](doc/Simulation.md)
 

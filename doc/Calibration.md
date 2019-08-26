@@ -146,3 +146,29 @@ After calibrating the camera you can run the camera + IMU calibration. The resul
 basalt_calibrate_imu --dataset-path ~/uzh_calib_data/indoor_forward_calib_snapdragon_imu.bag --dataset-type bag --aprilgrid /usr/etc/basalt/aprilgrid_5x4_uzh.json --result-path ~/uzh_calib_result/ --gyro-noise-std 0.05 --accel-noise-std 0.1 --gyro-bias-std 4e-5 --accel-bias-std 0.002
 ```
 ![uzh_imu_calib](/doc/img/uzh_imu_calib.png)
+
+
+## Kalibr dataset
+Download the datasets for camera and camera-IMU calibration from [here (Sample datasets)](https://github.com/ethz-asl/kalibr/wiki/downloads):
+```
+mkdir ~/kalibr_calib_data
+cd ~/kalibr_calib_data
+# Download data
+tar xvf static.tar.gz
+tar xvf dynamic.tar.gz
+```
+
+### Camera calibration
+Run the camera calibration:
+```
+basalt_calibrate --dataset-path ~/kalibr_calib_data/static/static.bag --dataset-type bag --aprilgrid /usr/etc/basalt/aprilgrid_6x6.json --result-path ~/kalibr_calib_result/ --cam-types ds ds ds ds
+```
+![kalibr_cam_calib](/doc/img/kalibr_cam_calib.png)
+
+
+### Camera + IMU calibration
+After calibrating the camera you can run the camera + IMU calibration. The result-path should point to the same folder as before:
+```
+basalt_calibrate_imu --dataset-path ~/kalibr_calib_data/dynamic/dynamic.bag --dataset-type bag --aprilgrid /usr/etc/basalt/aprilgrid_6x6.json --result-path ~/kalibr_calib_result/ --gyro-noise-std 0.005 --accel-noise-std 0.01 --gyro-bias-std 4.0e-06 --accel-bias-std 0.0002
+```
+![kalibr_imu_calib](/doc/img/kalibr_imu_calib.png)
