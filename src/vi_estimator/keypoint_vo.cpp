@@ -47,8 +47,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace basalt {
 
 KeypointVoEstimator::KeypointVoEstimator(
-    double int_std_dev, const basalt::Calibration<double>& calib,
-    const VioConfig& config)
+    const basalt::Calibration<double>& calib, const VioConfig& config)
     : take_kf(true),
       frames_after_kf(0),
       initialized(false),
@@ -65,10 +64,8 @@ KeypointVoEstimator::KeypointVoEstimator(
   marg_H.setZero(POSE_SIZE, POSE_SIZE);
   marg_b.setZero(POSE_SIZE);
 
-  double prior_weight = 1.0 / (int_std_dev * int_std_dev);
-
   // prior on pose
-  marg_H.diagonal().setConstant(prior_weight);
+  marg_H.diagonal().setConstant(config.vio_init_pose_weight);
 
   std::cout << "marg_H\n" << marg_H << std::endl;
 

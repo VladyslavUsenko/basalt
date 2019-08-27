@@ -878,9 +878,8 @@ void setup_vio() {
 
   basalt::VioConfig config;
 
-  // vio.reset(new basalt::KeypointVioEstimator(0.0001, g, calib, config));
   vio = basalt::VioEstimatorFactory::getVioEstimator(
-      config, calib, 0.0001, basalt::constants::g, use_imu);
+      config, calib, basalt::constants::g, use_imu);
   vio->initialize(t_init_ns, T_w_i_init, vel_w_i_init, gt_gyro_bias.front(),
                   gt_accel_bias.front());
 

@@ -72,6 +72,10 @@ struct VioConfig {
   double vio_lm_lambda_min;
   double vio_lm_lambda_max;
 
+  double vio_init_pose_weight;
+  double vio_init_ba_weight;
+  double vio_init_bg_weight;
+
   double mapper_obs_std_dev;
   double mapper_obs_huber_thresh;
   int mapper_detection_num_points;

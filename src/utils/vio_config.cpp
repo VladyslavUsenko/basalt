@@ -72,6 +72,10 @@ VioConfig::VioConfig() {
   vio_lm_lambda_min = 1e-32;
   vio_lm_lambda_max = 1e2;
 
+  vio_init_pose_weight = 1e8;
+  vio_init_ba_weight = 1e1;
+  vio_init_bg_weight = 1e2;
+
   mapper_obs_std_dev = 0.25;
   mapper_obs_huber_thresh = 1.5;
   mapper_detection_num_points = 800;
@@ -144,6 +148,10 @@ void serialize(Archive& ar, basalt::VioConfig& config) {
   ar(CEREAL_NVP(config.vio_use_lm));
   ar(CEREAL_NVP(config.vio_lm_lambda_min));
   ar(CEREAL_NVP(config.vio_lm_lambda_max));
+
+  ar(CEREAL_NVP(config.vio_init_pose_weight));
+  ar(CEREAL_NVP(config.vio_init_ba_weight));
+  ar(CEREAL_NVP(config.vio_init_bg_weight));
 
   ar(CEREAL_NVP(config.mapper_obs_std_dev));
   ar(CEREAL_NVP(config.mapper_obs_huber_thresh));

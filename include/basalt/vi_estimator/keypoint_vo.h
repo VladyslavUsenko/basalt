@@ -63,8 +63,7 @@ class KeypointVoEstimator : public VioEstimatorBase,
   typedef Eigen::Matrix<double, N, N> MatNN;
   typedef Eigen::Matrix<double, N, 3> MatN3;
 
-  KeypointVoEstimator(double int_std_dev,
-                      const basalt::Calibration<double>& calib,
+  KeypointVoEstimator(const basalt::Calibration<double>& calib,
                       const VioConfig& config);
 
   void initialize(int64_t t_ns, const Sophus::SE3d& T_w_i,

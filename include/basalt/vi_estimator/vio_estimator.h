@@ -100,7 +100,6 @@ class VioEstimatorFactory {
  public:
   static VioEstimatorBase::Ptr getVioEstimator(const VioConfig& config,
                                                const Calibration<double>& cam,
-                                               double int_std_dev,
                                                const Eigen::Vector3d& g,
                                                bool use_imu);
 };

@@ -47,8 +47,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace basalt {
 
 KeypointVioEstimator::KeypointVioEstimator(
-    double int_std_dev, const Eigen::Vector3d& g,
-    const basalt::Calibration<double>& calib, const VioConfig& config)
+    const Eigen::Vector3d& g, const basalt::Calibration<double>& calib,
+    const VioConfig& config)
     : take_kf(true),
       frames_after_kf(0),
       g(g),
@@ -66,16 +66,14 @@ KeypointVioEstimator::KeypointVioEstimator(
   marg_H.setZero(POSE_VEL_BIAS_SIZE, POSE_VEL_BIAS_SIZE);
   marg_b.setZero(POSE_VEL_BIAS_SIZE);
 
-  double prior_weight = 1.0 / (int_std_dev * int_std_dev);
-
   // prior on position
-  marg_H.diagonal().head<3>().setConstant(prior_weight);
+  marg_H.diagonal().head<3>().setConstant(config.vio_init_pose_weight);
   // prior on yaw
-  marg_H(5, 5) = prior_weight;
+  marg_H(5, 5) = config.vio_init_pose_weight;
 
   // small prior to avoid jumps in bias
-  marg_H.diagonal().segment<3>(9).array() = 1e2;
-  marg_H.diagonal().segment<3>(12).array() = 1e3;
+  marg_H.diagonal().segment<3>(9).array() = config.vio_init_ba_weight;
+  marg_H.diagonal().segment<3>(12).array() = config.vio_init_bg_weight;
 
   std::cout << "marg_H\n" << marg_H << std::endl;
 

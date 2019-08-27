@@ -41,14 +41,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace basalt {
 
 VioEstimatorBase::Ptr VioEstimatorFactory::getVioEstimator(
-    const VioConfig& config, const Calibration<double>& cam, double int_std_dev,
+    const VioConfig& config, const Calibration<double>& cam,
     const Eigen::Vector3d& g, bool use_imu) {
   VioEstimatorBase::Ptr res;
 
   if (use_imu) {
-    res.reset(new KeypointVioEstimator(int_std_dev, g, cam, config));
+    res.reset(new KeypointVioEstimator(g, cam, config));
   } else {
-    res.reset(new KeypointVoEstimator(int_std_dev, cam, config));
+    res.reset(new KeypointVoEstimator(cam, config));
   }
 
   return res;

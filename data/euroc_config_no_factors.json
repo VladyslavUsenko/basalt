@@ -23,6 +23,9 @@
         "config.vio_use_lm": false,
         "config.vio_lm_lambda_min": 1e-32,
         "config.vio_lm_lambda_max": 1e2,
+        "config.vio_init_pose_weight": 1e8,
+        "config.vio_init_ba_weight": 1e1,
+        "config.vio_init_bg_weight": 1e2,
 
         "config.mapper_obs_std_dev": 0.25,
         "config.mapper_obs_huber_thresh": 1.5,
