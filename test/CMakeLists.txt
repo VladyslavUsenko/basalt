@@ -5,9 +5,6 @@ cmake_minimum_required(VERSION 3.10)
 include_directories(../thirdparty/basalt-headers/test/include)
 
 
-add_executable(test_image src/test_image.cpp)
-target_link_libraries(test_image gtest gtest_main basalt)
-
 add_executable(test_spline_opt src/test_spline_opt.cpp)
 target_link_libraries(test_spline_opt gtest gtest_main basalt)
 
@@ -22,12 +19,10 @@ enable_testing()
 
 include(GoogleTest)
 
-#gtest_discover_tests(test_image DISCOVERY_TIMEOUT 60)
 #gtest_discover_tests(test_spline_opt DISCOVERY_TIMEOUT 60)
 #gtest_discover_tests(test_vio DISCOVERY_TIMEOUT 60)
 #gtest_discover_tests(test_nfr DISCOVERY_TIMEOUT 60)
 
-gtest_add_tests(TARGET test_image AUTO)
 gtest_add_tests(TARGET test_spline_opt AUTO)
 gtest_add_tests(TARGET test_vio AUTO)
 gtest_add_tests(TARGET test_nfr AUTO)
