@@ -36,8 +36,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <Eigen/Dense>
 
+#include <basalt/image/image.h>
 #include <basalt/optical_flow/patterns.h>
-#include <basalt/utils/image.h>
 
 namespace basalt {
 

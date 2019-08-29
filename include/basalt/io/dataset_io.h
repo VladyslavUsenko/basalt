@@ -58,8 +58,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <Eigen/Dense>
 #include <basalt/utils/sophus_utils.hpp>
 
+#include <basalt/image/image.h>
 #include <basalt/utils/assert.h>
-#include <basalt/utils/image.h>
 
 #include <basalt/camera/generic_camera.hpp>
 #include <basalt/camera/stereographic_param.hpp>

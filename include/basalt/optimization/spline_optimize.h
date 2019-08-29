@@ -41,7 +41,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <basalt/camera/unified_camera.hpp>
 
-#include <basalt/utils/image.h>
+#include <basalt/image/image.h>
 
 #include <basalt/serialization/headers_serialization.h>
 

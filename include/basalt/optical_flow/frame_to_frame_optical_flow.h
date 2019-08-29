@@ -43,6 +43,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <basalt/optical_flow/optical_flow.h>
 #include <basalt/optical_flow/patch.h>
 
+#include <basalt/image/image_pyr.h>
 #include <basalt/utils/keypoints.h>
 
 #include <tbb/parallel_for.h>

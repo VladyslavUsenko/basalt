@@ -40,7 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <Eigen/Dense>
 #include <sophus/se3.hpp>
 
-#include <basalt/utils/image.h>
+#include <basalt/image/image.h>
 #include <basalt/utils/sophus_utils.hpp>
 
 #include <basalt/utils/common_types.h>
