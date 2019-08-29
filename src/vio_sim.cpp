@@ -71,7 +71,7 @@ void draw_scene();
 void load_data(const std::string& calib_path);
 void gen_data();
 void compute_projections();
-void setup_vio();
+void setup_vio(const std::string& config_path);
 void draw_plots();
 bool next_step();
 void alignButton();
@@ -162,6 +162,7 @@ int main(int argc, char** argv) {
   bool show_gui = true;
   std::string cam_calib_path;
   std::string result_path;
+  std::string config_path;
 
   CLI::App app{"App description"};
 
@@ -176,6 +177,8 @@ int main(int argc, char** argv) {
 
   app.add_option("--result-path", result_path,
                  "Path to result file where the system will write RMSE ATE.");
+
+  app.add_option("--config-path", config_path, "Path to config file.");
 
   app.add_option("--num-points", NUM_POINTS, "Number of points in simulation.");
   app.add_option("--use-imu", use_imu, "Use IMU.");
@@ -195,7 +198,7 @@ int main(int argc, char** argv) {
 
   gen_data();
 
-  setup_vio();
+  setup_vio(config_path);
 
   vio->out_vis_queue = &out_vis_queue;
   vio->out_state_queue = &out_state_queue;
@@ -867,7 +870,7 @@ void draw_plots() {
                      pangolin::Colour::White());
 }
 
-void setup_vio() {
+void setup_vio(const std::string& config_path) {
   int64_t t_init_ns = gt_frame_t_ns[0];
   Sophus::SE3d T_w_i_init = gt_frame_T_w_i[0];
   Eigen::Vector3d vel_w_i_init = gt_spline.transVelWorld(t_init_ns);
@@ -877,6 +880,9 @@ void setup_vio() {
   std::cout << "vel_w_i " << vel_w_i_init.transpose() << std::endl;
 
   basalt::VioConfig config;
+  if (!config_path.empty()) {
+    config.load(config_path);
+  }
 
   vio = basalt::VioEstimatorFactory::getVioEstimator(
       config, calib, basalt::constants::g, use_imu);
