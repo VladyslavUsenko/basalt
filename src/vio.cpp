@@ -65,7 +65,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // GUI functions
 void draw_image_overlay(pangolin::View& v, size_t cam_id);
-void draw_scene();
+void draw_scene(pangolin::View& view);
 void load_data(const std::string& calib_path);
 bool next_step();
 bool prev_step();
@@ -110,6 +110,10 @@ pangolin::Var<bool> kitti_fmt("ui.kitti_fmt", false, false, true);
 Button save_traj_btn("ui.save_traj", &saveTrajectoryButton);
 
 pangolin::Var<bool> follow("ui.follow", true, false, true);
+
+// pangolin::Var<bool> record("ui.record", false, false, true);
+
+pangolin::OpenGlRenderState camera;
 
 // Visualization variables
 std::unordered_map<int64_t, basalt::VioVisualizationData::Ptr> vis_map;
@@ -379,10 +383,12 @@ int main(int argc, char** argv) {
 
     glEnable(GL_DEPTH_TEST);
 
-    pangolin::View& img_view_display =
-        pangolin::CreateDisplay()
-            .SetBounds(0.4, 1.0, pangolin::Attach::Pix(UI_WIDTH), 0.4)
-            .SetLayout(pangolin::LayoutEqual);
+    pangolin::View& main_display = pangolin::CreateDisplay().SetBounds(
+        0.0, 1.0, pangolin::Attach::Pix(UI_WIDTH), 1.0);
+
+    pangolin::View& img_view_display = pangolin::CreateDisplay()
+                                           .SetBounds(0.4, 1.0, 0.0, 0.4)
+                                           .SetLayout(pangolin::LayoutEqual);
 
     pangolin::View& plot_display = pangolin::CreateDisplay().SetBounds(
         0.0, 0.4, pangolin::Attach::Pix(UI_WIDTH), 1.0);
@@ -409,7 +415,7 @@ int main(int argc, char** argv) {
     Eigen::Vector3d cam_p(-0.5, -3, -5);
     cam_p = vio->getT_w_i_init().so3() * calib.T_i_c[0].so3() * cam_p;
 
-    pangolin::OpenGlRenderState camera(
+    camera = pangolin::OpenGlRenderState(
         pangolin::ProjectionMatrix(640, 480, 400, 400, 320, 240, 0.001, 10000),
         pangolin::ModelViewLookAt(cam_p[0], cam_p[1], cam_p[2], 0, 0, 0,
                                   pangolin::AxisZ));
@@ -419,6 +425,11 @@ int main(int argc, char** argv) {
             .SetAspect(-640 / 480.0)
             .SetBounds(0.4, 1.0, 0.4, 1.0)
             .SetHandler(new pangolin::Handler3D(camera));
+
+    display3D.extern_draw_function = draw_scene;
+
+    main_display.AddDisplay(img_view_display);
+    main_display.AddDisplay(display3D);
 
     while (!pangolin::ShouldQuit()) {
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -443,8 +454,6 @@ int main(int argc, char** argv) {
 
       display3D.Activate(camera);
       glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-
-      draw_scene();
 
       img_view_display.Activate();
 
@@ -492,6 +501,13 @@ int main(int argc, char** argv) {
         euroc_fmt = false;
         tum_rgbd_fmt = false;
       }
+
+      //      if (record) {
+      //        main_display.RecordOnRender(
+      //            "ffmpeg:[fps=50,bps=80000000,unique_filename]///tmp/"
+      //            "vio_screencap.avi");
+      //        record = false;
+      //      }
 
       pangolin::FinishFrame();
 
@@ -651,7 +667,11 @@ void draw_image_overlay(pangolin::View& v, size_t cam_id) {
   }
 }
 
-void draw_scene() {
+void draw_scene(pangolin::View& view) {
+  UNUSED(view);
+  view.Activate(camera);
+  glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+
   glPointSize(3);
   glColor3f(1.0, 0.0, 0.0);
   glEnable(GL_BLEND);
