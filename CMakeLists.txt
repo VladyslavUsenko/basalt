@@ -279,7 +279,8 @@ if(realsense2_FOUND)
       ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 endif()
 
-install(PROGRAMS scripts/basalt_convert_kitti_calib.py DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+file(GLOB SCRIPTS_TO_INSTALL "${CMAKE_CURRENT_SOURCE_DIR}/scripts/basalt_*.json")
+install(PROGRAMS SCRIPTS_TO_INSTALL DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 
 file(GLOB CONFIG_FILES "${CMAKE_CURRENT_SOURCE_DIR}/data/*.json")
 install(FILES ${CONFIG_FILES}
