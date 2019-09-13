@@ -6,8 +6,13 @@ import numpy as np
 import os
 from string import Template
 import cv2
+import argparse
 
-dataset_path = sys.argv[1]
+parser = argparse.ArgumentParser(description='Convert KITTI calibration to basalt and save it int the dataset folder as basalt_calib.json.')
+parser.add_argument('-d', '--dataset-path', required=True, help="Path to the dataset in KITTI format")
+args = parser.parse_args()
+
+dataset_path = args.dataset_path
 
 print(dataset_path)
 

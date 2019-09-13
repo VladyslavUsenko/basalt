@@ -4,11 +4,17 @@ import sys
 import math
 import os
 import cv2
+import argparse
 
 import numpy as np
 from matplotlib import pyplot as plt
 
-dataset_path = sys.argv[1]
+parser = argparse.ArgumentParser(description='Response calibration.')
+parser.add_argument('-d', '--dataset-path', required=True, help="Path to the dataset in Euroc format")
+args = parser.parse_args()
+
+
+dataset_path = args.dataset_path
 
 print(dataset_path)
 
@@ -23,7 +29,8 @@ imgs = []
 # check image data.
 for timestamp in timestamps:
     path = dataset_path + '/mav0/cam0/data/' + str(timestamp)
-    img = cv2.imread(dataset_path + '/mav0/cam0/data/' + str(timestamp) + '.webp', cv2.IMREAD_GRAYSCALE)[:,:,0]
+    img = cv2.imread(dataset_path + '/mav0/cam0/data/' + str(timestamp) + '.webp', cv2.IMREAD_GRAYSCALE)
+    if len(img.shape) == 3: img = img[:,:,0]
     imgs.append(img)
     pixel_avgs.append(np.mean(img))
 
@@ -73,9 +80,10 @@ def print_error():
     generated_imgs = irradiance[np.newaxis, :, :] * exposures[:, np.newaxis, np.newaxis]
     generated_imgs -= inv_resp[imgs]
     generated_imgs[imgs == 255] = 0
-    print(np.sum(generated_imgs**2))
+    print('Error', np.sum(generated_imgs**2))
 
 for iter in range(5):
+    print('Iteration', iter)
     irradiance = opt_irradiance()
     print_error()
     inv_resp = opt_inv_resp()

@@ -3,6 +3,7 @@
 import sys
 import os
 import rospy
+import argparse
 from geometry_msgs.msg import TransformStamped
 
 
@@ -34,11 +35,18 @@ def listener():
 
 
 if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(description='Record Motion Capture messages from ROS (/vrpn_client/raw_transform).')
+    parser.add_argument('-d', '--dataset-path', required=True, help="Path to store the result")
+    args = parser.parse_args()
+
+    dataset_path = args.dataset_path
+
     out_file = None
     time_offset = None
 
-    if not os.path.exists(sys.argv[1]):
-        os.makedirs(sys.argv[1])
+    if not os.path.exists(dataset_path):
+        os.makedirs(dataset_path)
 
     out_file = open(sys.argv[1] + '/data.csv', 'w')
     out_file.write('#timestamp [ns], p_RS_R_x [m], p_RS_R_y [m], p_RS_R_z [m], q_RS_w [], q_RS_x [], q_RS_y [], q_RS_z []\n')

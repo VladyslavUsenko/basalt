@@ -3,10 +3,17 @@
 import sys
 import math
 import os
+import argparse
 
 import numpy as np
 
-dataset_path = sys.argv[1]
+
+parser = argparse.ArgumentParser(description='Check the dataset. Report if any images are missing.')
+parser.add_argument('-d', '--dataset-path', required=True, help="Path to the dataset in Euroc format")
+args = parser.parse_args()
+
+
+dataset_path = args.dataset_path
 
 print(dataset_path)
 
