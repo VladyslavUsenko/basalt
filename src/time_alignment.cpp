@@ -66,6 +66,8 @@ int main(int argc, char **argv) {
   std::string output_gyro_path;
   std::string output_mocap_path;
 
+  double max_offset_s = 10.0;
+
   bool show_gui = true;
 
   CLI::App app{"Calibrate time offset"};
@@ -88,6 +90,9 @@ int main(int argc, char **argv) {
   app.add_option(
       "--output-mocap", output_mocap_path,
       "Path to output file with mocap rotational velocities for plotting");
+
+  app.add_option("--max-offset", max_offset_s,
+                 "Maximum offset for a grid search in seconds.");
 
   app.add_flag("--show-gui", show_gui, "Show GUI for debugging");
 
@@ -208,7 +213,7 @@ int main(int argc, char **argv) {
   double best_error = std::numeric_limits<double>::max();
   int best_error_idx = -1;
 
-  int64_t max_offset_ns = 10000000000;
+  int64_t max_offset_ns = max_offset_s * 1e9;
   int64_t offset_inc_ns = 100000;
 
   for (int64_t offset_ns = -max_offset_ns; offset_ns <= max_offset_ns;
