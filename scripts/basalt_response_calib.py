@@ -91,15 +91,14 @@ for iter in range(5):
 
 
 
-plt.figure()
-plt.plot(inv_resp[:-1])
-plt.ylabel('Irradiance Value')
-plt.xlabel('Image Intensity')
-plt.title('Inverse Responce Function')
+fig, (ax1, ax2) = plt.subplots(1, 2)
+ax1.plot(inv_resp[:-1])
+ax1.set(xlabel='Image Intensity', ylabel='Irradiance Value')
+ax1.set_title('Inverse Response Function')
 
-plt.figure()
-plt.imshow(irradiance)
-plt.title('Irradiance Image')
+
+ax2.imshow(irradiance)
+ax2.set_title('Irradiance Image')
 plt.show()
 
 

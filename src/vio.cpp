@@ -94,7 +94,6 @@ pangolin::Var<bool> show_est_bg("ui.show_est_bg", false, false, true);
 pangolin::Var<bool> show_est_ba("ui.show_est_ba", false, false, true);
 
 pangolin::Var<bool> show_gt("ui.show_gt", true, false, true);
-pangolin::Var<bool> show_device_gt("ui.show_device_gt", true, false, true);
 
 Button next_step_btn("ui.next_step", &next_step);
 Button prev_step_btn("ui.prev_step", &prev_step);

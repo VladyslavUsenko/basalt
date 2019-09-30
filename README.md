@@ -57,6 +57,7 @@ NOTE: It is possible to compile the code on Ubuntu 16.04, but you need to instal
 
 ## Usage
 * [Camera, IMU and Mocap calibration. (TUM-VI, Euroc, UZH-FPV and Kalibr datasets)](doc/Calibration.md)
+* [Tutorial on Camera-IMU and Motion capture calibration with Realsense T265.](doc/Realsense.md)
 * [Visual-inertial odometry and mapping. (TUM-VI and Euroc datasets)](doc/VioMapping.md)
 * [Visual odometry (no IMU). (KITTI dataset)](doc/Vo.md)
 * [Simulation tools to test different components of the system.](doc/Simulation.md)
