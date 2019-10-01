@@ -66,8 +66,6 @@ int main(int argc, char **argv) {
   std::string output_gyro_path;
   std::string output_mocap_path;
 
-  bool save_new_gt = false;
-
   double max_offset_s = 10.0;
 
   bool show_gui = true;
@@ -97,13 +95,15 @@ int main(int argc, char **argv) {
                  "Maximum offset for a grid search in seconds.");
 
   app.add_flag("--show-gui", show_gui, "Show GUI for debugging");
-  app.add_flag("--save-gt", save_new_gt,
-               "Save time aligned data to mav0/gt/ folder");
 
   try {
     app.parse(argc, argv);
   } catch (const CLI::ParseError &e) {
     return app.exit(e);
+  }
+
+  if (!dataset_path.empty() && dataset_path[dataset_path.length() - 1] != '/') {
+    dataset_path += '/';
   }
 
   basalt::VioDatasetPtr vio_dataset;
@@ -353,30 +353,6 @@ int main(int argc, char **argv) {
       os << (mocap_rot_vel_timestamps[i] + best_offset_ns - min_time) * 1e-9
          << " " << mocap_rot_vel_data[i].transpose() << std::endl;
     }
-  }
-
-  if (save_new_gt) {
-    fs::create_directory(dataset_path + "/mav0/gt/");
-
-    std::ofstream f(dataset_path + "/mav0/gt/data.csv");
-
-    for (size_t i = 0; i < vio_dataset->get_gt_timestamps().size(); i++) {
-      const int64_t corrected_time = vio_dataset->get_gt_timestamps()[i] +
-                                     vio_dataset->get_mocap_to_imu_offset_ns() +
-                                     best_offset_refined_ns;
-
-      if (corrected_time >= min_time && corrected_time <= max_time) {
-        const Sophus::SE3d &p = vio_dataset->get_gt_pose_data()[i];
-
-        f << corrected_time << ',' << p.translation().x() << ','
-          << p.translation().y() << ',' << p.translation().z() << ','
-          << p.unit_quaternion().w() << ',' << p.unit_quaternion().x() << ','
-          << p.unit_quaternion().y() << ',' << p.unit_quaternion().z()
-          << std::endl;
-      }
-    }
-
-    f.close();
   }
 
   if (show_gui) {

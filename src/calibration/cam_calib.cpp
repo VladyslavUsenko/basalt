@@ -229,6 +229,8 @@ void CamCalib::computeVign() {
   ve.save_vign_png(cache_path);
 
   calib_opt->setVignette(ve.get_vign_param());
+
+  std::cout << "Saved vignette png files to " << cache_path << std::endl;
 }
 
 void CamCalib::setNumCameras(size_t n) {

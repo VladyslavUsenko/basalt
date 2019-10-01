@@ -101,7 +101,7 @@ For the motion capture recording we use [ros_vrpn_client](https://github.com/eth
 **Important for recording the dataset:**
 * Set the `skip_frames` slider to 1 to use the full framerate.
 * Reduce the exposure time to reduce the motion blur.
-* Move the setup such that all axis of accelerometer and gyro are exited. This means moving with acceleration along X, Y and Z axis and rotating around those axes.
+* Move the setup such that all axes of accelerometer and gyro are excited. This means moving with acceleration along X, Y and Z axes and rotating around those axes.
 * Do not forget to simultaneously record motion capture data.
 * Rename the dataset to `imu_calib`.
 
@@ -131,9 +131,9 @@ To perform the calibration follow these steps:
 ## Generating Time-Aligned Ground Truth
 Since motion capture system and the PC where the dataset was recorded might not have the same clock we need to perform the time synchronization. Additionally we need to transform the coordinate frame of the GT data to the IMU frame (originally it is in the coordinate frame attached to the markers).
 
-The raw motion capture data is stored in the `mav/mocap0/` folder. We can find the time offset by minimizing the error between gyro measurements and rotational velocities computed from the motion capture data. The resulting trajectory (time aligned and transformed to the IMU frame) will be written to `mav/gt/` and automatically loaded when available.
+The raw motion capture data is stored in the `mav/mocap0/` folder. We can find the time offset by minimizing the error between gyro measurements and rotational velocities computed from the motion capture data. If you press the `save_aligned_dataset` button the resulting trajectory (time aligned and transformed to the IMU frame) will be written to `mav/gt/data.csv` and automatically loaded when available.
 ```
-basalt_time_alignment --dataset-path ~/t265_calib_data/sequence0 --dataset-type euroc --calibration ~/t265_calib_results/calibration.json --mocap-calibration ~/t265_calib_results/mocap_calibration.json --save-gt
+basalt_time_alignment --dataset-path ~/t265_calib_data/sequence0 --dataset-type euroc --calibration ~/t265_calib_results/calibration.json --mocap-calibration ~/t265_calib_results/mocap_calibration.json
 ```
 You should be able to see that, despite some noise, rotational velocity computed from the motion capture data aligns well with gyro measurements.
 ![t265_time_align_gyro](/doc/img/t265_time_align_gyro.png)
@@ -151,7 +151,7 @@ After the system processes the whole sequence you can use `align_se3` button to 
 
 
 ## Running Visual-Inertial Odometry Live
-It is also possible to run the odometry live with the camera If no calibration files are provided the factory calibration will be used.
+It is also possible to run the odometry live with the camera. If no calibration files are provided the factory calibration will be used.
 ```
 basalt_rs_t265_vio --cam-calib ~/t265_calib_results/calibration.json --config-path /usr/etc/basalt/euroc_config.json
 ```
