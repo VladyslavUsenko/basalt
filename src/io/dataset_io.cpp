@@ -42,10 +42,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace basalt {
 
 DatasetIoInterfacePtr DatasetIoFactory::getDatasetIo(
-    const std::string &dataset_type) {
+    const std::string &dataset_type, bool load_mocap_as_gt) {
   if (dataset_type == "euroc") {
     // return DatasetIoInterfacePtr();
-    return DatasetIoInterfacePtr(new EurocIO);
+    return DatasetIoInterfacePtr(new EurocIO(load_mocap_as_gt));
   } else if (dataset_type == "bag") {
     return DatasetIoInterfacePtr(new RosbagIO);
   } else if (dataset_type == "uzh") {

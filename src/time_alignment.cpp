@@ -1,3 +1,37 @@
+/**
+BSD 3-Clause License
+
+This file is part of the Basalt project.
+https://gitlab.com/VladyslavUsenko/basalt.git
+
+Copyright (c) 2019, Vladyslav Usenko, Michael Loipführer and Nikolaus Demmel.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
+
+* Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+
+* Neither the name of the copyright holder nor the names of its
+  contributors may be used to endorse or promote products derived from
+  this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
 
 #include <pangolin/display/image_view.h>
 #include <pangolin/gl/gldraw.h>
@@ -137,7 +171,7 @@ int main(int argc, char **argv) {
   }
 
   basalt::DatasetIoInterfacePtr dataset_io =
-      basalt::DatasetIoFactory::getDatasetIo(dataset_type);
+      basalt::DatasetIoFactory::getDatasetIo(dataset_type, true);
 
   dataset_io->read(dataset_path);
   vio_dataset = dataset_io->get_data();
@@ -380,11 +414,18 @@ int main(int argc, char **argv) {
 
     pangolin::Var<bool> show_error("ui.show_error", false, false, true);
 
+    std::string save_button_name = "ui.save_aligned_dataset";
+    // Disable save_aligned_dataset button if GT data already exists
+    if (fs::exists(fs::path(dataset_path + "mav0/gt/data.csv"))) {
+      save_button_name += "(disabled)";
+    }
+
     pangolin::Var<std::function<void(void)>> save_aligned_dataset(
-        "ui.save_aligned_dataset", [&]() {
+        save_button_name, [&]() {
           if (fs::exists(fs::path(dataset_path + "mav0/gt/data.csv"))) {
-            std::cout << "Aligned grount truth data already exists, skipping."
-                      << std::endl;
+            std::cout << "Aligned ground-truth data already exists, skipping. "
+                         "If you want to run the calibration again delete "
+                      << dataset_path << "mav0/gt/ folder." << std::endl;
             return;
           }
           std::cout << "Saving aligned dataset in "

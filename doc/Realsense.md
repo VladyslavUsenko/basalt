@@ -141,7 +141,7 @@ You should be able to see that, despite some noise, rotational velocity computed
 You can also switch to the error function plot and see that there is a clear minimum corresponding to the computed time offset.
 ![t265_time_align_error](/doc/img/t265_time_align_error.png)
 
-**Note:** If you want to run the time alignment again you should delete the `~/t265_calib_data/sequence0/mav/gt` folder first.
+**Note:** If you want to run the time alignment again you should delete the `~/t265_calib_data/sequence0/mav/gt` folder first. If GT data already exist you will see the `save_aligned_dataset(disabled)` button which will **NOT** overwrite it.
 
 ## Running Visual-Inertial Odometry
 Now we can run the visual-inertial odometry on the recorded dataset:
