@@ -35,9 +35,9 @@ brew install librealsense
 ### Install and configure QtCreator
 Download and install QtCreator. On **Ubuntu 18.04** run:
 ```
-wget https://download.qt.io/official_releases/qtcreator/4.9/4.9.2/qt-creator-opensource-linux-x86_64-4.9.2.run
-chmod +x qt-creator-opensource-linux-x86_64-4.9.2.run
-./qt-creator-opensource-linux-x86_64-4.9.2.run
+wget https://download.qt.io/official_releases/qtcreator/4.10/4.10.0/qt-creator-opensource-linux-x86_64-4.10.0.run
+chmod +x qt-creator-opensource-linux-x86_64-4.10.0.run
+./qt-creator-opensource-linux-x86_64-4.10.0.run
 ```
 
 On **MacOS** run:
