@@ -84,7 +84,7 @@ To perform the calibration follow these steps:
 * `init_cam_extr` initialize transformations between multiple cameras.
 * `init_opt` initialize optimization.
 * `opt_until_converge` optimize until convergence.
-* `opt_cam_poses` some initial poses computed from the initialized intrinsics can be far from optimum and not converge to the right minimum. To improve the final result we can re-initialize poses with optimized intrinsics.
+* `init_cam_poses` some initial poses computed from the initialized intrinsics can be far from optimum and not converge to the right minimum. To improve the final result we can re-initialize poses with optimized intrinsics.
 * `init_opt` initialize optimization with new initial poses.
 * `opt_until_converge` optimize until convergence.
 * `compute_vign` after optimizing geometric models compute the vignetting of the cameras.
