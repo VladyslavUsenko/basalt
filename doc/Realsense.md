@@ -84,7 +84,7 @@ To perform the calibration follow these steps:
 * `init_cam_extr` initialize transformations between multiple cameras.
 * `init_opt` initialize optimization.
 * `opt_until_converge` optimize until convergence.
-* `opt_cam_poses` some initial poses computed from the initialized intrinsics can be far from optimum and not converge to the right minimum. To improve the final result we can re-initialize poses with optimized intrinsics.
+* `init_cam_poses` some initial poses computed from the initialized intrinsics can be far from optimum and not converge to the right minimum. To improve the final result we can re-initialize poses with optimized intrinsics.
 * `init_opt` initialize optimization with new initial poses.
 * `opt_until_converge` optimize until convergence.
 * `compute_vign` after optimizing geometric models compute the vignetting of the cameras.
@@ -141,7 +141,7 @@ You should be able to see that, despite some noise, rotational velocity computed
 You can also switch to the error function plot and see that there is a clear minimum corresponding to the computed time offset.
 ![t265_time_align_error](/doc/img/t265_time_align_error.png)
 
-**Note:** If you want to run the time alignment again you should delete the `~/t265_calib_data/sequence0/mav/gt` folder first.
+**Note:** If you want to run the time alignment again you should delete the `~/t265_calib_data/sequence0/mav/gt` folder first. If GT data already exist you will see the `save_aligned_dataset(disabled)` button which will **NOT** overwrite it.
 
 ## Running Visual-Inertial Odometry
 Now we can run the visual-inertial odometry on the recorded dataset:
