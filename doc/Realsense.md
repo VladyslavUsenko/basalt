@@ -1,6 +1,6 @@
 # Tutorial on Camera-IMU and Motion Capture Calibration with Realsense T265
 
-![Realsense](doc/img/realsense_setup.jpg)
+![Realsense](/doc/img/realsense_setup.jpg)
 
 In this tutorial we explain how to perform photometric and geometric calibration of the multi-camera setup and then calibrate the transformations between cameras, IMU and the motion capture marker setup. To make sure the calibration is successful we recommend to rigidly attach markers to the camera as shown on the figure above.
 
