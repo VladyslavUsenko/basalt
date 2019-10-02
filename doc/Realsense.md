@@ -27,7 +27,7 @@ basalt_rs_t265_record --dataset-path ~/t265_calib_data/ --manual-exposure
 * `--dataset-path` specifies the location where the recorded dataset will be stored. In this case it will be stored in `~/t265_calib_data/<current_timestamp>/`.
 * `--manual-exposure` disables the autoexposure. In this tutorial the autoexposure is disabled for all calibration sequences, but for the VIO sequence (sequence0) we enable it.
 
-![t265_record](doc/img/t265_record.png)
+![t265_record](/doc/img/t265_record.png)
 
 The GUI elements have the following meaning:
 * `webp_quality` compression quality. The highest value (101) means lossless compression. For photometric calibration it is important not to have any compression artifacts, so we record these calibration sequences with lossless compression.
@@ -59,7 +59,7 @@ Run the response function calibration:
 basalt_response_calib.py -d ~/t265_calib_data/response_calib
 ```
 You should see the response function and the irradiance image similar to the one shown below. For the details of the algorithm see Section 2.3.1 of [[arXiv:1607.02555]](https://arxiv.org/abs/1607.02555). The results suggest that the response function used in the camera is linear. 
-![t265_inv_resp_irradiance](doc/img/t265_inv_resp_irradiance.png)
+![t265_inv_resp_irradiance](/doc/img/t265_inv_resp_irradiance.png)
 
 ## Multi-Camera Geometric and Vignette Calibration
 For the camera calibration we need to record a dataset with a static aprilgrid pattern.
@@ -96,7 +96,7 @@ To perform the calibration follow these steps:
 ## IMU and Motion Capture Calibration
 After calibrating cameras we can proceed to geometric and time calibration of the cameras, IMU and motion capture system. Setting up the motion capture system is specific for your setup. 
 
-For the motion capture recording we use [ros_vrpn_client](https://github.com/ethz-asl/ros_vrpn_client) with [basalt_capture_mocap.py](scripts/basalt_capture_mocap.py). We record the data to the `mocap0` folder and then move it to the `mav0` directory of the camera dataset. This script is provided as an example. Motion capture setup is different in every particular case.
+For the motion capture recording we use [ros_vrpn_client](https://github.com/ethz-asl/ros_vrpn_client) with [basalt_capture_mocap.py](/scripts/basalt_capture_mocap.py). We record the data to the `mocap0` folder and then move it to the `mav0` directory of the camera dataset. This script is provided as an example. Motion capture setup is different in every particular case.
 
 **Important for recording the dataset:**
 * Set the `skip_frames` slider to 1 to use the full framerate.
