@@ -1,3 +1,37 @@
+/**
+BSD 3-Clause License
+
+This file is part of the Basalt project.
+https://gitlab.com/VladyslavUsenko/basalt.git
+
+Copyright (c) 2019, Vladyslav Usenko, Michael Loipführer and Nikolaus Demmel.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
+
+* Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+
+* Neither the name of the copyright holder nor the names of its
+  contributors may be used to endorse or promote products derived from
+  this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
 
 #include <pangolin/display/image_view.h>
 #include <pangolin/gl/gldraw.h>
@@ -66,8 +100,6 @@ int main(int argc, char **argv) {
   std::string output_gyro_path;
   std::string output_mocap_path;
 
-  bool save_new_gt = false;
-
   double max_offset_s = 10.0;
 
   bool show_gui = true;
@@ -97,13 +129,15 @@ int main(int argc, char **argv) {
                  "Maximum offset for a grid search in seconds.");
 
   app.add_flag("--show-gui", show_gui, "Show GUI for debugging");
-  app.add_flag("--save-gt", save_new_gt,
-               "Save time aligned data to mav0/gt/ folder");
 
   try {
     app.parse(argc, argv);
   } catch (const CLI::ParseError &e) {
     return app.exit(e);
+  }
+
+  if (!dataset_path.empty() && dataset_path[dataset_path.length() - 1] != '/') {
+    dataset_path += '/';
   }
 
   basalt::VioDatasetPtr vio_dataset;
@@ -137,7 +171,7 @@ int main(int argc, char **argv) {
   }
 
   basalt::DatasetIoInterfacePtr dataset_io =
-      basalt::DatasetIoFactory::getDatasetIo(dataset_type);
+      basalt::DatasetIoFactory::getDatasetIo(dataset_type, true);
 
   dataset_io->read(dataset_path);
   vio_dataset = dataset_io->get_data();
@@ -355,30 +389,6 @@ int main(int argc, char **argv) {
     }
   }
 
-  if (save_new_gt) {
-    fs::create_directory(dataset_path + "/mav0/gt/");
-
-    std::ofstream f(dataset_path + "/mav0/gt/data.csv");
-
-    for (size_t i = 0; i < vio_dataset->get_gt_timestamps().size(); i++) {
-      const int64_t corrected_time = vio_dataset->get_gt_timestamps()[i] +
-                                     vio_dataset->get_mocap_to_imu_offset_ns() +
-                                     best_offset_refined_ns;
-
-      if (corrected_time >= min_time && corrected_time <= max_time) {
-        const Sophus::SE3d &p = vio_dataset->get_gt_pose_data()[i];
-
-        f << corrected_time << ',' << p.translation().x() << ','
-          << p.translation().y() << ',' << p.translation().z() << ','
-          << p.unit_quaternion().w() << ',' << p.unit_quaternion().x() << ','
-          << p.unit_quaternion().y() << ',' << p.unit_quaternion().z()
-          << std::endl;
-      }
-    }
-
-    f.close();
-  }
-
   if (show_gui) {
     static constexpr int UI_WIDTH = 280;
 
@@ -404,11 +414,18 @@ int main(int argc, char **argv) {
 
     pangolin::Var<bool> show_error("ui.show_error", false, false, true);
 
+    std::string save_button_name = "ui.save_aligned_dataset";
+    // Disable save_aligned_dataset button if GT data already exists
+    if (fs::exists(fs::path(dataset_path + "mav0/gt/data.csv"))) {
+      save_button_name += "(disabled)";
+    }
+
     pangolin::Var<std::function<void(void)>> save_aligned_dataset(
-        "ui.save_aligned_dataset", [&]() {
+        save_button_name, [&]() {
           if (fs::exists(fs::path(dataset_path + "mav0/gt/data.csv"))) {
-            std::cout << "Aligned grount truth data already exists, skipping."
-                      << std::endl;
+            std::cout << "Aligned ground-truth data already exists, skipping. "
+                         "If you want to run the calibration again delete "
+                      << dataset_path << "mav0/gt/ folder." << std::endl;
             return;
           }
           std::cout << "Saving aligned dataset in "

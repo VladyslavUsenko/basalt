@@ -148,7 +148,7 @@ class EurocVioDataset : public VioDataset {
 
 class EurocIO : public DatasetIoInterface {
  public:
-  EurocIO() {}
+  EurocIO(bool load_mocap_as_gt) : load_mocap_as_gt(load_mocap_as_gt) {}
 
   void read(const std::string &path) {
     if (!fs::exists(path))
@@ -163,9 +163,10 @@ class EurocIO : public DatasetIoInterface {
 
     read_imu_data(path + "/mav0/imu0/");
 
-    if (file_exists(path + "/mav0/state_groundtruth_estimate0/data.csv")) {
+    if (!load_mocap_as_gt &&
+        file_exists(path + "/mav0/state_groundtruth_estimate0/data.csv")) {
       read_gt_data_state(path + "/mav0/state_groundtruth_estimate0/");
-    } else if (file_exists(path + "/mav0/gt/data.csv")) {
+    } else if (!load_mocap_as_gt && file_exists(path + "/mav0/gt/data.csv")) {
       read_gt_data_pose(path + "/mav0/gt/");
     } else if (file_exists(path + "/mav0/mocap0/data.csv")) {
       read_gt_data_pose(path + "/mav0/mocap0/");
@@ -304,6 +305,7 @@ class EurocIO : public DatasetIoInterface {
   }
 
   std::shared_ptr<EurocVioDataset> data;
+  bool load_mocap_as_gt;
 };  // namespace basalt
 
 }  // namespace basalt

@@ -148,7 +148,8 @@ typedef std::shared_ptr<DatasetIoInterface> DatasetIoInterfacePtr;
 
 class DatasetIoFactory {
  public:
-  static DatasetIoInterfacePtr getDatasetIo(const std::string &dataset_type);
+  static DatasetIoInterfacePtr getDatasetIo(const std::string &dataset_type,
+                                            bool load_mocap_as_gt = false);
 };
 
 }  // namespace basalt
