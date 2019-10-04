@@ -80,13 +80,14 @@ struct LinearizeSplineOpt : public LinearizeBase<Scalar> {
 
   typedef Se3Spline<N, Scalar> SplineT;
 
-  typedef typename Eigen::deque<PoseData>::const_iterator PoseDataIter;
-  typedef typename Eigen::deque<GyroData>::const_iterator GyroDataIter;
-  typedef typename Eigen::deque<AccelData>::const_iterator AccelDataIter;
-  typedef typename Eigen::deque<AprilgridCornersData>::const_iterator
-      AprilgridCornersDataIter;
+  typedef typename Eigen::aligned_deque<PoseData>::const_iterator PoseDataIter;
+  typedef typename Eigen::aligned_deque<GyroData>::const_iterator GyroDataIter;
   typedef
-      typename Eigen::deque<MocapPoseData>::const_iterator MocapPoseDataIter;
+      typename Eigen::aligned_deque<AccelData>::const_iterator AccelDataIter;
+  typedef typename Eigen::aligned_deque<AprilgridCornersData>::const_iterator
+      AprilgridCornersDataIter;
+  typedef typename Eigen::aligned_deque<MocapPoseData>::const_iterator
+      MocapPoseDataIter;
 
   // typedef typename LinearizeBase<Scalar>::PoseCalibH PoseCalibH;
   typedef typename LinearizeBase<Scalar>::CalibCommonData CalibCommonData;
@@ -519,7 +520,7 @@ struct LinearizeSplineOpt : public LinearizeBase<Scalar> {
 
       const SE3 T_mark_moc_meas = pm.data.inverse();
 
-      Vector6 residual = Sophus::logd(T_mark_moc_meas * T_moc_mark);
+      Vector6 residual = Sophus::se3_logd(T_mark_moc_meas * T_moc_mark);
 
       // TODO: check derivatives
       Matrix6 d_res_d_T_i_mark;
@@ -659,13 +660,14 @@ struct ComputeErrorSplineOpt : public LinearizeBase<Scalar> {
 
   typedef Se3Spline<N, Scalar> SplineT;
 
-  typedef typename Eigen::deque<PoseData>::const_iterator PoseDataIter;
-  typedef typename Eigen::deque<GyroData>::const_iterator GyroDataIter;
-  typedef typename Eigen::deque<AccelData>::const_iterator AccelDataIter;
-  typedef typename Eigen::deque<AprilgridCornersData>::const_iterator
-      AprilgridCornersDataIter;
+  typedef typename Eigen::aligned_deque<PoseData>::const_iterator PoseDataIter;
+  typedef typename Eigen::aligned_deque<GyroData>::const_iterator GyroDataIter;
   typedef
-      typename Eigen::deque<MocapPoseData>::const_iterator MocapPoseDataIter;
+      typename Eigen::aligned_deque<AccelData>::const_iterator AccelDataIter;
+  typedef typename Eigen::aligned_deque<AprilgridCornersData>::const_iterator
+      AprilgridCornersDataIter;
+  typedef typename Eigen::aligned_deque<MocapPoseData>::const_iterator
+      MocapPoseDataIter;
 
   // typedef typename LinearizeBase<Scalar>::PoseCalibH PoseCalibH;
   typedef typename LinearizeBase<Scalar>::CalibCommonData CalibCommonData;
@@ -822,7 +824,7 @@ struct ComputeErrorSplineOpt : public LinearizeBase<Scalar> {
 
       const SE3 T_mark_moc_meas = pm.data.inverse();
 
-      Vector6 residual = Sophus::logd(T_mark_moc_meas * T_moc_mark);
+      Vector6 residual = Sophus::se3_logd(T_mark_moc_meas * T_moc_mark);
 
       const Scalar& mocap_var_inv = this->common_data.mocap_var_inv;
 

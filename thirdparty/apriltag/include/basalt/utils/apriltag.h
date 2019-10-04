@@ -14,9 +14,9 @@ class ApriltagDetector {
   ~ApriltagDetector();
 
   void detectTags(basalt::ManagedImage<uint16_t>& img_raw,
-                  Eigen::vector<Eigen::Vector2d>& corners,
+                  Eigen::aligned_vector<Eigen::Vector2d>& corners,
                   std::vector<int>& ids, std::vector<double>& radii,
-                  Eigen::vector<Eigen::Vector2d>& corners_rejected,
+                  Eigen::aligned_vector<Eigen::Vector2d>& corners_rejected,
                   std::vector<int>& ids_rejected,
                   std::vector<double>& radii_rejected);
 

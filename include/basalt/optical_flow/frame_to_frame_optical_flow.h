@@ -176,15 +176,16 @@ class FrameToFrameOpticalFlow : public OpticalFlowBase {
     frame_counter++;
   }
 
-  void trackPoints(
-      const basalt::ManagedImagePyr<u_int16_t>& pyr_1,
-      const basalt::ManagedImagePyr<u_int16_t>& pyr_2,
-      const Eigen::map<KeypointId, Eigen::AffineCompact2f>& transform_map_1,
-      Eigen::map<KeypointId, Eigen::AffineCompact2f>& transform_map_2) const {
+  void trackPoints(const basalt::ManagedImagePyr<u_int16_t>& pyr_1,
+                   const basalt::ManagedImagePyr<u_int16_t>& pyr_2,
+                   const Eigen::aligned_map<KeypointId, Eigen::AffineCompact2f>&
+                       transform_map_1,
+                   Eigen::aligned_map<KeypointId, Eigen::AffineCompact2f>&
+                       transform_map_2) const {
     size_t num_points = transform_map_1.size();
 
     std::vector<KeypointId> ids;
-    Eigen::vector<Eigen::AffineCompact2f> init_vec;
+    Eigen::aligned_vector<Eigen::AffineCompact2f> init_vec;
 
     ids.reserve(num_points);
     init_vec.reserve(num_points);
@@ -292,7 +293,7 @@ class FrameToFrameOpticalFlow : public OpticalFlowBase {
   }
 
   void addPoints() {
-    Eigen::vector<Eigen::Vector2d> pts0;
+    Eigen::aligned_vector<Eigen::Vector2d> pts0;
 
     for (const auto& kv : transforms->observations.at(0)) {
       pts0.emplace_back(kv.second.translation().cast<double>());
@@ -303,7 +304,8 @@ class FrameToFrameOpticalFlow : public OpticalFlowBase {
     detectKeypoints(pyramid->at(0).lvl(0), kd,
                     config.optical_flow_detection_grid_size, 1, pts0);
 
-    Eigen::map<KeypointId, Eigen::AffineCompact2f> new_poses0, new_poses1;
+    Eigen::aligned_map<KeypointId, Eigen::AffineCompact2f> new_poses0,
+        new_poses1;
 
     for (size_t i = 0; i < kd.corners.size(); i++) {
       Eigen::AffineCompact2f transform;
@@ -331,7 +333,7 @@ class FrameToFrameOpticalFlow : public OpticalFlowBase {
     std::set<KeypointId> lm_to_remove;
 
     std::vector<KeypointId> kpid;
-    Eigen::vector<Eigen::Vector2f> proj0, proj1;
+    Eigen::aligned_vector<Eigen::Vector2f> proj0, proj1;
 
     for (const auto& kv : transforms->observations.at(1)) {
       auto it = transforms->observations.at(0).find(kv.first);
@@ -343,7 +345,7 @@ class FrameToFrameOpticalFlow : public OpticalFlowBase {
       }
     }
 
-    Eigen::vector<Eigen::Vector4f> p3d0, p3d1;
+    Eigen::aligned_vector<Eigen::Vector4f> p3d0, p3d1;
     std::vector<bool> p3d0_success, p3d1_success;
 
     calib.intrinsics[0].unproject(proj0, p3d0, p3d0_success);

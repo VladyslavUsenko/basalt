@@ -74,23 +74,23 @@ using basalt::POSE_VEL_BIAS_SIZE;
 
 Eigen::Vector3d g(0, 0, -9.81);
 
-const Eigen::vector<Eigen::Vector2i> image_resolutions = {{752, 480},
-                                                          {752, 480}};
+const Eigen::aligned_vector<Eigen::Vector2i> image_resolutions = {{752, 480},
+                                                                  {752, 480}};
 
 basalt::VioConfig vio_config;
 basalt::NfrMapper::Ptr nrf_mapper;
 
-Eigen::vector<Eigen::Vector3d> gt_frame_t_w_i;
+Eigen::aligned_vector<Eigen::Vector3d> gt_frame_t_w_i;
 std::vector<int64_t> gt_frame_t_ns, image_t_ns;
 
-Eigen::vector<Eigen::Vector3d> mapper_points;
+Eigen::aligned_vector<Eigen::Vector3d> mapper_points;
 std::vector<int> mapper_point_ids;
 
 std::map<int64_t, basalt::MargData::Ptr> marg_data;
 
-Eigen::vector<Eigen::Vector3d> edges_vis;
-Eigen::vector<Eigen::Vector3d> roll_pitch_vis;
-Eigen::vector<Eigen::Vector3d> rel_edges_vis;
+Eigen::aligned_vector<Eigen::Vector3d> edges_vis;
+Eigen::aligned_vector<Eigen::Vector3d> roll_pitch_vis;
+Eigen::aligned_vector<Eigen::Vector3d> rel_edges_vis;
 
 void draw_image_overlay(pangolin::View& v, size_t cam_id);
 void draw_scene();
@@ -642,7 +642,7 @@ void optimize() {
 }
 
 double alignButton() {
-  Eigen::vector<Eigen::Vector3d> filter_t_w_i;
+  Eigen::aligned_vector<Eigen::Vector3d> filter_t_w_i;
   std::vector<int64_t> filter_t_ns;
 
   for (const auto& kv : nrf_mapper->getFramePoses()) {

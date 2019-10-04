@@ -79,7 +79,7 @@ struct ImageData {
 };
 
 struct Observations {
-  Eigen::vector<Eigen::Vector2d> pos;
+  Eigen::aligned_vector<Eigen::Vector2d> pos;
   std::vector<int> id;
 };
 
@@ -111,7 +111,7 @@ struct AprilgridCornersData {
   int64_t timestamp_ns;
   int cam_id;
 
-  Eigen::vector<Eigen::Vector2d> corner_pos;
+  Eigen::aligned_vector<Eigen::Vector2d> corner_pos;
   std::vector<int> corner_id;
 };
 
@@ -123,10 +123,11 @@ class VioDataset {
 
   virtual std::vector<int64_t> &get_image_timestamps() = 0;
 
-  virtual const Eigen::vector<AccelData> &get_accel_data() const = 0;
-  virtual const Eigen::vector<GyroData> &get_gyro_data() const = 0;
+  virtual const Eigen::aligned_vector<AccelData> &get_accel_data() const = 0;
+  virtual const Eigen::aligned_vector<GyroData> &get_gyro_data() const = 0;
   virtual const std::vector<int64_t> &get_gt_timestamps() const = 0;
-  virtual const Eigen::vector<Sophus::SE3d> &get_gt_pose_data() const = 0;
+  virtual const Eigen::aligned_vector<Sophus::SE3d> &get_gt_pose_data()
+      const = 0;
   virtual int64_t get_mocap_to_imu_offset_ns() const = 0;
   virtual std::vector<ImageData> get_image_data(int64_t t_ns) = 0;
 

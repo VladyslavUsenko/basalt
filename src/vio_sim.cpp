@@ -97,12 +97,12 @@ std::normal_distribution<> obs_noise_dist{0, obs_std_dev};
 
 basalt::Se3Spline<5> gt_spline(int64_t(knot_time * 1e9));
 
-Eigen::vector<Eigen::Vector3d> gt_points;
-Eigen::vector<Sophus::SE3d> gt_frame_T_w_i;
-Eigen::vector<Eigen::Vector3d> gt_frame_t_w_i, vio_t_w_i;
+Eigen::aligned_vector<Eigen::Vector3d> gt_points;
+Eigen::aligned_vector<Sophus::SE3d> gt_frame_T_w_i;
+Eigen::aligned_vector<Eigen::Vector3d> gt_frame_t_w_i, vio_t_w_i;
 std::vector<int64_t> gt_frame_t_ns;
-Eigen::vector<Eigen::Vector3d> gt_accel, gt_gyro, gt_accel_bias, gt_gyro_bias,
-    noisy_accel, noisy_gyro, gt_vel;
+Eigen::aligned_vector<Eigen::Vector3d> gt_accel, gt_gyro, gt_accel_bias,
+    gt_gyro_bias, noisy_accel, noisy_gyro, gt_vel;
 std::vector<int64_t> gt_imu_t_ns;
 
 std::map<basalt::TimeCamId, basalt::SimObservations> gt_observations;
@@ -730,7 +730,7 @@ void gen_data() {
 
       int64_t t_ns = gt_spline.getDtNs();
 
-      Eigen::vector<Sophus::SE3d> knots;
+      Eigen::aligned_vector<Sophus::SE3d> knots;
       for (size_t i = 0; i < gt_spline.numKnots(); i++) {
         knots.push_back(gt_spline.getKnot(i));
       }

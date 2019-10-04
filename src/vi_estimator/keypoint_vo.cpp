@@ -487,8 +487,10 @@ void KeypointVoEstimator::marginalize(
       {
         // Linearize points
 
-        Eigen::map<TimeCamId,
-                   Eigen::map<TimeCamId, Eigen::vector<KeypointObservation>>>
+        Eigen::aligned_map<
+            TimeCamId,
+            Eigen::aligned_map<TimeCamId,
+                               Eigen::aligned_vector<KeypointObservation>>>
             obs_to_lin;
 
         for (auto it = lmdb.getObservations().cbegin();
@@ -503,7 +505,7 @@ void KeypointVoEstimator::marginalize(
         }
 
         double rld_error;
-        Eigen::vector<RelLinData> rld_vec;
+        Eigen::aligned_vector<RelLinData> rld_vec;
 
         linearizeHelper(rld_vec, obs_to_lin, rld_error);
 
@@ -651,13 +653,13 @@ void KeypointVoEstimator::optimize() {
       auto t1 = std::chrono::high_resolution_clock::now();
 
       double rld_error;
-      Eigen::vector<RelLinData> rld_vec;
+      Eigen::aligned_vector<RelLinData> rld_vec;
       linearizeHelper(rld_vec, lmdb.getObservations(), rld_error);
 
       BundleAdjustmentBase::LinearizeAbsReduce<DenseAccumulator<double>> lopt(
           aom);
 
-      tbb::blocked_range<Eigen::vector<RelLinData>::iterator> range(
+      tbb::blocked_range<Eigen::aligned_vector<RelLinData>::iterator> range(
           rld_vec.begin(), rld_vec.end());
 
       tbb::parallel_reduce(range, lopt);
@@ -836,7 +838,7 @@ void KeypointVoEstimator::optimize() {
 }  // namespace basalt
 
 void KeypointVoEstimator::computeProjections(
-    std::vector<Eigen::vector<Eigen::Vector4d>>& data) const {
+    std::vector<Eigen::aligned_vector<Eigen::Vector4d>>& data) const {
   for (const auto& kv : lmdb.getObservations()) {
     const TimeCamId& tcid_h = kv.first;
 

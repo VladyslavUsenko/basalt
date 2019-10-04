@@ -154,9 +154,10 @@ void detectKeypointsMapping(const basalt::Image<const uint16_t>& img_raw,
   }
 }
 
-void detectKeypoints(const basalt::Image<const uint16_t>& img_raw,
-                     KeypointsData& kd, int PATCH_SIZE, int num_points_cell,
-                     const Eigen::vector<Eigen::Vector2d>& current_points) {
+void detectKeypoints(
+    const basalt::Image<const uint16_t>& img_raw, KeypointsData& kd,
+    int PATCH_SIZE, int num_points_cell,
+    const Eigen::aligned_vector<Eigen::Vector2d>& current_points) {
   kd.corners.clear();
   kd.corner_angles.clear();
   kd.corner_descriptors.clear();

@@ -227,9 +227,10 @@ void BundleAdjustmentBase::computeError(
 }
 
 void BundleAdjustmentBase::linearizeHelper(
-    Eigen::vector<RelLinData>& rld_vec,
-    const Eigen::map<TimeCamId,
-                     Eigen::map<TimeCamId, Eigen::vector<KeypointObservation>>>&
+    Eigen::aligned_vector<RelLinData>& rld_vec,
+    const Eigen::aligned_map<
+        TimeCamId, Eigen::aligned_map<
+                       TimeCamId, Eigen::aligned_vector<KeypointObservation>>>&
         obs_to_lin,
     double& error) const {
   error = 0;
@@ -422,7 +423,8 @@ void BundleAdjustmentBase::linearizeRel(const RelLinData& rld,
 }
 
 void BundleAdjustmentBase::get_current_points(
-    Eigen::vector<Eigen::Vector3d>& points, std::vector<int>& ids) const {
+    Eigen::aligned_vector<Eigen::Vector3d>& points,
+    std::vector<int>& ids) const {
   points.clear();
   ids.clear();
 
@@ -632,8 +634,8 @@ void BundleAdjustmentBase::computeMargPriorError(
 Eigen::VectorXd BundleAdjustmentBase::checkNullspace(
     const Eigen::MatrixXd& H, const Eigen::VectorXd& b,
     const AbsOrderMap& order,
-    const Eigen::map<int64_t, PoseVelBiasStateWithLin>& frame_states,
-    const Eigen::map<int64_t, PoseStateWithLin>& frame_poses) {
+    const Eigen::aligned_map<int64_t, PoseVelBiasStateWithLin>& frame_states,
+    const Eigen::aligned_map<int64_t, PoseStateWithLin>& frame_poses) {
   BASALT_ASSERT(size_t(H.cols()) == order.total_size);
   size_t marg_size = order.total_size;
 

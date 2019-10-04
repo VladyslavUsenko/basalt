@@ -154,13 +154,14 @@ void CamCalib::initGui() {
 }
 
 void CamCalib::computeVign() {
-  Eigen::vector<Eigen::Vector2d> optical_centers;
+  Eigen::aligned_vector<Eigen::Vector2d> optical_centers;
   for (size_t i = 0; i < calib_opt->calib->intrinsics.size(); i++) {
     optical_centers.emplace_back(
         calib_opt->calib->intrinsics[i].getParam().segment<2>(2));
   }
 
-  std::map<TimeCamId, Eigen::vector<Eigen::Vector3d>> reprojected_vignette2;
+  std::map<TimeCamId, Eigen::aligned_vector<Eigen::Vector3d>>
+      reprojected_vignette2;
   for (size_t i = 0; i < vio_dataset->get_image_timestamps().size(); i++) {
     int64_t timestamp_ns = vio_dataset->get_image_timestamps()[i];
     const std::vector<ImageData> img_vec =
@@ -172,7 +173,7 @@ void CamCalib::computeVign() {
       auto it = reprojected_vignette.find(tcid);
 
       if (it != reprojected_vignette.end() && img_vec[j].img.get()) {
-        Eigen::vector<Eigen::Vector3d> rv;
+        Eigen::aligned_vector<Eigen::Vector3d> rv;
         rv.resize(it->second.corners_proj.size());
 
         for (size_t k = 0; k < it->second.corners_proj.size(); k++) {
@@ -314,7 +315,7 @@ void CamCalib::computeProjections() {
       TimeCamId tcid(timestamp_ns, i);
 
       ProjectedCornerData rc, rv;
-      Eigen::vector<Eigen::Vector2d> polar_azimuthal_angle;
+      Eigen::aligned_vector<Eigen::Vector2d> polar_azimuthal_angle;
 
       Sophus::SE3d T_c_w_ =
           (calib_opt->getT_w_i(timestamp_ns) * calib_opt->calib->T_i_c[i])
@@ -498,7 +499,7 @@ void CamCalib::initCamIntrinsics() {
       }
     }
 
-    Eigen::vector<Eigen::Vector2i> res;
+    Eigen::aligned_vector<Eigen::Vector2i> res;
 
     for (size_t i = 0; i < vio_dataset->get_num_cams(); i++) {
       res.emplace_back(img_data[i].img->w, img_data[i].img->h);

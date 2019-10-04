@@ -63,7 +63,7 @@ struct LinearizePosesOpt : public LinearizeBase<Scalar> {
   typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1> VectorX;
   typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> MatrixX;
 
-  typedef typename Eigen::vector<AprilgridCornersData>::const_iterator
+  typedef typename Eigen::aligned_vector<AprilgridCornersData>::const_iterator
       AprilgridCornersDataIter;
 
   typedef typename LinearizeBase<Scalar>::CalibCommonData CalibCommonData;
@@ -75,11 +75,12 @@ struct LinearizePosesOpt : public LinearizeBase<Scalar> {
 
   size_t opt_size;
 
-  const Eigen::unordered_map<int64_t, SE3>& timestam_to_pose;
+  const Eigen::aligned_unordered_map<int64_t, SE3>& timestam_to_pose;
 
-  LinearizePosesOpt(size_t opt_size,
-                    const Eigen::unordered_map<int64_t, SE3>& timestam_to_pose,
-                    const CalibCommonData& common_data)
+  LinearizePosesOpt(
+      size_t opt_size,
+      const Eigen::aligned_unordered_map<int64_t, SE3>& timestam_to_pose,
+      const CalibCommonData& common_data)
       : opt_size(opt_size), timestam_to_pose(timestam_to_pose) {
     this->common_data = common_data;
     accum.reset(opt_size);
@@ -191,7 +192,7 @@ struct ComputeErrorPosesOpt : public LinearizeBase<Scalar> {
   typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1> VectorX;
   typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> MatrixX;
 
-  typedef typename Eigen::vector<AprilgridCornersData>::const_iterator
+  typedef typename Eigen::aligned_vector<AprilgridCornersData>::const_iterator
       AprilgridCornersDataIter;
 
   typedef typename LinearizeBase<Scalar>::CalibCommonData CalibCommonData;
@@ -202,11 +203,11 @@ struct ComputeErrorPosesOpt : public LinearizeBase<Scalar> {
 
   size_t opt_size;
 
-  const Eigen::unordered_map<int64_t, SE3>& timestam_to_pose;
+  const Eigen::aligned_unordered_map<int64_t, SE3>& timestam_to_pose;
 
   ComputeErrorPosesOpt(
       size_t opt_size,
-      const Eigen::unordered_map<int64_t, SE3>& timestam_to_pose,
+      const Eigen::aligned_unordered_map<int64_t, SE3>& timestam_to_pose,
       const CalibCommonData& common_data)
       : opt_size(opt_size), timestam_to_pose(timestam_to_pose) {
     this->common_data = common_data;

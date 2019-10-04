@@ -92,8 +92,9 @@ class LandmarkDatabase {
   std::vector<KeypointPosition> getLandmarksForHost(
       const TimeCamId& tcid) const;
 
-  const Eigen::map<TimeCamId,
-                   Eigen::map<TimeCamId, Eigen::vector<KeypointObservation>>>&
+  const Eigen::aligned_map<
+      TimeCamId, Eigen::aligned_map<
+                     TimeCamId, Eigen::aligned_vector<KeypointObservation>>>&
   getObservations() const;
 
   bool landmarkExists(int lm_id) const;
@@ -117,15 +118,16 @@ class LandmarkDatabase {
   }
 
  private:
-  Eigen::unordered_map<int, KeypointPosition> kpts;
-  Eigen::map<TimeCamId,
-             Eigen::map<TimeCamId, Eigen::vector<KeypointObservation>>>
+  Eigen::aligned_unordered_map<int, KeypointPosition> kpts;
+  Eigen::aligned_map<
+      TimeCamId,
+      Eigen::aligned_map<TimeCamId, Eigen::aligned_vector<KeypointObservation>>>
       obs;
 
   std::unordered_map<TimeCamId, std::set<int>> host_to_kpts;
 
   int num_observations = 0;
-  Eigen::unordered_map<int, int> kpts_num_obs;
+  Eigen::aligned_unordered_map<int, int> kpts_num_obs;
 };
 
 }  // namespace basalt

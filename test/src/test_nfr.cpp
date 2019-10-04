@@ -22,11 +22,11 @@ std::normal_distribution<> gyro_noise_dist{0, gyro_std_dev};
 std::normal_distribution<> accel_noise_dist{0, accel_std_dev};
 
 TEST(PreIntegrationTestSuite, RelPoseTest) {
-  Sophus::SE3d T_w_i = Sophus::expd(Sophus::Vector6d::Random());
-  Sophus::SE3d T_w_j = Sophus::expd(Sophus::Vector6d::Random());
+  Sophus::SE3d T_w_i = Sophus::se3_expd(Sophus::Vector6d::Random());
+  Sophus::SE3d T_w_j = Sophus::se3_expd(Sophus::Vector6d::Random());
 
-  Sophus::SE3d T_i_j =
-      Sophus::expd(Sophus::Vector6d::Random() / 100) * T_w_i.inverse() * T_w_j;
+  Sophus::SE3d T_i_j = Sophus::se3_expd(Sophus::Vector6d::Random() / 100) *
+                       T_w_i.inverse() * T_w_j;
 
   Sophus::Matrix6d d_res_d_T_w_i, d_res_d_T_w_j;
   basalt::relPoseError(T_i_j, T_w_i, T_w_j, &d_res_d_T_w_i, &d_res_d_T_w_j);
@@ -61,7 +61,7 @@ TEST(PreIntegrationTestSuite, RelPoseTest) {
 }
 
 TEST(PreIntegrationTestSuite, AbsPositionTest) {
-  Sophus::SE3d T_w_i = Sophus::expd(Sophus::Vector6d::Random());
+  Sophus::SE3d T_w_i = Sophus::se3_expd(Sophus::Vector6d::Random());
 
   Eigen::Vector3d pos = T_w_i.translation() + Eigen::Vector3d::Random() / 10;
 
@@ -84,12 +84,12 @@ TEST(PreIntegrationTestSuite, AbsPositionTest) {
 }
 
 TEST(PreIntegrationTestSuite, YawTest) {
-  Sophus::SE3d T_w_i = Sophus::expd(Sophus::Vector6d::Random());
+  Sophus::SE3d T_w_i = Sophus::se3_expd(Sophus::Vector6d::Random());
 
   Eigen::Vector3d yaw_dir_body =
       T_w_i.so3().inverse() * Eigen::Vector3d::UnitX();
 
-  T_w_i = Sophus::expd(Sophus::Vector6d::Random() / 100) * T_w_i;
+  T_w_i = Sophus::se3_expd(Sophus::Vector6d::Random() / 100) * T_w_i;
 
   Sophus::Matrix<double, 1, 6> d_res_d_T_w_i;
   basalt::yawError(T_w_i, yaw_dir_body, &d_res_d_T_w_i);
@@ -112,11 +112,11 @@ TEST(PreIntegrationTestSuite, YawTest) {
 }
 
 TEST(PreIntegrationTestSuite, RollPitchTest) {
-  Sophus::SE3d T_w_i = Sophus::expd(Sophus::Vector6d::Random());
+  Sophus::SE3d T_w_i = Sophus::se3_expd(Sophus::Vector6d::Random());
 
   Sophus::SO3d R_w_i = T_w_i.so3();
 
-  T_w_i = Sophus::expd(Sophus::Vector6d::Random() / 100) * T_w_i;
+  T_w_i = Sophus::se3_expd(Sophus::Vector6d::Random() / 100) * T_w_i;
 
   Sophus::Matrix<double, 2, 6> d_res_d_T_w_i;
   basalt::rollPitchError(T_w_i, R_w_i, &d_res_d_T_w_i);

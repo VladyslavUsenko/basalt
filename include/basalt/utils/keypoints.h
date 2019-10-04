@@ -53,11 +53,11 @@ typedef std::bitset<256> Descriptor;
 void detectKeypointsMapping(const basalt::Image<const uint16_t>& img_raw,
                             KeypointsData& kd, int num_features);
 
-void detectKeypoints(const basalt::Image<const uint16_t>& img_raw,
-                     KeypointsData& kd, int PATCH_SIZE = 32,
-                     int num_points_cell = 1,
-                     const Eigen::vector<Eigen::Vector2d>& current_points =
-                         Eigen::vector<Eigen::Vector2d>());
+void detectKeypoints(
+    const basalt::Image<const uint16_t>& img_raw, KeypointsData& kd,
+    int PATCH_SIZE = 32, int num_points_cell = 1,
+    const Eigen::aligned_vector<Eigen::Vector2d>& current_points =
+        Eigen::aligned_vector<Eigen::Vector2d>());
 
 void computeAngles(const basalt::Image<const uint16_t>& img_raw,
                    KeypointsData& kd, bool rotate_features);

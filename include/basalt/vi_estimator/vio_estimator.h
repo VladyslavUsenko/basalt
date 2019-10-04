@@ -46,15 +46,15 @@ struct VioVisualizationData {
 
   int64_t t_ns;
 
-  Eigen::vector<Sophus::SE3d> states;
-  Eigen::vector<Sophus::SE3d> frames;
+  Eigen::aligned_vector<Sophus::SE3d> states;
+  Eigen::aligned_vector<Sophus::SE3d> frames;
 
-  Eigen::vector<Eigen::Vector3d> points;
+  Eigen::aligned_vector<Eigen::Vector3d> points;
   std::vector<int> point_ids;
 
   OpticalFlowResult::Ptr opt_flow_res;
 
-  std::vector<Eigen::vector<Eigen::Vector4d>> projections;
+  std::vector<Eigen::aligned_vector<Eigen::Vector4d>> projections;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
@@ -105,7 +105,7 @@ class VioEstimatorFactory {
 };
 
 double alignSVD(const std::vector<int64_t>& filter_t_ns,
-                const Eigen::vector<Eigen::Vector3d>& filter_t_w_i,
+                const Eigen::aligned_vector<Eigen::Vector3d>& filter_t_w_i,
                 const std::vector<int64_t>& gt_t_ns,
-                Eigen::vector<Eigen::Vector3d>& gt_t_w_i);
+                Eigen::aligned_vector<Eigen::Vector3d>& gt_t_w_i);
 }  // namespace basalt

@@ -270,8 +270,8 @@ struct MargData {
   AbsOrderMap aom;
   Eigen::MatrixXd abs_H;
   Eigen::VectorXd abs_b;
-  Eigen::map<int64_t, PoseVelBiasStateWithLin> frame_states;
-  Eigen::map<int64_t, PoseStateWithLin> frame_poses;
+  Eigen::aligned_map<int64_t, PoseVelBiasStateWithLin> frame_states;
+  Eigen::aligned_map<int64_t, PoseStateWithLin> frame_poses;
   std::set<int64_t> kfs_all;
   std::set<int64_t> kfs_to_marg;
   bool use_imu;

@@ -55,11 +55,11 @@ VioEstimatorBase::Ptr VioEstimatorFactory::getVioEstimator(
 }
 
 double alignSVD(const std::vector<int64_t>& filter_t_ns,
-                const Eigen::vector<Eigen::Vector3d>& filter_t_w_i,
+                const Eigen::aligned_vector<Eigen::Vector3d>& filter_t_w_i,
                 const std::vector<int64_t>& gt_t_ns,
-                Eigen::vector<Eigen::Vector3d>& gt_t_w_i) {
-  Eigen::vector<Eigen::Vector3d> est_associations;
-  Eigen::vector<Eigen::Vector3d> gt_associations;
+                Eigen::aligned_vector<Eigen::Vector3d>& gt_t_w_i) {
+  Eigen::aligned_vector<Eigen::Vector3d> est_associations;
+  Eigen::aligned_vector<Eigen::Vector3d> gt_associations;
 
   for (size_t i = 0; i < filter_t_w_i.size(); i++) {
     int64_t t_ns = filter_t_ns[i];

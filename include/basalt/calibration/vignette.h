@@ -47,12 +47,13 @@ class VignetteEstimator {
   static const int64_t knot_spacing = 1e10;
   static const int border_size = 2;
 
-  VignetteEstimator(const VioDatasetPtr &vio_dataset,
-                    const Eigen::vector<Eigen::Vector2d> &optical_centers,
-                    const Eigen::vector<Eigen::Vector2i> &resolutions,
-                    const std::map<TimeCamId, Eigen::vector<Eigen::Vector3d>>
-                        &reprojected_vignette,
-                    const AprilGrid &april_grid);
+  VignetteEstimator(
+      const VioDatasetPtr &vio_dataset,
+      const Eigen::aligned_vector<Eigen::Vector2d> &optical_centers,
+      const Eigen::aligned_vector<Eigen::Vector2i> &resolutions,
+      const std::map<TimeCamId, Eigen::aligned_vector<Eigen::Vector3d>>
+          &reprojected_vignette,
+      const AprilGrid &april_grid);
 
   void compute_error(std::map<TimeCamId, std::vector<double>>
                          *reprojected_vignette_error = nullptr);
@@ -75,9 +76,10 @@ class VignetteEstimator {
 
  private:
   const VioDatasetPtr vio_dataset;
-  Eigen::vector<Eigen::Vector2d> optical_centers;
-  Eigen::vector<Eigen::Vector2i> resolutions;
-  std::map<TimeCamId, Eigen::vector<Eigen::Vector3d>> reprojected_vignette;
+  Eigen::aligned_vector<Eigen::Vector2d> optical_centers;
+  Eigen::aligned_vector<Eigen::Vector2i> resolutions;
+  std::map<TimeCamId, Eigen::aligned_vector<Eigen::Vector3d>>
+      reprojected_vignette;
   const AprilGrid &april_grid;
 
   size_t vign_size;

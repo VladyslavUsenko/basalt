@@ -39,9 +39,9 @@ ApriltagDetector::~ApriltagDetector() { delete data; }
 
 void ApriltagDetector::detectTags(
     basalt::ManagedImage<uint16_t>& img_raw,
-    Eigen::vector<Eigen::Vector2d>& corners, std::vector<int>& ids,
+    Eigen::aligned_vector<Eigen::Vector2d>& corners, std::vector<int>& ids,
     std::vector<double>& radii,
-    Eigen::vector<Eigen::Vector2d>& corners_rejected,
+    Eigen::aligned_vector<Eigen::Vector2d>& corners_rejected,
     std::vector<int>& ids_rejected, std::vector<double>& radii_rejected) {
   corners.clear();
   ids.clear();

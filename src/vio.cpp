@@ -121,11 +121,11 @@ tbb::concurrent_bounded_queue<basalt::VioVisualizationData::Ptr> out_vis_queue;
 tbb::concurrent_bounded_queue<basalt::PoseVelBiasState::Ptr> out_state_queue;
 
 std::vector<int64_t> vio_t_ns;
-Eigen::vector<Eigen::Vector3d> vio_t_w_i;
-Eigen::vector<Sophus::SE3d> vio_T_w_i;
+Eigen::aligned_vector<Eigen::Vector3d> vio_t_w_i;
+Eigen::aligned_vector<Sophus::SE3d> vio_T_w_i;
 
 std::vector<int64_t> gt_t_ns;
-Eigen::vector<Eigen::Vector3d> gt_t_w_i;
+Eigen::aligned_vector<Eigen::Vector3d> gt_t_w_i;
 
 std::string marg_data_path;
 size_t last_frame_processed = 0;
@@ -640,8 +640,8 @@ void draw_image_overlay(pangolin::View& v, size_t cam_id) {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     if (it != vis_map.end()) {
-      const Eigen::map<basalt::KeypointId, Eigen::AffineCompact2f>& kp_map =
-          it->second->opt_flow_res->observations[cam_id];
+      const Eigen::aligned_map<basalt::KeypointId, Eigen::AffineCompact2f>&
+          kp_map = it->second->opt_flow_res->observations[cam_id];
 
       for (const auto& kv : kp_map) {
         Eigen::MatrixXf transformed_patch =
@@ -678,8 +678,8 @@ void draw_scene(pangolin::View& view) {
 
   glColor3ubv(cam_color);
   if (!vio_t_w_i.empty()) {
-    Eigen::vector<Eigen::Vector3d> sub_gt(vio_t_w_i.begin(),
-                                          vio_t_w_i.begin() + show_frame);
+    Eigen::aligned_vector<Eigen::Vector3d> sub_gt(
+        vio_t_w_i.begin(), vio_t_w_i.begin() + show_frame);
     pangolin::glDrawLineStrip(sub_gt);
   }
 

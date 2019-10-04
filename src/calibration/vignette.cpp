@@ -41,9 +41,9 @@ namespace basalt {
 
 VignetteEstimator::VignetteEstimator(
     const VioDatasetPtr &vio_dataset,
-    const Eigen::vector<Eigen::Vector2d> &optical_centers,
-    const Eigen::vector<Eigen::Vector2i> &resolutions,
-    const std::map<TimeCamId, Eigen::vector<Eigen::Vector3d>>
+    const Eigen::aligned_vector<Eigen::Vector2d> &optical_centers,
+    const Eigen::aligned_vector<Eigen::Vector2i> &resolutions,
+    const std::map<TimeCamId, Eigen::aligned_vector<Eigen::Vector3d>>
         &reprojected_vignette,
     const AprilGrid &april_grid)
     : vio_dataset(vio_dataset),

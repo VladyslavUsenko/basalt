@@ -164,15 +164,16 @@ class PatchOpticalFlow : public OpticalFlowBase {
     frame_counter++;
   }
 
-  void trackPoints(
-      const basalt::ManagedImagePyr<u_int16_t>& pyr_1,
-      const basalt::ManagedImagePyr<u_int16_t>& pyr_2,
-      const Eigen::map<KeypointId, Eigen::AffineCompact2f>& transform_map_1,
-      Eigen::map<KeypointId, Eigen::AffineCompact2f>& transform_map_2) const {
+  void trackPoints(const basalt::ManagedImagePyr<u_int16_t>& pyr_1,
+                   const basalt::ManagedImagePyr<u_int16_t>& pyr_2,
+                   const Eigen::aligned_map<KeypointId, Eigen::AffineCompact2f>&
+                       transform_map_1,
+                   Eigen::aligned_map<KeypointId, Eigen::AffineCompact2f>&
+                       transform_map_2) const {
     size_t num_points = transform_map_1.size();
 
     std::vector<KeypointId> ids;
-    Eigen::vector<Eigen::AffineCompact2f> init_vec;
+    Eigen::aligned_vector<Eigen::AffineCompact2f> init_vec;
 
     ids.reserve(num_points);
     init_vec.reserve(num_points);
@@ -191,7 +192,7 @@ class PatchOpticalFlow : public OpticalFlowBase {
         const Eigen::AffineCompact2f& transform_1 = init_vec[r];
         Eigen::AffineCompact2f transform_2 = transform_1;
 
-        const Eigen::vector<PatchT>& patch_vec = patches.at(id);
+        const Eigen::aligned_vector<PatchT>& patch_vec = patches.at(id);
 
         bool valid = trackPoint(pyr_2, patch_vec, transform_2);
 
@@ -223,7 +224,7 @@ class PatchOpticalFlow : public OpticalFlowBase {
   }
 
   inline bool trackPoint(const basalt::ManagedImagePyr<uint16_t>& pyr,
-                         const Eigen::vector<PatchT>& patch_vec,
+                         const Eigen::aligned_vector<PatchT>& patch_vec,
                          Eigen::AffineCompact2f& transform) const {
     bool patch_valid = true;
 
@@ -276,7 +277,7 @@ class PatchOpticalFlow : public OpticalFlowBase {
   }
 
   void addPoints() {
-    Eigen::vector<Eigen::Vector2d> pts0;
+    Eigen::aligned_vector<Eigen::Vector2d> pts0;
 
     for (const auto& kv : transforms->observations.at(0)) {
       pts0.emplace_back(kv.second.translation().cast<double>());
@@ -287,10 +288,11 @@ class PatchOpticalFlow : public OpticalFlowBase {
     detectKeypoints(pyramid->at(0).lvl(0), kd,
                     config.optical_flow_detection_grid_size, 1, pts0);
 
-    Eigen::map<KeypointId, Eigen::AffineCompact2f> new_poses0, new_poses1;
+    Eigen::aligned_map<KeypointId, Eigen::AffineCompact2f> new_poses0,
+        new_poses1;
 
     for (size_t i = 0; i < kd.corners.size(); i++) {
-      Eigen::vector<PatchT>& p = patches[last_keypoint_id];
+      Eigen::aligned_vector<PatchT>& p = patches[last_keypoint_id];
 
       Vector2 pos = kd.corners[i].cast<Scalar>();
 
@@ -325,7 +327,7 @@ class PatchOpticalFlow : public OpticalFlowBase {
     std::set<KeypointId> lm_to_remove;
 
     std::vector<KeypointId> kpid;
-    Eigen::vector<Eigen::Vector2d> proj0, proj1;
+    Eigen::aligned_vector<Eigen::Vector2d> proj0, proj1;
 
     for (const auto& kv : transforms->observations.at(1)) {
       auto it = transforms->observations.at(0).find(kv.first);
@@ -337,7 +339,7 @@ class PatchOpticalFlow : public OpticalFlowBase {
       }
     }
 
-    Eigen::vector<Eigen::Vector4d> p3d0, p3d1;
+    Eigen::aligned_vector<Eigen::Vector4d> p3d0, p3d1;
     std::vector<bool> p3d0_success, p3d1_success;
 
     calib.intrinsics[0].unproject(proj0, p3d0, p3d0_success);
@@ -372,7 +374,8 @@ class PatchOpticalFlow : public OpticalFlowBase {
   VioConfig config;
   basalt::Calibration<double> calib;
 
-  Eigen::unordered_map<KeypointId, Eigen::vector<PatchT>> patches;
+  Eigen::aligned_unordered_map<KeypointId, Eigen::aligned_vector<PatchT>>
+      patches;
 
   OpticalFlowResult::Ptr transforms;
   std::shared_ptr<std::vector<basalt::ManagedImagePyr<u_int16_t>>> old_pyramid,

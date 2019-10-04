@@ -55,11 +55,11 @@ basalt::Calibration<double> calib;
 basalt::MocapCalibration<double> mocap_calib;
 
 // Linear time version
-double compute_error(int64_t offset,
-                     const std::vector<int64_t> &gyro_timestamps,
-                     const Eigen::vector<Eigen::Vector3d> &gyro_data,
-                     const std::vector<int64_t> &mocap_rot_vel_timestamps,
-                     const Eigen::vector<Eigen::Vector3d> &mocap_rot_vel_data) {
+double compute_error(
+    int64_t offset, const std::vector<int64_t> &gyro_timestamps,
+    const Eigen::aligned_vector<Eigen::Vector3d> &gyro_data,
+    const std::vector<int64_t> &mocap_rot_vel_timestamps,
+    const Eigen::aligned_vector<Eigen::Vector3d> &mocap_rot_vel_data) {
   double error = 0;
   int num_points = 0;
 
@@ -177,10 +177,10 @@ int main(int argc, char **argv) {
   vio_dataset = dataset_io->get_data();
 
   std::vector<int64_t> gyro_timestamps;
-  Eigen::vector<Eigen::Vector3d> gyro_data;
+  Eigen::aligned_vector<Eigen::Vector3d> gyro_data;
 
   std::vector<int64_t> mocap_rot_vel_timestamps;
-  Eigen::vector<Eigen::Vector3d> mocap_rot_vel_data;
+  Eigen::aligned_vector<Eigen::Vector3d> mocap_rot_vel_data;
 
   // Apply calibration to gyro
   {

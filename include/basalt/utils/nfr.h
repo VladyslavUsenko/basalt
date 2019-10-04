@@ -45,7 +45,7 @@ inline Sophus::Vector6d relPoseError(
     const Sophus::SE3d& T_w_j, Sophus::Matrix6d* d_res_d_T_w_i = nullptr,
     Sophus::Matrix6d* d_res_d_T_w_j = nullptr) {
   Sophus::SE3d T_j_i = T_w_j.inverse() * T_w_i;
-  Sophus::Vector6d res = Sophus::logd(T_i_j * T_j_i);
+  Sophus::Vector6d res = Sophus::se3_logd(T_i_j * T_j_i);
 
   if (d_res_d_T_w_i || d_res_d_T_w_j) {
     Sophus::Matrix6d J;

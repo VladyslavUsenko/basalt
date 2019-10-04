@@ -145,8 +145,9 @@ const KeypointPosition &LandmarkDatabase::getLandmark(int lm_id) const {
   return kpts.at(lm_id);
 }
 
-const Eigen::map<TimeCamId,
-                 Eigen::map<TimeCamId, Eigen::vector<KeypointObservation> > >
+const Eigen::aligned_map<
+    TimeCamId,
+    Eigen::aligned_map<TimeCamId, Eigen::aligned_vector<KeypointObservation> > >
     &LandmarkDatabase::getObservations() const {
   return obs;
 }

@@ -100,7 +100,7 @@ tbb::concurrent_bounded_queue<basalt::VioVisualizationData::Ptr> out_vis_queue;
 tbb::concurrent_bounded_queue<basalt::PoseVelBiasState::Ptr> out_state_queue;
 
 std::vector<int64_t> vio_t_ns;
-Eigen::vector<Eigen::Vector3d> vio_t_w_i;
+Eigen::aligned_vector<Eigen::Vector3d> vio_t_w_i;
 
 std::string marg_data_path;
 
@@ -408,7 +408,8 @@ void draw_scene() {
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   glColor3ubv(cam_color);
-  Eigen::vector<Eigen::Vector3d> sub_gt(vio_t_w_i.begin(), vio_t_w_i.end());
+  Eigen::aligned_vector<Eigen::Vector3d> sub_gt(vio_t_w_i.begin(),
+                                                vio_t_w_i.end());
   pangolin::glDrawLineStrip(sub_gt);
 
   if (curr_vis_data.get()) {

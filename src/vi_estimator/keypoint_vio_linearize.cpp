@@ -40,8 +40,8 @@ namespace basalt {
 void KeypointVioEstimator::linearizeAbsIMU(
     const AbsOrderMap& aom, Eigen::MatrixXd& abs_H, Eigen::VectorXd& abs_b,
     double& imu_error, double& bg_error, double& ba_error,
-    const Eigen::map<int64_t, PoseVelBiasStateWithLin>& states,
-    const Eigen::map<int64_t, IntegratedImuMeasurement>& imu_meas,
+    const Eigen::aligned_map<int64_t, PoseVelBiasStateWithLin>& states,
+    const Eigen::aligned_map<int64_t, IntegratedImuMeasurement>& imu_meas,
     const Eigen::Vector3d& gyro_bias_weight,
     const Eigen::Vector3d& accel_bias_weight, const Eigen::Vector3d& g) {
   imu_error = 0;
@@ -179,8 +179,8 @@ void KeypointVioEstimator::linearizeAbsIMU(
 void KeypointVioEstimator::computeImuError(
     const AbsOrderMap& aom, double& imu_error, double& bg_error,
     double& ba_error,
-    const Eigen::map<int64_t, PoseVelBiasStateWithLin>& states,
-    const Eigen::map<int64_t, IntegratedImuMeasurement>& imu_meas,
+    const Eigen::aligned_map<int64_t, PoseVelBiasStateWithLin>& states,
+    const Eigen::aligned_map<int64_t, IntegratedImuMeasurement>& imu_meas,
     const Eigen::Vector3d& gyro_bias_weight,
     const Eigen::Vector3d& accel_bias_weight, const Eigen::Vector3d& g) {
   imu_error = 0;

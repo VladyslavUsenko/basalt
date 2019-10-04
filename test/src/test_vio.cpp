@@ -74,7 +74,7 @@ TEST(VioTestSuite, ImuNullspace2Test) {
 
   state1.t_ns = imu_meas.get_dt_ns();
   state1.T_w_i = gt_spline.pose(imu_meas.get_dt_ns()) *
-                 Sophus::expd(Sophus::Vector6d::Random() / 10);
+                 Sophus::se3_expd(Sophus::Vector6d::Random() / 10);
   state1.vel_w_i = gt_spline.transVelWorld(imu_meas.get_dt_ns()) +
                    Sophus::Vector3d::Random() / 10;
   state1.bias_gyro = bg;
@@ -86,9 +86,9 @@ TEST(VioTestSuite, ImuNullspace2Test) {
   Eigen::Vector3d accel_weight;
   accel_weight.setConstant(1e6);
 
-  Eigen::map<int64_t, basalt::IntegratedImuMeasurement> imu_meas_vec;
-  Eigen::map<int64_t, basalt::PoseVelBiasStateWithLin> frame_states;
-  Eigen::map<int64_t, basalt::PoseStateWithLin> frame_poses;
+  Eigen::aligned_map<int64_t, basalt::IntegratedImuMeasurement> imu_meas_vec;
+  Eigen::aligned_map<int64_t, basalt::PoseVelBiasStateWithLin> frame_states;
+  Eigen::aligned_map<int64_t, basalt::PoseStateWithLin> frame_poses;
 
   imu_meas_vec[state0.t_ns] = imu_meas;
   frame_states[state0.t_ns] = state0;
@@ -227,7 +227,7 @@ TEST(VioTestSuite, ImuNullspace3Test) {
 
   state1.t_ns = imu_meas1.get_dt_ns();
   state1.T_w_i = gt_spline.pose(state1.t_ns) *
-                 Sophus::expd(Sophus::Vector6d::Random() / 10);
+                 Sophus::se3_expd(Sophus::Vector6d::Random() / 10);
   state1.vel_w_i =
       gt_spline.transVelWorld(state1.t_ns) + Sophus::Vector3d::Random() / 10;
   state1.bias_gyro = bg;
@@ -235,7 +235,7 @@ TEST(VioTestSuite, ImuNullspace3Test) {
 
   state2.t_ns = imu_meas1.get_dt_ns() + imu_meas2.get_dt_ns();
   state2.T_w_i = gt_spline.pose(state2.t_ns) *
-                 Sophus::expd(Sophus::Vector6d::Random() / 10);
+                 Sophus::se3_expd(Sophus::Vector6d::Random() / 10);
   state2.vel_w_i =
       gt_spline.transVelWorld(state2.t_ns) + Sophus::Vector3d::Random() / 10;
   state2.bias_gyro = bg;
@@ -247,9 +247,9 @@ TEST(VioTestSuite, ImuNullspace3Test) {
   Eigen::Vector3d accel_weight;
   accel_weight.setConstant(1e6);
 
-  Eigen::map<int64_t, basalt::IntegratedImuMeasurement> imu_meas_vec;
-  Eigen::map<int64_t, basalt::PoseVelBiasStateWithLin> frame_states;
-  Eigen::map<int64_t, basalt::PoseStateWithLin> frame_poses;
+  Eigen::aligned_map<int64_t, basalt::IntegratedImuMeasurement> imu_meas_vec;
+  Eigen::aligned_map<int64_t, basalt::PoseVelBiasStateWithLin> frame_states;
+  Eigen::aligned_map<int64_t, basalt::PoseStateWithLin> frame_poses;
 
   imu_meas_vec[imu_meas1.get_start_t_ns()] = imu_meas1;
   imu_meas_vec[imu_meas2.get_start_t_ns()] = imu_meas2;
@@ -287,11 +287,11 @@ TEST(VioTestSuite, ImuNullspace3Test) {
 }
 
 TEST(VioTestSuite, RelPoseTest) {
-  Sophus::SE3d T_w_i_h = Sophus::expd(Sophus::Vector6d::Random());
-  Sophus::SE3d T_w_i_t = Sophus::expd(Sophus::Vector6d::Random());
+  Sophus::SE3d T_w_i_h = Sophus::se3_expd(Sophus::Vector6d::Random());
+  Sophus::SE3d T_w_i_t = Sophus::se3_expd(Sophus::Vector6d::Random());
 
-  Sophus::SE3d T_i_c_h = Sophus::expd(Sophus::Vector6d::Random() / 10);
-  Sophus::SE3d T_i_c_t = Sophus::expd(Sophus::Vector6d::Random() / 10);
+  Sophus::SE3d T_i_c_h = Sophus::se3_expd(Sophus::Vector6d::Random() / 10);
+  Sophus::SE3d T_i_c_t = Sophus::se3_expd(Sophus::Vector6d::Random() / 10);
 
   Sophus::Matrix6d d_rel_d_h, d_rel_d_t;
 
@@ -311,7 +311,7 @@ TEST(VioTestSuite, RelPoseTest) {
               basalt::KeypointVioEstimator::computeRelPose(T_w_h_new, T_i_c_h,
                                                            T_w_i_t, T_i_c_t);
 
-          return Sophus::logd(T_t_h_sophus_new * T_t_h_sophus.inverse());
+          return Sophus::se3_logd(T_t_h_sophus_new * T_t_h_sophus.inverse());
         },
         x0);
   }
@@ -328,7 +328,7 @@ TEST(VioTestSuite, RelPoseTest) {
           Sophus::SE3d T_t_h_sophus_new =
               basalt::KeypointVioEstimator::computeRelPose(T_w_i_h, T_i_c_h,
                                                            T_w_t_new, T_i_c_t);
-          return Sophus::logd(T_t_h_sophus_new * T_t_h_sophus.inverse());
+          return Sophus::se3_logd(T_t_h_sophus_new * T_t_h_sophus.inverse());
         },
         x0);
   }
@@ -345,8 +345,8 @@ TEST(VioTestSuite, LinearizePointsTest) {
   kpt_pos.dir = basalt::StereographicParam<double>::project(point3d);
   kpt_pos.id = 0.1231231;
 
-  Sophus::SE3d T_w_h = Sophus::expd(Sophus::Vector6d::Random() / 100);
-  Sophus::SE3d T_w_t = Sophus::expd(Sophus::Vector6d::Random() / 100);
+  Sophus::SE3d T_w_h = Sophus::se3_expd(Sophus::Vector6d::Random() / 100);
+  Sophus::SE3d T_w_t = Sophus::se3_expd(Sophus::Vector6d::Random() / 100);
   T_w_t.translation()[0] += 0.1;
 
   Sophus::SE3d T_t_h_sophus = T_w_t.inverse() * T_w_h;
@@ -374,7 +374,8 @@ TEST(VioTestSuite, LinearizePointsTest) {
     test_jacobian(
         "d_res_d_xi", d_res_d_xi,
         [&](const Sophus::Vector6d& x) {
-          Eigen::Matrix4d T_t_h_new = (Sophus::expd(x) * T_t_h_sophus).matrix();
+          Eigen::Matrix4d T_t_h_new =
+              (Sophus::se3_expd(x) * T_t_h_sophus).matrix();
 
           Eigen::Vector2d res;
           basalt::KeypointVioEstimator::linearizePoint(kpt_obs, kpt_pos,

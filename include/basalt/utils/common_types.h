@@ -102,7 +102,7 @@ struct KeypointsData {
   /// FeatureId)
   std::vector<std::bitset<256>> corner_descriptors;
 
-  Eigen::vector<Eigen::Vector4d> corners_3d;
+  Eigen::aligned_vector<Eigen::Vector4d> corners_3d;
 
   std::vector<FeatureHash> hashes;
   HashBowVector bow_vector;

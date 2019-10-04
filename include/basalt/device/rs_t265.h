@@ -105,7 +105,7 @@ class RsT265Device {
 
   int frame_counter = 0;
 
-  Eigen::deque<RsIMUData> gyro_data_queue;
+  Eigen::aligned_deque<RsIMUData> gyro_data_queue;
   std::shared_ptr<RsIMUData> prev_accel_data;
 
   std::shared_ptr<basalt::Calibration<double>> calib;

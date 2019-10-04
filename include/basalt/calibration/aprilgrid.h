@@ -41,8 +41,8 @@ namespace basalt {
 struct AprilGrid {
   AprilGrid(const std::string &config_path);
 
-  Eigen::vector<Eigen::Vector4d> aprilgrid_corner_pos_3d;
-  Eigen::vector<Eigen::Vector4d> aprilgrid_vignette_pos_3d;
+  Eigen::aligned_vector<Eigen::Vector4d> aprilgrid_corner_pos_3d;
+  Eigen::aligned_vector<Eigen::Vector4d> aprilgrid_vignette_pos_3d;
 
  private:
   int tagCols;        // number of apriltags

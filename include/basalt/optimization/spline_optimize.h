@@ -231,7 +231,7 @@ class SplineOptimization {
 
   SE3 getT_w_i(int64_t t_ns) { return spline.pose(t_ns); }
 
-  void setAprilgridCorners3d(const Eigen::vector<Eigen::Vector4d>& v) {
+  void setAprilgridCorners3d(const Eigen::aligned_vector<Eigen::Vector4d>& v) {
     aprilgrid_corner_pos_3d = v;
   }
 
@@ -270,7 +270,7 @@ class SplineOptimization {
 
   void addAprilgridMeasurement(
       int64_t t_ns, int cam_id,
-      const Eigen::vector<Eigen::Vector2d>& corners_pos,
+      const Eigen::aligned_vector<Eigen::Vector2d>& corners_pos,
       const std::vector<int>& corner_id) {
     min_time_us = std::min(min_time_us, t_ns);
     max_time_us = std::max(max_time_us, t_ns);
@@ -519,13 +519,14 @@ class SplineOptimization {
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
  private:
-  typedef typename Eigen::deque<PoseData>::const_iterator PoseDataIter;
-  typedef typename Eigen::deque<GyroData>::const_iterator GyroDataIter;
-  typedef typename Eigen::deque<AccelData>::const_iterator AccelDataIter;
-  typedef typename Eigen::deque<AprilgridCornersData>::const_iterator
-      AprilgridCornersDataIter;
+  typedef typename Eigen::aligned_deque<PoseData>::const_iterator PoseDataIter;
+  typedef typename Eigen::aligned_deque<GyroData>::const_iterator GyroDataIter;
   typedef
-      typename Eigen::deque<MocapPoseData>::const_iterator MocapPoseDataIter;
+      typename Eigen::aligned_deque<AccelData>::const_iterator AccelDataIter;
+  typedef typename Eigen::aligned_deque<AprilgridCornersData>::const_iterator
+      AprilgridCornersDataIter;
+  typedef typename Eigen::aligned_deque<MocapPoseData>::const_iterator
+      MocapPoseDataIter;
 
   void applyInc(VectorX& inc_full,
                 const std::vector<size_t>& offset_cam_intrinsics) {
@@ -550,7 +551,7 @@ class SplineOptimization {
     size_t T_i_c_block_offset =
         bias_block_offset + ACCEL_BIAS_SIZE + GYRO_BIAS_SIZE + G_SIZE;
     for (size_t i = 0; i < calib->T_i_c.size(); i++) {
-      calib->T_i_c[i] *= Sophus::expd(inc_full.template segment<POSE_SIZE>(
+      calib->T_i_c[i] *= Sophus::se3_expd(inc_full.template segment<POSE_SIZE>(
           T_i_c_block_offset + i * POSE_SIZE));
     }
 
@@ -561,9 +562,9 @@ class SplineOptimization {
 
     size_t mocap_block_offset = offset_cam_intrinsics.back();
 
-    mocap_calib->T_moc_w *=
-        Sophus::expd(inc_full.template segment<POSE_SIZE>(mocap_block_offset));
-    mocap_calib->T_i_mark *= Sophus::expd(
+    mocap_calib->T_moc_w *= Sophus::se3_expd(
+        inc_full.template segment<POSE_SIZE>(mocap_block_offset));
+    mocap_calib->T_i_mark *= Sophus::se3_expd(
         inc_full.template segment<POSE_SIZE>(mocap_block_offset + POSE_SIZE));
 
     mocap_calib->mocap_time_offset_ns +=
@@ -580,11 +581,11 @@ class SplineOptimization {
 
   int64_t min_time_us, max_time_us;
 
-  Eigen::deque<PoseData> pose_measurements;
-  Eigen::deque<GyroData> gyro_measurements;
-  Eigen::deque<AccelData> accel_measurements;
-  Eigen::deque<AprilgridCornersData> aprilgrid_corners_measurements;
-  Eigen::deque<MocapPoseData> mocap_measurements;
+  Eigen::aligned_deque<PoseData> pose_measurements;
+  Eigen::aligned_deque<GyroData> gyro_measurements;
+  Eigen::aligned_deque<AccelData> accel_measurements;
+  Eigen::aligned_deque<AprilgridCornersData> aprilgrid_corners_measurements;
+  Eigen::aligned_deque<MocapPoseData> mocap_measurements;
 
   typename LinearizeT::CalibCommonData ccd;
 
@@ -597,7 +598,7 @@ class SplineOptimization {
   SplineT spline;
   Vector3 g;
 
-  Eigen::vector<Eigen::Vector4d> aprilgrid_corner_pos_3d;
+  Eigen::aligned_vector<Eigen::Vector4d> aprilgrid_corner_pos_3d;
 
   int64_t dt_ns;
 };  // namespace basalt

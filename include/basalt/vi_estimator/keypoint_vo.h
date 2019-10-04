@@ -120,13 +120,13 @@ class KeypointVoEstimator : public VioEstimatorBase,
   // const MatNN get_cov() const { return cov.bottomRightCorner<N, N>(); }
 
   void computeProjections(
-      std::vector<Eigen::vector<Eigen::Vector4d>>& res) const;
+      std::vector<Eigen::aligned_vector<Eigen::Vector4d>>& res) const;
 
   inline void setMaxStates(size_t val) { max_states = val; }
   inline void setMaxKfs(size_t val) { max_kfs = val; }
 
-  Eigen::vector<Sophus::SE3d> getFrameStates() const {
-    Eigen::vector<Sophus::SE3d> res;
+  Eigen::aligned_vector<Sophus::SE3d> getFrameStates() const {
+    Eigen::aligned_vector<Sophus::SE3d> res;
 
     for (const auto& kv : frame_states) {
       res.push_back(kv.second.getState().T_w_i);
@@ -135,8 +135,8 @@ class KeypointVoEstimator : public VioEstimatorBase,
     return res;
   }
 
-  Eigen::vector<Sophus::SE3d> getFramePoses() const {
-    Eigen::vector<Sophus::SE3d> res;
+  Eigen::aligned_vector<Sophus::SE3d> getFramePoses() const {
+    Eigen::aligned_vector<Sophus::SE3d> res;
 
     for (const auto& kv : frame_poses) {
       res.push_back(kv.second.getPose());
@@ -145,8 +145,8 @@ class KeypointVoEstimator : public VioEstimatorBase,
     return res;
   }
 
-  Eigen::map<int64_t, Sophus::SE3d> getAllPosesMap() const {
-    Eigen::map<int64_t, Sophus::SE3d> res;
+  Eigen::aligned_map<int64_t, Sophus::SE3d> getAllPosesMap() const {
+    Eigen::aligned_map<int64_t, Sophus::SE3d> res;
 
     for (const auto& kv : frame_poses) {
       res[kv.first] = kv.second.getPose();
@@ -172,7 +172,7 @@ class KeypointVoEstimator : public VioEstimatorBase,
 
   // Input
 
-  Eigen::map<int64_t, OpticalFlowResult::Ptr> prev_opt_flow_res;
+  Eigen::aligned_map<int64_t, OpticalFlowResult::Ptr> prev_opt_flow_res;
 
   std::map<int64_t, int> num_points_kf;
 

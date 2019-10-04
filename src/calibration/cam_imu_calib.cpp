@@ -313,8 +313,8 @@ void CamImuCalib::initCamImuTransform() {
   }
 
   std::vector<int64_t> timestamps_cam;
-  Eigen::vector<Eigen::Vector3d> rot_vel_cam;
-  Eigen::vector<Eigen::Vector3d> rot_vel_imu;
+  Eigen::aligned_vector<Eigen::Vector3d> rot_vel_cam;
+  Eigen::aligned_vector<Eigen::Vector3d> rot_vel_imu;
 
   Sophus::SO3d R_i_c0_init = calib_opt->getCamT_i_c(0).so3();
 
@@ -492,8 +492,8 @@ void CamImuCalib::initMocap() {
 
   {
     std::vector<int64_t> timestamps_cam;
-    Eigen::vector<Eigen::Vector3d> rot_vel_mocap;
-    Eigen::vector<Eigen::Vector3d> rot_vel_imu;
+    Eigen::aligned_vector<Eigen::Vector3d> rot_vel_mocap;
+    Eigen::aligned_vector<Eigen::Vector3d> rot_vel_imu;
 
     Sophus::SO3d R_i_mark_init = calib_opt->mocap_calib->T_i_mark.so3();
 

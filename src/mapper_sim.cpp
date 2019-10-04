@@ -77,28 +77,28 @@ Eigen::Vector3d g(0, 0, -9.81);
 
 std::shared_ptr<basalt::Se3Spline<5>> gt_spline;
 
-Eigen::vector<Sophus::SE3d> gt_frame_T_w_i;
-Eigen::vector<Eigen::Vector3d> gt_frame_t_w_i, vio_t_w_i;
+Eigen::aligned_vector<Sophus::SE3d> gt_frame_T_w_i;
+Eigen::aligned_vector<Eigen::Vector3d> gt_frame_t_w_i, vio_t_w_i;
 std::vector<int64_t> gt_frame_t_ns;
 
-Eigen::vector<Eigen::Vector3d> gt_accel, gt_gyro, gt_accel_bias, gt_gyro_bias,
-    noisy_accel, noisy_gyro, gt_vel;
+Eigen::aligned_vector<Eigen::Vector3d> gt_accel, gt_gyro, gt_accel_bias,
+    gt_gyro_bias, noisy_accel, noisy_gyro, gt_vel;
 
 std::vector<int64_t> gt_imu_t_ns;
 
-Eigen::vector<Eigen::Vector3d> filter_points;
+Eigen::aligned_vector<Eigen::Vector3d> filter_points;
 std::vector<int> filter_point_ids;
 
 std::map<int64_t, basalt::MargData::Ptr> marg_data;
 
-Eigen::vector<basalt::RollPitchFactor> roll_pitch_factors;
-Eigen::vector<basalt::RelPoseFactor> rel_pose_factors;
+Eigen::aligned_vector<basalt::RollPitchFactor> roll_pitch_factors;
+Eigen::aligned_vector<basalt::RelPoseFactor> rel_pose_factors;
 
-Eigen::vector<Eigen::Vector3d> edges_vis;
-Eigen::vector<Eigen::Vector3d> roll_pitch_vis;
-Eigen::vector<Eigen::Vector3d> rel_edges_vis;
+Eigen::aligned_vector<Eigen::Vector3d> edges_vis;
+Eigen::aligned_vector<Eigen::Vector3d> roll_pitch_vis;
+Eigen::aligned_vector<Eigen::Vector3d> rel_edges_vis;
 
-Eigen::vector<Eigen::Vector3d> mapper_points;
+Eigen::aligned_vector<Eigen::Vector3d> mapper_points;
 std::vector<int> mapper_point_ids;
 
 basalt::NfrMapper::Ptr nrf_mapper;
@@ -282,7 +282,7 @@ void load_data(const std::string& calib_path, const std::string& cache_path) {
       cereal::JSONInputArchive archive(is);
 
       int64_t t_ns;
-      Eigen::vector<Sophus::SE3d> knots;
+      Eigen::aligned_vector<Sophus::SE3d> knots;
 
       archive(cereal::make_nvp("t_ns", t_ns));
       archive(cereal::make_nvp("knots", knots));
@@ -532,7 +532,7 @@ void optimize() {
 
 void randomInc() {
   Sophus::Vector6d rnd = Sophus::Vector6d::Random().array().abs();
-  Sophus::SE3d random_inc = Sophus::expd(rnd / 10);
+  Sophus::SE3d random_inc = Sophus::se3_expd(rnd / 10);
 
   for (auto& kv : nrf_mapper->getFramePoses()) {
     Sophus::SE3d pose = random_inc * kv.second.getPose();
@@ -548,7 +548,7 @@ void randomYawInc() {
   rnd.setZero();
   rnd[5] = std::abs(Eigen::Vector2d::Random()[0]);
 
-  Sophus::SE3d random_inc = Sophus::expd(rnd);
+  Sophus::SE3d random_inc = Sophus::se3_expd(rnd);
 
   std::cout << "random_inc\n" << random_inc.matrix() << std::endl;
 
@@ -562,7 +562,7 @@ void randomYawInc() {
 }
 
 double alignButton() {
-  Eigen::vector<Eigen::Vector3d> filter_t_w_i;
+  Eigen::aligned_vector<Eigen::Vector3d> filter_t_w_i;
   std::vector<int64_t> filter_t_ns;
 
   for (const auto& kv : nrf_mapper->getFramePoses()) {

@@ -55,17 +55,17 @@ class PosesOptimization {
   using VectorX = typename LinearizeT::VectorX;
 
   using AprilgridCornersDataIter =
-      typename Eigen::vector<AprilgridCornersData>::const_iterator;
+      typename Eigen::aligned_vector<AprilgridCornersData>::const_iterator;
 
  public:
   PosesOptimization()
       : lambda(1e-6), min_lambda(1e-12), max_lambda(100), lambda_vee(2) {}
 
   bool initializeIntrinsics(
-      size_t cam_id, const Eigen::vector<Eigen::Vector2d> &corners,
+      size_t cam_id, const Eigen::aligned_vector<Eigen::Vector2d> &corners,
       const std::vector<int> &corner_ids,
-      const Eigen::vector<Eigen::Vector4d> &aprilgrid_corner_pos_3d, int cols,
-      int rows) {
+      const Eigen::aligned_vector<Eigen::Vector4d> &aprilgrid_corner_pos_3d,
+      int cols, int rows) {
     Eigen::Vector4d init_intr;
 
     bool val = CalibHelper::initializeIntrinsics(
@@ -156,8 +156,8 @@ class PosesOptimization {
     int max_iter = 10;
 
     while (!step && max_iter > 0 && !converged) {
-      Eigen::unordered_map<int64_t, Sophus::SE3d> timestam_to_pose_backup =
-          timestam_to_pose;
+      Eigen::aligned_unordered_map<int64_t, Sophus::SE3d>
+          timestam_to_pose_backup = timestam_to_pose;
       Calibration<Scalar> calib_backup = *calib;
 
       Eigen::VectorXd Hdiag_lambda = Hdiag * lambda;
@@ -170,12 +170,12 @@ class PosesOptimization {
 
       for (auto &kv : timestam_to_pose) {
         kv.second *=
-            Sophus::expd(inc.segment<POSE_SIZE>(offset_poses[kv.first]));
+            Sophus::se3_expd(inc.segment<POSE_SIZE>(offset_poses[kv.first]));
       }
 
       for (size_t i = 0; i < calib->T_i_c.size(); i++) {
         calib->T_i_c[i] *=
-            Sophus::expd(inc.segment<POSE_SIZE>(offset_T_i_c[i]));
+            Sophus::se3_expd(inc.segment<POSE_SIZE>(offset_T_i_c[i]));
       }
 
       for (size_t i = 0; i < calib->intrinsics.size(); i++) {
@@ -264,7 +264,7 @@ class PosesOptimization {
       return it->second;
   }
 
-  void setAprilgridCorners3d(const Eigen::vector<Eigen::Vector4d> &v) {
+  void setAprilgridCorners3d(const Eigen::aligned_vector<Eigen::Vector4d> &v) {
     aprilgrid_corner_pos_3d = v;
   }
 
@@ -280,7 +280,7 @@ class PosesOptimization {
 
   void addAprilgridMeasurement(
       int64_t t_ns, int cam_id,
-      const Eigen::vector<Eigen::Vector2d> &corners_pos,
+      const Eigen::aligned_vector<Eigen::Vector2d> &corners_pos,
       const std::vector<int> &corner_id) {
     aprilgrid_corners_measurements.emplace_back();
 
@@ -298,7 +298,7 @@ class PosesOptimization {
     calib->vignette = vign;
   }
 
-  void setResolution(const Eigen::vector<Eigen::Vector2i> &resolution) {
+  void setResolution(const Eigen::aligned_vector<Eigen::Vector2i> &resolution) {
     calib->resolution = resolution;
   }
 
@@ -319,11 +319,11 @@ class PosesOptimization {
   std::vector<size_t> offset_T_i_c;
 
   // frame poses
-  Eigen::unordered_map<int64_t, Sophus::SE3d> timestam_to_pose;
+  Eigen::aligned_unordered_map<int64_t, Sophus::SE3d> timestam_to_pose;
 
-  Eigen::vector<AprilgridCornersData> aprilgrid_corners_measurements;
+  Eigen::aligned_vector<AprilgridCornersData> aprilgrid_corners_measurements;
 
-  Eigen::vector<Eigen::Vector4d> aprilgrid_corner_pos_3d;
+  Eigen::aligned_vector<Eigen::Vector4d> aprilgrid_corner_pos_3d;
 
 };  // namespace basalt
 

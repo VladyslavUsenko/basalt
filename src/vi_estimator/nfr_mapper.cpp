@@ -251,7 +251,7 @@ void NfrMapper::optimize(int num_iterations) {
     auto t1 = std::chrono::high_resolution_clock::now();
 
     double rld_error;
-    Eigen::vector<RelLinData> rld_vec;
+    Eigen::aligned_vector<RelLinData> rld_vec;
     linearizeHelper(rld_vec, lmdb.getObservations(), rld_error);
 
     //      SparseHashAccumulator<double> accum;
@@ -269,12 +269,12 @@ void NfrMapper::optimize(int num_iterations) {
 
     MapperLinearizeAbsReduce<SparseHashAccumulator<double>> lopt(aom,
                                                                  &frame_poses);
-    tbb::blocked_range<Eigen::vector<RelLinData>::iterator> range(
+    tbb::blocked_range<Eigen::aligned_vector<RelLinData>::iterator> range(
         rld_vec.begin(), rld_vec.end());
-    tbb::blocked_range<Eigen::vector<RollPitchFactor>::const_iterator> range1(
-        roll_pitch_factors.begin(), roll_pitch_factors.end());
-    tbb::blocked_range<Eigen::vector<RelPoseFactor>::const_iterator> range2(
-        rel_pose_factors.begin(), rel_pose_factors.end());
+    tbb::blocked_range<Eigen::aligned_vector<RollPitchFactor>::const_iterator>
+        range1(roll_pitch_factors.begin(), roll_pitch_factors.end());
+    tbb::blocked_range<Eigen::aligned_vector<RelPoseFactor>::const_iterator>
+        range2(rel_pose_factors.begin(), rel_pose_factors.end());
 
     tbb::parallel_reduce(range, lopt);
 
@@ -420,7 +420,7 @@ void NfrMapper::optimize(int num_iterations) {
   }
 }
 
-Eigen::map<int64_t, PoseStateWithLin>& NfrMapper::getFramePoses() {
+Eigen::aligned_map<int64_t, PoseStateWithLin>& NfrMapper::getFramePoses() {
   return frame_poses;
 }
 

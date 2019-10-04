@@ -88,12 +88,12 @@ std::mt19937 gen{1};
 
 basalt::Se3Spline<5> gt_spline(int64_t(knot_time * 1e9));
 
-Eigen::vector<Eigen::Vector3d> gt_points;
-Eigen::vector<Sophus::SE3d> gt_frame_T_w_i;
-Eigen::vector<Eigen::Vector3d> gt_frame_t_w_i, vio_t_w_i;
+Eigen::aligned_vector<Eigen::Vector3d> gt_points;
+Eigen::aligned_vector<Sophus::SE3d> gt_frame_T_w_i;
+Eigen::aligned_vector<Eigen::Vector3d> gt_frame_t_w_i, vio_t_w_i;
 std::vector<int64_t> gt_frame_t_ns, kf_t_ns;
-Eigen::vector<Eigen::Vector3d> gt_accel, gt_gyro, gt_accel_bias, gt_gyro_bias,
-    noisy_accel, noisy_gyro, gt_vel;
+Eigen::aligned_vector<Eigen::Vector3d> gt_accel, gt_gyro, gt_accel_bias,
+    gt_gyro_bias, noisy_accel, noisy_gyro, gt_vel;
 std::vector<int64_t> gt_imu_t_ns;
 
 std::map<basalt::TimeCamId, basalt::SimObservations> gt_observations;
@@ -356,7 +356,7 @@ int main(int argc, char** argv) {
   // t4.join();
 
   if (!result_path.empty()) {
-    Eigen::vector<Eigen::Vector3d> vio_t_w_i;
+    Eigen::aligned_vector<Eigen::Vector3d> vio_t_w_i;
 
     auto it = vis_map.find(kf_t_ns.back());
 
@@ -528,7 +528,7 @@ void gen_data() {
       cereal::JSONInputArchive archive(is);
 
       int64_t t_ns;
-      Eigen::vector<Sophus::SE3d> knots;
+      Eigen::aligned_vector<Sophus::SE3d> knots;
 
       archive(cereal::make_nvp("t_ns", t_ns));
       archive(cereal::make_nvp("knots", knots));
@@ -571,7 +571,7 @@ void gen_data() {
 
   mdl.start(marg_data_path);
 
-  Eigen::map<int64_t, Sophus::SE3d> tmp_poses;
+  Eigen::aligned_map<int64_t, Sophus::SE3d> tmp_poses;
 
   while (true) {
     basalt::MargData::Ptr data;
@@ -747,7 +747,7 @@ bool next_step() {
 }
 
 void alignButton() {
-  Eigen::vector<Eigen::Vector3d> vio_t_w_i;
+  Eigen::aligned_vector<Eigen::Vector3d> vio_t_w_i;
 
   auto it = vis_map.find(kf_t_ns.back());
 

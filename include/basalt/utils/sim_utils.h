@@ -39,7 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace basalt {
 
 struct SimObservations {
-  Eigen::vector<Eigen::Vector2d> pos;
+  Eigen::aligned_vector<Eigen::Vector2d> pos;
   std::vector<int> id;
 };
 

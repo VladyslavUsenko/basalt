@@ -50,7 +50,7 @@ inline void render_camera(const Eigen::Matrix4d& T_w_c, float lineWidth,
   const float sz = sizeFactor;
   const float width = 640, height = 480, fx = 500, fy = 500, cx = 320, cy = 240;
 
-  const Eigen::vector<Eigen::Vector3f> lines = {
+  const Eigen::aligned_vector<Eigen::Vector3f> lines = {
       {0, 0, 0},
       {sz * (0 - cx) / fx, sz * (0 - cy) / fy, sz},
       {0, 0, 0},

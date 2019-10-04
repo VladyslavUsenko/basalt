@@ -66,8 +66,8 @@ inline void load(Archive& ar, std::map<std::string, T, C, A>& map) {
 
 }  // namespace cereal
 
-Eigen::vector<Sophus::SE3d> load_poses(const std::string& path) {
-  Eigen::vector<Sophus::SE3d> res;
+Eigen::aligned_vector<Sophus::SE3d> load_poses(const std::string& path) {
+  Eigen::aligned_vector<Sophus::SE3d> res;
 
   std::ifstream f(path);
   std::string line;
@@ -90,8 +90,8 @@ Eigen::vector<Sophus::SE3d> load_poses(const std::string& path) {
 }
 
 void eval_kitti(const std::vector<double>& lengths,
-                const Eigen::vector<Sophus::SE3d>& poses_gt,
-                const Eigen::vector<Sophus::SE3d>& poses_result,
+                const Eigen::aligned_vector<Sophus::SE3d>& poses_gt,
+                const Eigen::aligned_vector<Sophus::SE3d>& poses_result,
                 std::map<std::string, std::map<std::string, double>>& res) {
   auto lastFrameFromSegmentLength = [](std::vector<float>& dist,
                                        int first_frame, float len) {
@@ -185,8 +185,9 @@ int main(int argc, char** argv) {
     return app.exit(e);
   }
 
-  const Eigen::vector<Sophus::SE3d> poses_gt = load_poses(gt_path);
-  const Eigen::vector<Sophus::SE3d> poses_result = load_poses(traj_path);
+  const Eigen::aligned_vector<Sophus::SE3d> poses_gt = load_poses(gt_path);
+  const Eigen::aligned_vector<Sophus::SE3d> poses_result =
+      load_poses(traj_path);
 
   if (poses_gt.empty() || poses_gt.size() != poses_result.size()) {
     std::cerr << "Wrong number of poses: poses_gt " << poses_gt.size()

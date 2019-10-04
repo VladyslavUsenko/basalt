@@ -45,8 +45,8 @@ class BundleAdjustmentBase {
   struct RelLinDataBase {
     std::vector<std::pair<TimeCamId, TimeCamId>> order;
 
-    Eigen::vector<Sophus::Matrix6d> d_rel_d_h;
-    Eigen::vector<Sophus::Matrix6d> d_rel_d_t;
+    Eigen::aligned_vector<Sophus::Matrix6d> d_rel_d_h;
+    Eigen::aligned_vector<Sophus::Matrix6d> d_rel_d_t;
   };
 
   struct FrameRelLinData {
@@ -54,7 +54,7 @@ class BundleAdjustmentBase {
     Sophus::Vector6d bp;
 
     std::vector<int> lm_id;
-    Eigen::vector<Eigen::Matrix<double, 6, 3>> Hpl;
+    Eigen::aligned_vector<Eigen::Matrix<double, 6, 3>> Hpl;
 
     FrameRelLinData() {
       Hpp.setZero();
@@ -88,11 +88,12 @@ class BundleAdjustmentBase {
       }
     }
 
-    Eigen::unordered_map<int, Eigen::Matrix3d> Hll;
-    Eigen::unordered_map<int, Eigen::Vector3d> bl;
-    Eigen::unordered_map<int, std::vector<std::pair<size_t, size_t>>> lm_to_obs;
+    Eigen::aligned_unordered_map<int, Eigen::Matrix3d> Hll;
+    Eigen::aligned_unordered_map<int, Eigen::Vector3d> bl;
+    Eigen::aligned_unordered_map<int, std::vector<std::pair<size_t, size_t>>>
+        lm_to_obs;
 
-    Eigen::vector<FrameRelLinData> Hpppl;
+    Eigen::aligned_vector<FrameRelLinData> Hpppl;
 
     double error;
   };
@@ -103,9 +104,11 @@ class BundleAdjustmentBase {
                     double outlier_threshold = 0) const;
 
   void linearizeHelper(
-      Eigen::vector<RelLinData>& rld_vec,
-      const Eigen::map<
-          TimeCamId, Eigen::map<TimeCamId, Eigen::vector<KeypointObservation>>>&
+      Eigen::aligned_vector<RelLinData>& rld_vec,
+      const Eigen::aligned_map<
+          TimeCamId,
+          Eigen::aligned_map<TimeCamId,
+                             Eigen::aligned_vector<KeypointObservation>>>&
           obs_to_lin,
       double& error) const;
 
@@ -227,7 +230,7 @@ class BundleAdjustmentBase {
                                      Sophus::Matrix6d* d_rel_d_h = nullptr,
                                      Sophus::Matrix6d* d_rel_d_t = nullptr);
 
-  void get_current_points(Eigen::vector<Eigen::Vector3d>& points,
+  void get_current_points(Eigen::aligned_vector<Eigen::Vector3d>& points,
                           std::vector<int>& ids) const;
 
   // Modifies abs_H and abs_b as a side effect.
@@ -254,8 +257,8 @@ class BundleAdjustmentBase {
   static Eigen::VectorXd checkNullspace(
       const Eigen::MatrixXd& marg_H, const Eigen::VectorXd& marg_b,
       const AbsOrderMap& marg_order,
-      const Eigen::map<int64_t, PoseVelBiasStateWithLin>& frame_states,
-      const Eigen::map<int64_t, PoseStateWithLin>& frame_poses);
+      const Eigen::aligned_map<int64_t, PoseVelBiasStateWithLin>& frame_states,
+      const Eigen::aligned_map<int64_t, PoseStateWithLin>& frame_poses);
 
   /// Triangulates the point and returns homogenous representation. First 3
   /// components - unit-length direction vector. Last component inverse
@@ -359,7 +362,7 @@ class BundleAdjustmentBase {
 
   template <class AccumT>
   struct LinearizeAbsReduce {
-    using RelLinDataIter = Eigen::vector<RelLinData>::iterator;
+    using RelLinDataIter = Eigen::aligned_vector<RelLinData>::iterator;
 
     LinearizeAbsReduce(AbsOrderMap& aom) : aom(aom) {
       accum.reset(aom.total_size);
@@ -414,8 +417,8 @@ class BundleAdjustmentBase {
     return PoseStateWithLin(it2->second);
   }
 
-  Eigen::map<int64_t, PoseVelBiasStateWithLin> frame_states;
-  Eigen::map<int64_t, PoseStateWithLin> frame_poses;
+  Eigen::aligned_map<int64_t, PoseVelBiasStateWithLin> frame_states;
+  Eigen::aligned_map<int64_t, PoseStateWithLin> frame_poses;
 
   // Point management
   LandmarkDatabase lmdb;

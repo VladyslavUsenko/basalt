@@ -293,8 +293,8 @@ void draw_image_overlay(pangolin::View& v, size_t cam_id) {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     if (observations.count(t_ns) > 0) {
-      const Eigen::map<basalt::KeypointId, Eigen::AffineCompact2f>& kp_map =
-          observations.at(t_ns)->observations[cam_id];
+      const Eigen::aligned_map<basalt::KeypointId, Eigen::AffineCompact2f>&
+          kp_map = observations.at(t_ns)->observations[cam_id];
 
       for (const auto& kv : kp_map) {
         Eigen::MatrixXf transformed_patch =

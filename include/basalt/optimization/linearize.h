@@ -72,10 +72,11 @@ struct LinearizeBase {
   typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1> VectorX;
   typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> MatrixX;
 
-  typedef typename Eigen::vector<PoseData>::const_iterator PoseDataIter;
-  typedef typename Eigen::vector<GyroData>::const_iterator GyroDataIter;
-  typedef typename Eigen::vector<AccelData>::const_iterator AccelDataIter;
-  typedef typename Eigen::vector<AprilgridCornersData>::const_iterator
+  typedef typename Eigen::aligned_vector<PoseData>::const_iterator PoseDataIter;
+  typedef typename Eigen::aligned_vector<GyroData>::const_iterator GyroDataIter;
+  typedef
+      typename Eigen::aligned_vector<AccelData>::const_iterator AccelDataIter;
+  typedef typename Eigen::aligned_vector<AprilgridCornersData>::const_iterator
       AprilgridCornersDataIter;
 
   template <int INTRINSICS_SIZE>
@@ -100,7 +101,8 @@ struct LinearizeBase {
   struct CalibCommonData {
     const Calibration<Scalar>* calibration = nullptr;
     const MocapCalibration<Scalar>* mocap_calibration = nullptr;
-    const Eigen::vector<Eigen::Vector4d>* aprilgrid_corner_pos_3d = nullptr;
+    const Eigen::aligned_vector<Eigen::Vector4d>* aprilgrid_corner_pos_3d =
+        nullptr;
 
     // Calib data
     const std::vector<size_t>* offset_T_i_c = nullptr;

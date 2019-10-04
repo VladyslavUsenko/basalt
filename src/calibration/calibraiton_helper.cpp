@@ -51,9 +51,10 @@ namespace basalt {
 
 template <class CamT>
 bool estimateTransformation(
-    const CamT &cam_calib, const Eigen::vector<Eigen::Vector2d> &corners,
+    const CamT &cam_calib,
+    const Eigen::aligned_vector<Eigen::Vector2d> &corners,
     const std::vector<int> &corner_ids,
-    const Eigen::vector<Eigen::Vector4d> &aprilgrid_corner_pos_3d,
+    const Eigen::aligned_vector<Eigen::Vector4d> &aprilgrid_corner_pos_3d,
     Sophus::SE3d &T_target_camera, size_t &num_inliers) {
   opengv::bearingVectors_t bearingVectors;
   opengv::points_t points;
@@ -140,7 +141,7 @@ void CalibHelper::detectCorners(
 
 void CalibHelper::initCamPoses(
     const Calibration<double>::Ptr &calib,
-    const Eigen::vector<Eigen::Vector4d> &aprilgrid_corner_pos_3d,
+    const Eigen::aligned_vector<Eigen::Vector4d> &aprilgrid_corner_pos_3d,
     tbb::concurrent_unordered_map<TimeCamId, CalibCornerData> &calib_corners,
     tbb::concurrent_unordered_map<TimeCamId, CalibInitPoseData>
         &calib_init_poses) {
@@ -169,13 +170,13 @@ void CalibHelper::initCamPoses(
 }
 
 bool CalibHelper::initializeIntrinsics(
-    const Eigen::vector<Eigen::Vector2d> &corners,
+    const Eigen::aligned_vector<Eigen::Vector2d> &corners,
     const std::vector<int> &corner_ids,
-    const Eigen::vector<Eigen::Vector4d> &aprilgrid_corner_pos_3d, int cols,
-    int rows, Eigen::Vector4d &init_intr) {
+    const Eigen::aligned_vector<Eigen::Vector4d> &aprilgrid_corner_pos_3d,
+    int cols, int rows, Eigen::Vector4d &init_intr) {
   // First, initialize the image center at the center of the image.
 
-  Eigen::map<int, Eigen::Vector2d> id_to_corner;
+  Eigen::aligned_map<int, Eigen::Vector2d> id_to_corner;
   for (size_t i = 0; i < corner_ids.size(); i++) {
     id_to_corner[corner_ids[i]] = corners[i];
   }
@@ -197,7 +198,7 @@ bool CalibHelper::initializeIntrinsics(
     for (size_t r = 0; r < target_rows; ++r) {
       // cv::Mat P(target.cols(); 4, CV_64F);
 
-      Eigen::vector<Eigen::Vector4d> P;
+      Eigen::aligned_vector<Eigen::Vector4d> P;
 
       for (size_t c = 0; c < target_cols; ++c) {
         int tag_offset = (r * target_cols + c) << 2;
@@ -302,7 +303,7 @@ bool CalibHelper::initializeIntrinsics(
 
 void CalibHelper::computeInitialPose(
     const Calibration<double>::Ptr &calib, size_t cam_id,
-    const Eigen::vector<Eigen::Vector4d> &aprilgrid_corner_pos_3d,
+    const Eigen::aligned_vector<Eigen::Vector4d> &aprilgrid_corner_pos_3d,
     const CalibCornerData &cd, CalibInitPoseData &cp) {
   if (cd.corners.size() < 8) {
     cp.num_inliers = 0;
@@ -336,9 +337,9 @@ void CalibHelper::computeInitialPose(
 
 size_t CalibHelper::computeReprojectionError(
     const UnifiedCamera<double> &cam_calib,
-    const Eigen::vector<Eigen::Vector2d> &corners,
+    const Eigen::aligned_vector<Eigen::Vector2d> &corners,
     const std::vector<int> &corner_ids,
-    const Eigen::vector<Eigen::Vector4d> &aprilgrid_corner_pos_3d,
+    const Eigen::aligned_vector<Eigen::Vector4d> &aprilgrid_corner_pos_3d,
     const Sophus::SE3d &T_target_camera, double &error) {
   size_t num_projected = 0;
   error = 0;

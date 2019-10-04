@@ -68,13 +68,14 @@ class NfrMapper : public BundleAdjustmentBase {
   struct MapperLinearizeAbsReduce
       : public BundleAdjustmentBase::LinearizeAbsReduce<AccumT> {
     using RollPitchFactorConstIter =
-        Eigen::vector<RollPitchFactor>::const_iterator;
-    using RelPoseFactorConstIter = Eigen::vector<RelPoseFactor>::const_iterator;
-    using RelLinDataIter = Eigen::vector<RelLinData>::iterator;
+        Eigen::aligned_vector<RollPitchFactor>::const_iterator;
+    using RelPoseFactorConstIter =
+        Eigen::aligned_vector<RelPoseFactor>::const_iterator;
+    using RelLinDataIter = Eigen::aligned_vector<RelLinData>::iterator;
 
     MapperLinearizeAbsReduce(
         AbsOrderMap& aom,
-        const Eigen::map<int64_t, PoseStateWithLin>* frame_poses)
+        const Eigen::aligned_map<int64_t, PoseStateWithLin>* frame_poses)
         : BundleAdjustmentBase::LinearizeAbsReduce<AccumT>(aom),
           frame_poses(frame_poses) {
       this->accum.reset(aom.total_size);
@@ -159,7 +160,7 @@ class NfrMapper : public BundleAdjustmentBase {
     double roll_pitch_error;
     double rel_error;
 
-    const Eigen::map<int64_t, PoseStateWithLin>* frame_poses;
+    const Eigen::aligned_map<int64_t, PoseStateWithLin>* frame_poses;
   };
 
   NfrMapper(const basalt::Calibration<double>& calib, const VioConfig& config);
@@ -172,7 +173,7 @@ class NfrMapper : public BundleAdjustmentBase {
 
   void optimize(int num_iterations = 10);
 
-  Eigen::map<int64_t, PoseStateWithLin>& getFramePoses();
+  Eigen::aligned_map<int64_t, PoseStateWithLin>& getFramePoses();
 
   void computeRelPose(double& rel_error);
 
@@ -191,8 +192,8 @@ class NfrMapper : public BundleAdjustmentBase {
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  Eigen::vector<RollPitchFactor> roll_pitch_factors;
-  Eigen::vector<RelPoseFactor> rel_pose_factors;
+  Eigen::aligned_vector<RollPitchFactor> roll_pitch_factors;
+  Eigen::aligned_vector<RelPoseFactor> rel_pose_factors;
 
   std::unordered_map<int64_t, OpticalFlowInput::Ptr> img_data;
 

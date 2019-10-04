@@ -71,11 +71,12 @@ class RosbagVioDataset : public VioDataset {
   std::unordered_map<int64_t, std::vector<std::optional<rosbag::IndexEntry>>>
       image_data_idx;
 
-  Eigen::vector<AccelData> accel_data;
-  Eigen::vector<GyroData> gyro_data;
+  Eigen::aligned_vector<AccelData> accel_data;
+  Eigen::aligned_vector<GyroData> gyro_data;
 
-  std::vector<int64_t> gt_timestamps;        // ordered gt timestamps
-  Eigen::vector<Sophus::SE3d> gt_pose_data;  // TODO: change to eigen aligned
+  std::vector<int64_t> gt_timestamps;  // ordered gt timestamps
+  Eigen::aligned_vector<Sophus::SE3d>
+      gt_pose_data;  // TODO: change to eigen aligned
 
   int64_t mocap_to_imu_offset_ns;
 
@@ -86,12 +87,16 @@ class RosbagVioDataset : public VioDataset {
 
   std::vector<int64_t> &get_image_timestamps() { return image_timestamps; }
 
-  const Eigen::vector<AccelData> &get_accel_data() const { return accel_data; }
-  const Eigen::vector<GyroData> &get_gyro_data() const { return gyro_data; }
+  const Eigen::aligned_vector<AccelData> &get_accel_data() const {
+    return accel_data;
+  }
+  const Eigen::aligned_vector<GyroData> &get_gyro_data() const {
+    return gyro_data;
+  }
   const std::vector<int64_t> &get_gt_timestamps() const {
     return gt_timestamps;
   }
-  const Eigen::vector<Sophus::SE3d> &get_gt_pose_data() const {
+  const Eigen::aligned_vector<Sophus::SE3d> &get_gt_pose_data() const {
     return gt_pose_data;
   }
 
