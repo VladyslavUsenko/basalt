@@ -56,6 +56,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <basalt/io/marg_data_io.h>
 #include <basalt/optimization/accumulator.h>
 #include <basalt/spline/se3_spline.h>
+#include <basalt/utils/filesystem.h>
 #include <basalt/utils/imu_types.h>
 #include <basalt/utils/nfr.h>
 #include <basalt/utils/vis_utils.h>
@@ -63,11 +64,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <basalt/vi_estimator/vio_estimator.h>
 #include <basalt/calibration/calibration.hpp>
 
-#include <experimental/filesystem>
-
 #include <basalt/serialization/headers_serialization.h>
-
-namespace fs = std::experimental::filesystem;
 
 using basalt::POSE_SIZE;
 using basalt::POSE_VEL_BIAS_SIZE;

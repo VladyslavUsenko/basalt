@@ -36,9 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <basalt/io/dataset_io.h>
-
-#include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
+#include <basalt/utils/filesystem.h>
 
 #include <opencv2/highgui/highgui.hpp>
 
@@ -99,7 +97,7 @@ class UzhVioDataset : public VioDataset {
           path + "/" +
           (i == 0 ? left_image_path.at(t_ns) : right_image_path.at(t_ns));
 
-      if (file_exists(full_image_path)) {
+      if (fs::exists(full_image_path)) {
         cv::Mat img = cv::imread(full_image_path, cv::IMREAD_UNCHANGED);
 
         if (img.type() == CV_8UC1) {
@@ -182,7 +180,7 @@ class UzhIO : public DatasetIoInterface {
     std::cout << "Loaded " << data->get_gyro_data().size() << " imu msgs."
               << std::endl;
 
-    if (file_exists(path + "/groundtruth.txt")) {
+    if (fs::exists(path + "/groundtruth.txt")) {
       read_gt_data_pose(path + "/groundtruth.txt");
     }
 

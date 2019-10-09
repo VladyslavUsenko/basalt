@@ -36,9 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <basalt/io/dataset_io.h>
-
-#include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
+#include <basalt/utils/filesystem.h>
 
 #include <opencv2/highgui/highgui.hpp>
 
@@ -95,7 +93,7 @@ class KittiVioDataset : public VioDataset {
     for (size_t i = 0; i < num_cams; i++) {
       std::string full_image_path = path + folder[i] + image_path[t_ns];
 
-      if (file_exists(full_image_path)) {
+      if (fs::exists(full_image_path)) {
         cv::Mat img = cv::imread(full_image_path, cv::IMREAD_UNCHANGED);
 
         if (img.type() == CV_8UC1) {
@@ -140,7 +138,7 @@ class KittiIO : public DatasetIoInterface {
 
     read_image_timestamps(path + "/times.txt");
 
-    if (file_exists(path + "/poses.txt")) {
+    if (fs::exists(path + "/poses.txt")) {
       read_gt_data_pose(path + "/poses.txt");
     }
   }

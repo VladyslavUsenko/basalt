@@ -53,9 +53,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <basalt/imu/imu_types.h>
 #include <basalt/optical_flow/optical_flow.h>
 #include <basalt/calibration/calibration.hpp>
-#include <experimental/filesystem>
-
-namespace fs = std::experimental::filesystem;
 
 namespace basalt {
 

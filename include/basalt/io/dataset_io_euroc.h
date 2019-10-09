@@ -36,9 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DATASET_IO_EUROC_H
 
 #include <basalt/io/dataset_io.h>
-
-#include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
+#include <basalt/utils/filesystem.h>
 
 #include <opencv2/highgui/highgui.hpp>
 
@@ -99,7 +97,7 @@ class EurocVioDataset : public VioDataset {
       std::string full_image_path =
           path + folder[i] + "data/" + image_path[t_ns];
 
-      if (file_exists(full_image_path)) {
+      if (fs::exists(full_image_path)) {
         cv::Mat img = cv::imread(full_image_path, cv::IMREAD_UNCHANGED);
 
         if (img.type() == CV_8UC1) {
@@ -169,20 +167,20 @@ class EurocIO : public DatasetIoInterface {
     read_imu_data(path + "/mav0/imu0/");
 
     if (!load_mocap_as_gt &&
-        file_exists(path + "/mav0/state_groundtruth_estimate0/data.csv")) {
+        fs::exists(path + "/mav0/state_groundtruth_estimate0/data.csv")) {
       read_gt_data_state(path + "/mav0/state_groundtruth_estimate0/");
-    } else if (!load_mocap_as_gt && file_exists(path + "/mav0/gt/data.csv")) {
+    } else if (!load_mocap_as_gt && fs::exists(path + "/mav0/gt/data.csv")) {
       read_gt_data_pose(path + "/mav0/gt/");
-    } else if (file_exists(path + "/mav0/mocap0/data.csv")) {
+    } else if (fs::exists(path + "/mav0/mocap0/data.csv")) {
       read_gt_data_pose(path + "/mav0/mocap0/");
     }
 
     data->exposure_times.resize(data->num_cams);
-    if (file_exists(path + "/mav0/cam0/exposure.csv")) {
+    if (fs::exists(path + "/mav0/cam0/exposure.csv")) {
       std::cout << "Loading exposure times for cam0" << std::endl;
       read_exposure(path + "/mav0/cam0/", data->exposure_times[0]);
     }
-    if (file_exists(path + "/mav0/cam1/exposure.csv")) {
+    if (fs::exists(path + "/mav0/cam1/exposure.csv")) {
       std::cout << "Loading exposure times for cam1" << std::endl;
       read_exposure(path + "/mav0/cam1/", data->exposure_times[1]);
     }

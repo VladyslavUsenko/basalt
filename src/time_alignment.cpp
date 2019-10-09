@@ -42,14 +42,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <basalt/io/dataset_io.h>
 #include <basalt/serialization/headers_serialization.h>
+#include <basalt/utils/filesystem.h>
 #include <basalt/calibration/calibration.hpp>
-#include <experimental/filesystem>
 
 #include <tbb/tbb.h>
 
 #include <CLI/CLI.hpp>
-
-namespace fs = std::experimental::filesystem;
 
 basalt::Calibration<double> calib;
 basalt::MocapCalibration<double> mocap_calib;

@@ -66,11 +66,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace basalt {
 
-inline bool file_exists(const std::string &name) {
-  std::ifstream f(name.c_str());
-  return f.good();
-}
-
 struct ImageData {
   ImageData() : exposure(0) {}
 

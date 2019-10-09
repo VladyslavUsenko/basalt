@@ -52,8 +52,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/Imu.h>
 
-#include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
+#include <basalt/utils/filesystem.h>
 
 namespace basalt {
 

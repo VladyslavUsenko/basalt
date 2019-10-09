@@ -56,11 +56,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <basalt/device/rs_t265.h>
 #include <basalt/serialization/headers_serialization.h>
+#include <basalt/utils/filesystem.h>
 #include <CLI/CLI.hpp>
 #include <cereal/archives/json.hpp>
-#include <experimental/filesystem>
-
-namespace fs = std::experimental::filesystem;
 
 constexpr int UI_WIDTH = 200;
 
