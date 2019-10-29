@@ -445,16 +445,17 @@ void CamImuCalib::initOptimization() {
     const auto cp_it = calib_init_poses.find(tcid);
 
     if (cp_it != calib_init_poses.end()) {
-      calib_opt->addPoseMeasurement(
-          timestamp_ns,
-          cp_it->second.T_a_c * calib_opt->getCamT_i_c(0).inverse());
+      Sophus::SE3d T_a_i =
+          cp_it->second.T_a_c * calib_opt->getCamT_i_c(0).inverse();
+
+      calib_opt->addPoseMeasurement(timestamp_ns, T_a_i);
 
       if (!g_initialized) {
         for (size_t i = 0;
              i < vio_dataset->get_accel_data().size() && !g_initialized; i++) {
           const basalt::AccelData &ad = vio_dataset->get_accel_data()[i];
           if (std::abs(ad.timestamp_ns - timestamp_ns) < 3000000) {
-            g_a_init = cp_it->second.T_a_c.so3() * ad.data;
+            g_a_init = T_a_i.so3() * ad.data;
             g_initialized = true;
             std::cout << "g_a initialized with " << g_a_init.transpose()
                       << std::endl;
