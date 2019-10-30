@@ -250,7 +250,7 @@ void VignetteEstimator::optimize() {
 void VignetteEstimator::compute_data_log(
     std::vector<std::vector<float>> &vign_data_log) {
   std::vector<std::vector<double>> num_proj_points(
-      2, std::vector<double>(vign_size, 0));
+      vio_dataset->get_num_cams(), std::vector<double>(vign_size, 0));
 
   for (const auto &kv : reprojected_vignette) {
     const TimeCamId &tcid = kv.first;
@@ -264,7 +264,8 @@ void VignetteEstimator::compute_data_log(
     for (size_t i = 0; i < points_2d.size(); i++) {
       if (points_2d[i][2] >= 0) {
         size_t loc = (points_2d[i].head<2>() - oc).norm();
-        num_proj_points[tcid.cam_id][loc] += 1.;
+
+        if (loc < vign_size) num_proj_points[tcid.cam_id][loc] += 1.;
       }
     }
   }
