@@ -246,7 +246,7 @@ gen_results:
     paths:
     - euroc_results.txt
     - kitti_results.txt
-    - scripts/eval_full/eval_results/traj*
+    - scripts/eval_full/eval_results/*
   script:
     - cd scripts/eval_full
     - ./gen_results.py eval_results > euroc_results.txt
