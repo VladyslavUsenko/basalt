@@ -16,7 +16,9 @@ mkdir $folder_name
 for d in ${DATASETS[$CI_NODE_INDEX-1]}; do
    basalt_vio --dataset-path  $DATASET_PATH/$d --cam-calib /usr/etc/basalt/euroc_eucm_calib.json \
         --dataset-type euroc --show-gui 0 --config-path /usr/etc/basalt/euroc_config.json \
-        --result-path $folder_name/vio_$d --marg-data eval_tmp_marg_data
+        --result-path $folder_name/vio_$d --marg-data eval_tmp_marg_data --save-trajectory tum
+
+   mv trajectory.txt $folder_name/traj_vio_$d.txt
 
     basalt_mapper --show-gui 0 --cam-calib /usr/etc/basalt/euroc_eucm_calib.json --config-path /usr/etc/basalt/euroc_config.json --marg-data eval_tmp_marg_data \
         --result-path $folder_name/mapper_$d
