@@ -12,6 +12,8 @@ This project contains tools for:
 
 Some reusable components of the system are availble as a separate [header-only library](https://gitlab.com/VladyslavUsenko/basalt-headers) ([Documentation](https://vladyslavusenko.gitlab.io/basalt-headers/)).
 
+There is also a [Github mirror](https://github.com/VladyslavUsenko/basalt-mirror) of this project to enable easy forking.
+
 ## Related Publications
 Visual-Inertial Odometry and Mapping:
 * **Visual-Inertial Mapping with Non-Linear Factor Recovery**, V. Usenko, N. Demmel, D. Schubert, J. Stückler, D. Cremers, In [[arXiv:1904.06504]](https://arxiv.org/abs/1904.06504).
