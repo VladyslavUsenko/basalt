@@ -113,13 +113,18 @@ if(APPLE)
   # See: https://github.com/openMVG/openMVG/issues/1349#issuecomment-401492811
   set(CMAKE_FIND_FRAMEWORK LAST)
 
-  # use brewed llvm's libc++
-  # Note: the suffix "/../v1" for the include path is needed to work around a recent cmake issue:
-  # https://gitlab.kitware.com/cmake/cmake/issues/19251#note_571030
-  include_directories("/usr/local/opt/llvm/include/c++/v1/../v1")
-  link_directories("/usr/local/opt/llvm/lib")
-  add_compile_options("-nostdinc++")
-  set(STD_CXX_FS c++fs)
+  if(CMAKE_SYSTEM_VERSION VERSION_LESS 19.0.0)
+      # use brewed llvm's libc++
+      # Note: the suffix "/../v1" for the include path is needed to work around a recent cmake issue:
+      # https://gitlab.kitware.com/cmake/cmake/issues/19251#note_571030
+      include_directories("/usr/local/opt/llvm/include/c++/v1/../v1")
+      link_directories("/usr/local/opt/llvm/lib")
+      add_compile_options("-nostdinc++")
+      set(STD_CXX_FS c++fs)
+  endif()
+
+
+
 
   if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     message(STATUS "Detected macOS with non-Apple clang")

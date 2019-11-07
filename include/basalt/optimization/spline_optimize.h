@@ -87,10 +87,10 @@ class SplineOptimization {
 
   typedef Se3Spline<N, Scalar> SplineT;
 
-  SplineOptimization(int64_t dt_ns = 1e7)
+  SplineOptimization(int64_t dt_ns = 1e7, double init_lambda = 1e-12)
       : pose_var(1e-4),
         mocap_initialized(false),
-        lambda(1e-12),
+        lambda(init_lambda),
         min_lambda(1e-18),
         max_lambda(100),
         lambda_vee(2),
@@ -367,7 +367,8 @@ class SplineOptimization {
   bool optimize(bool use_intr, bool use_poses, bool use_april_corners,
                 bool opt_cam_time_offset, bool opt_imu_scale, bool use_mocap,
                 double huber_thresh, double stop_thresh, double& error,
-                int& num_points, double& reprojection_error) {
+                int& num_points, double& reprojection_error,
+                bool print_info = true) {
     // std::cerr << "optimize num_knots " << num_knots << std::endl;
 
     ccd.opt_intrinsics = use_intr;
@@ -419,8 +420,9 @@ class SplineOptimization {
     num_points = lopt.num_points;
     reprojection_error = lopt.reprojection_error;
 
-    std::cout << "[LINEARIZE] Error: " << lopt.error << " num points "
-              << lopt.num_points << std::endl;
+    if (print_info)
+      std::cout << "[LINEARIZE] Error: " << lopt.error << " num points "
+                << lopt.num_points << std::endl;
 
     lopt.accum.setup_solver();
     Eigen::VectorXd Hdiag = lopt.accum.Hdiagonal();
@@ -473,10 +475,11 @@ class SplineOptimization {
       double step_quality = f_diff / l_diff;
 
       if (step_quality < 0) {
-        std::cout << "\t[REJECTED] lambda:" << lambda
-                  << " step_quality: " << step_quality
-                  << " max_inc: " << max_inc << " Error: " << eopt.error
-                  << " num points " << eopt.num_points << std::endl;
+        if (print_info)
+          std::cout << "\t[REJECTED] lambda:" << lambda
+                    << " step_quality: " << step_quality
+                    << " max_inc: " << max_inc << " Error: " << eopt.error
+                    << " num points " << eopt.num_points << std::endl;
         lambda = std::min(max_lambda, lambda_vee * lambda);
         lambda_vee *= 2;
 
@@ -486,10 +489,11 @@ class SplineOptimization {
         g = g_backup;
 
       } else {
-        std::cout << "\t[ACCEPTED] lambda:" << lambda
-                  << " step_quality: " << step_quality
-                  << " max_inc: " << max_inc << " Error: " << eopt.error
-                  << " num points " << eopt.num_points << std::endl;
+        if (print_info)
+          std::cout << "\t[ACCEPTED] lambda:" << lambda
+                    << " step_quality: " << step_quality
+                    << " max_inc: " << max_inc << " Error: " << eopt.error
+                    << " num points " << eopt.num_points << std::endl;
 
         lambda = std::max(
             min_lambda,
@@ -506,7 +510,7 @@ class SplineOptimization {
       max_iter--;
     }
 
-    if (converged) {
+    if (converged && print_info) {
       std::cout << "[CONVERGED]" << std::endl;
     }
 

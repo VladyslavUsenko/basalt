@@ -33,8 +33,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef BASALT_ACCUMULATOR_H
-#define BASALT_ACCUMULATOR_H
+#pragma once
 
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
@@ -44,6 +43,20 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unordered_map>
 
 #include <basalt/utils/assert.h>
+
+#if defined(BASALT_USE_CHOLMOD)
+
+#include <Eigen/CholmodSupport>
+
+template <class T>
+using SparseLLT = Eigen::CholmodSupernodalLLT<T>;
+
+#else
+
+template <class T>
+using SparseLLT = Eigen::SimplicialLDLT<T>;
+
+#endif
 
 namespace basalt {
 
@@ -195,7 +208,7 @@ class SparseHashAccumulator {
       cg.compute(sm);
       res = cg.solve(b);
     } else {
-      Eigen::SimplicialLDLT<SparseMatrix> chol(sm);
+      SparseLLT<SparseMatrix> chol(sm);
       res = chol.solve(b);
     }
 
@@ -261,5 +274,3 @@ class SparseHashAccumulator {
 };
 
 }  // namespace basalt
-
-#endif
