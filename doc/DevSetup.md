@@ -3,12 +3,12 @@
 ### Clang-format
 We use clang-format to maintain a consistent formating of the code. Since there are small differences between different version of clang-format we use version 8 on all platforms.
 
-On **Ubuntu 18.04** run the following commands to install clang-format-8
+On **Ubuntu 18.04** run the following commands to install clang-format-9
 ```
 wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add -
-sudo sh -c 'echo "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-8 main" > /etc/apt/sources.list.d/llvm8.list'
+sudo sh -c 'echo "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-9 main" > /etc/apt/sources.list.d/llvm9.list'
 sudo apt-get update
-sudo apt-get install clang-format-8
+sudo apt-get install clang-format-9
 ```
 
 On **MacOS** [Homebrew](https://brew.sh/) should install the right version of clang-format:
