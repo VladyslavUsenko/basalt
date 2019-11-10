@@ -98,6 +98,16 @@ set(BASALT_CXX_FLAGS "-Wall -Wextra -Werror -Wno-error=unused-parameter -ftempla
 # clang-specific compile flags
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
   set(BASALT_CXX_FLAGS "${BASALT_CXX_FLAGS} -Wno-exceptions -fcolor-diagnostics -frelaxed-template-template-args -Wno-error=deprecated-declarations")
+
+  #   - Added TBB_USE_GLIBCXX_VERSION macro to specify the version of GNU
+  #     libstdc++ when it cannot be properly recognized, e.g. when used
+  #     with Clang on Linux* OS. Adopted from https://github.com/wjakob/tbb
+  if(NOT TBB_USE_GLIBCXX_VERSION AND UNIX AND NOT APPLE)
+    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+      string(REPLACE "." "0" TBB_USE_GLIBCXX_VERSION ${CMAKE_CXX_COMPILER_VERSION})
+    endif()
+    add_definitions(-DTBB_USE_GLIBCXX_VERSION=${TBB_USE_GLIBCXX_VERSION})
+  endif()
 else()
   set(BASALT_CXX_FLAGS "${BASALT_CXX_FLAGS} -Wno-error=maybe-uninitialized -Wno-error=implicit-fallthrough")
 endif()
@@ -106,7 +116,7 @@ endif()
 # Set platform / compiler specific compile flags and checks
 if(APPLE)
   # Need to investigate how to reliably detect and use OpenMP on macOS...
-  set(USE_OPENMP_DEFAULT Off)
+  set(USE_OPENMP_DEFAULT OFF)
 
   # Among others, setting CMAKE_FIND_FRAMEWORK to LAST fixed issues
   # with installed Mono that contains old headers (libpng, ...).
@@ -124,8 +134,6 @@ if(APPLE)
   endif()
 
 
-
-
   if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     message(STATUS "Detected macOS with non-Apple clang")
 
@@ -141,7 +149,7 @@ if(APPLE)
   endif()
 
 elseif(UNIX)
-  set(USE_OPENMP_DEFAULT On)
+  set(USE_OPENMP_DEFAULT ON)
 
   # assume libstdc++
   set(STD_CXX_FS stdc++fs)
