@@ -491,6 +491,11 @@ void CamImuCalib::initMocap() {
     return;
   }
 
+  if (vio_dataset->get_gt_timestamps().empty()) {
+    std::cerr << "The dataset contains no Mocap data!" << std::endl;
+    return;
+  }
+
   {
     std::vector<int64_t> timestamps_cam;
     Eigen::aligned_vector<Eigen::Vector3d> rot_vel_mocap;
