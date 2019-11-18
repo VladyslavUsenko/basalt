@@ -34,6 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
 
+#include <basalt/calibration/aprilgrid.h>
 #include <basalt/io/dataset_io.h>
 #include <basalt/utils/common_types.h>
 #include <basalt/calibration/calibration.hpp>
@@ -85,9 +86,13 @@ class CalibHelper {
 
   static bool initializeIntrinsics(
       const Eigen::aligned_vector<Eigen::Vector2d>& corners,
-      const std::vector<int>& corner_ids,
-      const Eigen::aligned_vector<Eigen::Vector4d>& aprilgrid_corner_pos_3d,
-      int cols, int rows, Eigen::Vector4d& init_intr);
+      const std::vector<int>& corner_ids, const AprilGrid& aprilgrid, int cols,
+      int rows, Eigen::Vector4d& init_intr);
+
+  static bool initializeIntrinsicsPinhole(
+      const std::vector<CalibCornerData*> pinhole_corners,
+      const AprilGrid& aprilgrid, int cols, int rows,
+      Eigen::Vector4d& init_intr);
 
  private:
   inline static double square(double x) { return x * x; }

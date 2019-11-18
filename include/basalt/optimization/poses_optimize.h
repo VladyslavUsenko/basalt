@@ -34,10 +34,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
 
+#include <basalt/calibration/aprilgrid.h>
 #include <basalt/calibration/calibration_helper.h>
 #include <basalt/optimization/poses_linearize.h>
-
-#include <basalt/camera/unified_camera.hpp>
 
 namespace basalt {
 
@@ -60,21 +59,6 @@ class PosesOptimization {
  public:
   PosesOptimization()
       : lambda(1e-6), min_lambda(1e-12), max_lambda(100), lambda_vee(2) {}
-
-  bool initializeIntrinsics(
-      size_t cam_id, const Eigen::aligned_vector<Eigen::Vector2d> &corners,
-      const std::vector<int> &corner_ids,
-      const Eigen::aligned_vector<Eigen::Vector4d> &aprilgrid_corner_pos_3d,
-      int cols, int rows) {
-    Eigen::Vector4d init_intr;
-
-    bool val = CalibHelper::initializeIntrinsics(
-        corners, corner_ids, aprilgrid_corner_pos_3d, cols, rows, init_intr);
-
-    calib->intrinsics[cam_id].setFromInit(init_intr);
-
-    return val;
-  }
 
   Vector2 getOpticalCenter(size_t i) {
     return calib->intrinsics[i].getParam().template segment<2>(2);

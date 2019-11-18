@@ -47,6 +47,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <opengv/sac_problems/absolute_pose/AbsolutePoseSacProblem.hpp>
 #include <opengv/sac_problems/relative_pose/CentralRelativePoseSacProblem.hpp>
 
+#include <opencv2/calib3d/calib3d.hpp>
+
 namespace basalt {
 
 template <class CamT>
@@ -171,9 +173,8 @@ void CalibHelper::initCamPoses(
 
 bool CalibHelper::initializeIntrinsics(
     const Eigen::aligned_vector<Eigen::Vector2d> &corners,
-    const std::vector<int> &corner_ids,
-    const Eigen::aligned_vector<Eigen::Vector4d> &aprilgrid_corner_pos_3d,
-    int cols, int rows, Eigen::Vector4d &init_intr) {
+    const std::vector<int> &corner_ids, const AprilGrid &aprilgrid, int cols,
+    int rows, Eigen::Vector4d &init_intr) {
   // First, initialize the image center at the center of the image.
 
   Eigen::aligned_map<int, Eigen::Vector2d> id_to_corner;
@@ -181,17 +182,17 @@ bool CalibHelper::initializeIntrinsics(
     id_to_corner[corner_ids[i]] = corners[i];
   }
 
-  double _xi = 1.0;
-  double _cu = cols / 2.0 - 0.5;
-  double _cv = rows / 2.0 - 0.5;
+  const double _xi = 1.0;
+  const double _cu = cols / 2.0 - 0.5;
+  const double _cv = rows / 2.0 - 0.5;
 
   /// Initialize some temporaries needed.
   double gamma0 = 0.0;
   double minReprojErr = std::numeric_limits<double>::max();
 
   // Now we try to find a non-radial line to initialize the focal length
-  const size_t target_cols = 6;
-  const size_t target_rows = 6;
+  const size_t target_cols = aprilgrid.getTagCols();
+  const size_t target_rows = aprilgrid.getTagRows();
 
   bool success = false;
   for (int tag_corner_offset = 0; tag_corner_offset < 2; tag_corner_offset++)
@@ -270,14 +271,14 @@ bool CalibHelper::initializeIntrinsics(
         size_t num_inliers;
         Sophus::SE3d T_target_camera;
         if (!estimateTransformation(cam_calib, corners, corner_ids,
-                                    aprilgrid_corner_pos_3d, T_target_camera,
-                                    num_inliers)) {
+                                    aprilgrid.aprilgrid_corner_pos_3d,
+                                    T_target_camera, num_inliers)) {
           continue;
         }
 
         double reprojErr = 0.0;
         size_t numReprojected = computeReprojectionError(
-            cam_calib, corners, corner_ids, aprilgrid_corner_pos_3d,
+            cam_calib, corners, corner_ids, aprilgrid.aprilgrid_corner_pos_3d,
             T_target_camera, reprojErr);
 
         // std::cerr << "numReprojected " << numReprojected << " reprojErr "
@@ -299,6 +300,105 @@ bool CalibHelper::initializeIntrinsics(
   if (success) init_intr << 0.5 * gamma0, 0.5 * gamma0, _cu, _cv;
 
   return success;
+}
+
+bool CalibHelper::initializeIntrinsicsPinhole(
+    const std::vector<CalibCornerData *> pinhole_corners,
+    const AprilGrid &aprilgrid, int cols, int rows,
+    Eigen::Vector4d &init_intr) {
+  // First, initialize the image center at the center of the image.
+
+  const double _cu = cols / 2.0 - 0.5;
+  const double _cv = rows / 2.0 - 0.5;
+
+  // Z. Zhang, A Flexible New Technique for Camera Calibration, PAMI 2000
+
+  size_t nImages = pinhole_corners.size();
+
+  //  Eigen::MatrixXd A(2 * nImages, 2);
+  //  Eigen::VectorXd b(2 * nImages);
+
+  Eigen::MatrixXd A(nImages * 2, 2);
+  Eigen::VectorXd b(nImages * 2, 1);
+
+  int i = 0;
+
+  for (const CalibCornerData *ccd : pinhole_corners) {
+    const auto &corners = ccd->corners;
+    const auto &corner_ids = ccd->corner_ids;
+
+    std::vector<cv::Point2f> M(corners.size()), imagePoints(corners.size());
+    for (size_t j = 0; j < corners.size(); ++j) {
+      M.at(j) =
+          cv::Point2f(aprilgrid.aprilgrid_corner_pos_3d[corner_ids[j]][0],
+                      aprilgrid.aprilgrid_corner_pos_3d[corner_ids[j]][1]);
+
+      //    std::cout << "corner "
+      //              <<
+      //              aprilgrid.aprilgrid_corner_pos_3d[corner_ids[j]].transpose()
+      //              << std::endl;
+
+      imagePoints.at(j) = cv::Point2f(corners[j][0], corners[j][1]);
+    }
+
+    cv::Mat H = cv::findHomography(M, imagePoints);
+
+    if (H.empty()) return false;
+
+    // std::cout << H << std::endl;
+
+    H.at<double>(0, 0) -= H.at<double>(2, 0) * _cu;
+    H.at<double>(0, 1) -= H.at<double>(2, 1) * _cu;
+    H.at<double>(0, 2) -= H.at<double>(2, 2) * _cu;
+    H.at<double>(1, 0) -= H.at<double>(2, 0) * _cv;
+    H.at<double>(1, 1) -= H.at<double>(2, 1) * _cv;
+    H.at<double>(1, 2) -= H.at<double>(2, 2) * _cv;
+
+    double h[3], v[3], d1[3], d2[3];
+    double n[4] = {0, 0, 0, 0};
+
+    for (int j = 0; j < 3; ++j) {
+      double t0 = H.at<double>(j, 0);
+      double t1 = H.at<double>(j, 1);
+      h[j] = t0;
+      v[j] = t1;
+      d1[j] = (t0 + t1) * 0.5;
+      d2[j] = (t0 - t1) * 0.5;
+      n[0] += t0 * t0;
+      n[1] += t1 * t1;
+      n[2] += d1[j] * d1[j];
+      n[3] += d2[j] * d2[j];
+    }
+
+    for (int j = 0; j < 4; ++j) {
+      n[j] = 1.0 / sqrt(n[j]);
+    }
+
+    for (int j = 0; j < 3; ++j) {
+      h[j] *= n[0];
+      v[j] *= n[1];
+      d1[j] *= n[2];
+      d2[j] *= n[3];
+    }
+
+    A(i * 2, 0) = h[0] * v[0];
+    A(i * 2, 1) = h[1] * v[1];
+    A(i * 2 + 1, 0) = d1[0] * d2[0];
+    A(i * 2 + 1, 1) = d1[1] * d2[1];
+    b(i * 2, 0) = -h[2] * v[2];
+    b(i * 2 + 1, 0) = -d1[2] * d2[2];
+
+    i++;
+  }
+
+  Eigen::Vector2d f = (A.transpose() * A).ldlt().solve(A.transpose() * b);
+
+  double fx = sqrt(fabs(1.0 / f(0)));
+  double fy = sqrt(fabs(1.0 / f(1)));
+
+  init_intr << fx, fy, _cu, _cv;
+
+  return true;
 }
 
 void CalibHelper::computeInitialPose(
