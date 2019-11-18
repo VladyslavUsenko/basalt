@@ -44,6 +44,9 @@ struct AprilGrid {
   Eigen::aligned_vector<Eigen::Vector4d> aprilgrid_corner_pos_3d;
   Eigen::aligned_vector<Eigen::Vector4d> aprilgrid_vignette_pos_3d;
 
+  inline int getTagCols() const { return tagCols; }
+  inline int getTagRows() const { return tagRows; }
+
  private:
   int tagCols;        // number of apriltags
   int tagRows;        // number of apriltags
