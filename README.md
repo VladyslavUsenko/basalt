@@ -10,7 +10,7 @@ This project contains tools for:
 * Visual-inertial odometry and mapping.
 * Simulated environment to test different components of the system.
 
-Some reusable components of the system are availble as a separate [header-only library](https://gitlab.com/VladyslavUsenko/basalt-headers) ([Documentation](https://vladyslavusenko.gitlab.io/basalt-headers/)).
+Some reusable components of the system are available as a separate [header-only library](https://gitlab.com/VladyslavUsenko/basalt-headers) ([Documentation](https://vladyslavusenko.gitlab.io/basalt-headers/)).
 
 There is also a [Github mirror](https://github.com/VladyslavUsenko/basalt-mirror) of this project to enable easy forking.
 
