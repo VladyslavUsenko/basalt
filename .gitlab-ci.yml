@@ -8,11 +8,13 @@ variables:
   DEB_DIR: deb
 
 stages:
+  - docker
   - build
   - test
   - eval
   - results
   - deploy
+  - repository
 
 # template for docker builds with ccache
 .prepare_docker_template: &prepare_docker_definition
@@ -276,4 +278,67 @@ deploy:
   script:
     - scp $SCP_FLAGS deb_xenial/*.deb $REPOSITORY_URL/xenial/    
     - scp $SCP_FLAGS deb_bionic/*.deb $REPOSITORY_URL/bionic/
+    
 
+.docker_build_template: &docker_build_definition
+  image: docker:stable
+  stage: docker
+  when: manual
+  only:
+    - master
+  services:
+    - docker:stable-dind
+  tags:
+    - docker-dind
+  before_script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
+  script:
+    - cd docker/"$B_IMAGE_NAME"
+    - docker build -t "$CI_REGISTRY_IMAGE"/"$B_IMAGE_NAME" .
+    - docker push "$CI_REGISTRY_IMAGE"/"$B_IMAGE_NAME"
+
+
+docker-build-bionic:
+  <<: *docker_build_definition
+  variables:
+    DOCKER_TLS_CERTDIR: '/certs'
+    GIT_SUBMODULE_STRATEGY: none
+    B_IMAGE_NAME: b_image
+
+docker-build-xenial:
+  <<: *docker_build_definition
+  variables:
+    DOCKER_TLS_CERTDIR: '/certs'
+    GIT_SUBMODULE_STRATEGY: none
+    B_IMAGE_NAME: b_image_xenial
+
+
+
+.repository_check_template: &repository_check_definition
+  stage: repository
+  when: manual
+  tags:
+    - docker
+  only:
+    - master
+  script:
+    - apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y gnupg2
+    - apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 0D97B6C9
+    - echo "deb [arch=amd64] http://packages.usenko.eu/ubuntu "$REPO_NAME" main" > /etc/apt/sources.list.d/basalt.list
+    - apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y basalt
+    - basalt_rs_t265_vio --help
+    - basalt_rs_t265_record --help
+
+repository-check-bionic:
+  image: ubuntu:18.04
+  <<: *repository_check_definition
+  variables:
+    GIT_STRATEGY: none
+    REPO_NAME: bionic
+
+repository-check-xenial:
+  image: ubuntu:16.04
+  <<: *repository_check_definition
+  variables:
+    GIT_STRATEGY: none
+    REPO_NAME: xenial
