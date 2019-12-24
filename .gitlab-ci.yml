@@ -163,13 +163,13 @@ bionic-relwithdebinfo-compile:
   only:
     - master
 
-elcapitan-relwithdebinfo-compile:
-  <<: *compile_test_definition
-  tags: [macos, "10.11"]
-  only:
-    - master
-  variables:
-    BUILD_TYPE: CiRelWithDebInfo
+# elcapitan-relwithdebinfo-compile:
+#  <<: *compile_test_definition
+#  tags: [macos, "10.11"]
+#  only:
+#    - master
+#  variables:
+#    BUILD_TYPE: CiRelWithDebInfo
 
 mojave-relwithdebinfo-compile:
   <<: *compile_test_definition
