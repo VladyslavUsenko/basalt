@@ -47,15 +47,14 @@ class HashBow {
 
     bow_vector.clear();
 
-    double sum_squared = 0;
+    double l1_sum = 0;
     for (const auto& kv : bow_map) {
       bow_vector.emplace_back(kv);
-      sum_squared += kv.second * kv.second;
+      l1_sum += std::abs(kv.second);
     }
 
-    double norm = std::sqrt(sum_squared);
     for (auto& kv : bow_vector) {
-      kv.second /= norm;
+      kv.second /= l1_sum;
     }
   }
 
@@ -83,13 +82,15 @@ class HashBow {
           // if there is a maximum query time select only the frames that have
           // timestamp below max_t_ns
           if (!max_t_ns || v.first.frame_id < (*max_t_ns))
-            scores[v.first] += kv.second * v.second;
+            scores[v.first] += std::abs(kv.second - v.second) -
+                               std::abs(kv.second) - std::abs(v.second);
         }
     }
 
     results.reserve(scores.size());
 
-    for (const auto& kv : scores) results.emplace_back(kv);
+    for (const auto& kv : scores)
+      results.emplace_back(kv.first, -kv.second / 2.0);
 
     std::sort(results.begin(), results.end(),
               [](const auto& a, const auto& b) { return a.second > b.second; });
