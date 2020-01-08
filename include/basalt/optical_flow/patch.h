@@ -105,10 +105,12 @@ struct OpticalFlowPatch {
 
     for (int i = 0; i < PATTERN_SIZE; i++) {
       if (data[i] >= 0) {
+        const Scalar data_i = data[i];
+        const Vector2 grad_i = grad.row(i);
+        grad.row(i) =
+            num_valid_points * (grad_i * sum - grad_sum * data_i) / (sum * sum);
+
         data[i] *= mean_inv;
-        Vector2 grad_i = grad.row(i);
-        grad.row(i) = num_valid_points * (grad_i * sum - grad_sum * data[i]) /
-                      (sum * sum);
       } else {
         grad.row(i).setZero();
       }
@@ -148,7 +150,7 @@ struct OpticalFlowPatch {
 
     for (int i = 0; i < PATTERN_SIZE; i++) {
       if (residual[i] >= 0 && data[i] >= 0) {
-        Scalar val = residual[i];
+        const Scalar val = residual[i];
         residual[i] = num_valid_points * val / sum - data[i];
         num_residuals++;
 
