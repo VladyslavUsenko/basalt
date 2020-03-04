@@ -203,7 +203,7 @@ void detectKeypoints(
       int points_added = 0;
       int threshold = 40;
 
-      while (points_added < num_points_cell && threshold >= 10) {
+      while (points_added < num_points_cell && threshold >= 5) {
         std::vector<cv::KeyPoint> points;
         cv::FAST(subImg, points, threshold);
 
