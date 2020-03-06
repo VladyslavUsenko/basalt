@@ -20,7 +20,7 @@ mkdir $folder_name
 
 for d in ${DATASETS[$CI_NODE_INDEX-1]}; do
    basalt_vio --dataset-path  $DATASET_PATH/$d --cam-calib /usr/etc/basalt/tumvi_512_eucm_calib.json \
-        --dataset-type euroc --show-gui 1 --config-path /usr/etc/basalt/tumvi_512_config.json \
+        --dataset-type euroc --show-gui 0 --config-path /usr/etc/basalt/tumvi_512_config.json \
         --result-path $folder_name/vio_$d --save-trajectory tum
 
    mv trajectory.txt $folder_name/${d}_basalt_poses.txt
