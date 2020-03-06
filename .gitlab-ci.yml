@@ -288,7 +288,7 @@ gen_results:
     - ./gen_results_kitti.py eval_results_kitti > kitti_results.txt
     - cat kitti_results.txt
     - ./gen_results_tumvi.py eval_results_tumvi > tumvi_results.txt
-    - cat kitti_results.txt
+    - cat tumvi_results.txt
     - mv euroc_results.txt ../../
     - mv kitti_results.txt ../../
     - mv tumvi_results.txt ../../

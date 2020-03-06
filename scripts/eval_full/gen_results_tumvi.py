@@ -39,7 +39,7 @@ for key in datasets[1:]:
 
 row_format ="{:>17}" + "{:>13}" * (len(datasets)-1)
 
-datasets_short = [x[:5] for x in datasets]
+datasets_short = [x[8:].split('_')[0] for x in datasets]
 
 print '\nVisual-Inertial Odometry'
 print row_format.format(*datasets_short)
