@@ -106,6 +106,23 @@ stages:
     - cd scripts/eval_full
     - ./run_evaluations.sh
 
+# template to evaluate on TUM-VI sequences
+.eval_tumvi_template: &eval_tumvi_definition
+  stage: eval
+  parallel: 4
+  tags: [docker, dataset-eval]
+  variables:
+    GIT_STRATEGY: none
+  artifacts:
+    paths:
+    - scripts/eval_full/eval_results_tumvi/*
+    expire_in: 1 week
+  script:
+    - dpkg -i deb_bionic/*.deb
+    - cd scripts/eval_full
+    - ./run_evaluations_tumvi.sh
+
+
 .eval_euroc_template: &eval_kitti_definition
   stage: eval
   parallel: 10
@@ -222,6 +239,20 @@ eval_euroc:
     - master
   allow_failure: false
 
+# evaluate on TUM-VI sequences
+eval_tumvi_master:
+  <<: *eval_tumvi_definition
+  only:
+    - master
+
+# evaluate on TUM-VI sequences
+eval_tumvi:
+  <<: *eval_tumvi_definition
+  when: manual
+  except:
+    - master
+  allow_failure: false
+
 # evaluate on KITTI sequences
 eval_kitti_master:
   <<: *eval_kitti_definition
@@ -248,6 +279,7 @@ gen_results:
     paths:
     - euroc_results.txt
     - kitti_results.txt
+    - tumvi_results.txt
     - scripts/eval_full/eval_results/*
   script:
     - cd scripts/eval_full
@@ -255,8 +287,11 @@ gen_results:
     - cat euroc_results.txt
     - ./gen_results_kitti.py eval_results_kitti > kitti_results.txt
     - cat kitti_results.txt
+    - ./gen_results_tumvi.py eval_results_tumvi > tumvi_results.txt
+    - cat kitti_results.txt
     - mv euroc_results.txt ../../
     - mv kitti_results.txt ../../
+    - mv tumvi_results.txt ../../
 
 # deploy deb packages
 deploy:
