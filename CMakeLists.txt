@@ -123,7 +123,7 @@ if(APPLE)
   # See: https://github.com/openMVG/openMVG/issues/1349#issuecomment-401492811
   set(CMAKE_FIND_FRAMEWORK LAST)
 
-  if(CMAKE_SYSTEM_VERSION VERSION_LESS 19.0.0)
+  if(CMAKE_SYSTEM_VERSION VERSION_LESS 18.0.0)
       # use brewed llvm's libc++
       include_directories("/usr/local/opt/llvm/include/c++/v1")
       link_directories("/usr/local/opt/llvm/lib")
