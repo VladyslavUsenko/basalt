@@ -2,9 +2,6 @@ cmake_minimum_required(VERSION 3.10)
 
 include("thirdparty/basalt-headers/cmake_modules/PreProjectWorkarounds.cmake")
 
-set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum OS X deployment version")
-message(STATUS "... setting deployment target to '${CMAKE_OSX_DEPLOYMENT_TARGET}' to trick libc++ into not disabling some features (like std::visit)")
-
 project(basalt)
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/" ${CMAKE_MODULE_PATH})
@@ -126,17 +123,17 @@ if(APPLE)
   # See: https://github.com/openMVG/openMVG/issues/1349#issuecomment-401492811
   set(CMAKE_FIND_FRAMEWORK LAST)
 
-  #if(CMAKE_SYSTEM_VERSION VERSION_LESS 19.0.0)
+  if(CMAKE_SYSTEM_VERSION VERSION_LESS 19.0.0)
       # use brewed llvm's libc++
-      #include_directories("/usr/local/opt/llvm/include/c++/v1")
-      #link_directories("/usr/local/opt/llvm/lib")
-      #add_compile_options("-nostdinc++")
-      #set(STD_CXX_FS c++fs)
+      include_directories("/usr/local/opt/llvm/include/c++/v1")
+      link_directories("/usr/local/opt/llvm/lib")
+      add_compile_options("-nostdinc++")
+      set(STD_CXX_FS c++fs)
 
       # Workaround for cmake not to filter the manually added standard include path
       # See: https://gitlab.kitware.com/cmake/cmake/issues/19227#note_669894
-      #list(REMOVE_ITEM CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES "/usr/local/opt/llvm/include/c++/v1")
-  #endif()
+      list(REMOVE_ITEM CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES "/usr/local/opt/llvm/include/c++/v1")
+  endif()
 
   if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     message(STATUS "Detected macOS with non-Apple clang")
