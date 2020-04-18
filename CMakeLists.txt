@@ -128,7 +128,7 @@ if(APPLE)
       include_directories("/usr/local/opt/llvm/include/c++/v1")
       link_directories("/usr/local/opt/llvm/lib")
       add_compile_options("-nostdinc++")
-      set(STD_CXX_FS c++fs)
+      #set(STD_CXX_FS c++fs)
 
       # Workaround for cmake not to filter the manually added standard include path
       # See: https://gitlab.kitware.com/cmake/cmake/issues/19227#note_669894
