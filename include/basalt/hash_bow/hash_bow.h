@@ -92,10 +92,13 @@ class HashBow {
     for (const auto& kv : scores)
       results.emplace_back(kv.first, -kv.second / 2.0);
 
-    std::sort(results.begin(), results.end(),
-              [](const auto& a, const auto& b) { return a.second > b.second; });
+    if (results.size() > num_results) {
+      std::partial_sort(
+          results.begin(), results.begin() + num_results, results.end(),
+          [](const auto& a, const auto& b) { return a.second > b.second; });
 
-    if (results.size() > num_results) results.resize(num_results);
+      results.resize(num_results);
+    }
   }
 
  protected:
