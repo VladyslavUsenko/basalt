@@ -164,6 +164,20 @@ xenial-release-compile:
     - deb_xenial/*.deb
     expire_in: 1 week
 
+focal-release-compile:
+  <<: *prepare_docker_definition
+  <<: *compile_test_package_definition
+  image: vladyslavusenko/b_image_focal:latest
+  only:
+    - master
+  variables:
+    CXX_MARCH: 'sandybridge'
+    DEB_DIR: deb_focal
+  artifacts:
+    paths:
+    - deb_focal/*.deb
+    expire_in: 1 week
+
 bionic-debug-compile:
   <<: *prepare_docker_definition
   <<: *compile_test_package_definition
@@ -223,6 +237,15 @@ xenial-test:
     - master
   variables:
     DEB_DIR: deb_xenial
+    GIT_STRATEGY: none
+
+focal-test:
+  <<: *test_deb_definition
+  image: vladyslavusenko/b_image_focal:latest
+  only:
+    - master
+  variables:
+    DEB_DIR: deb_focal
     GIT_STRATEGY: none
 
 # evaluate on EuRoC sequences
@@ -313,6 +336,7 @@ deploy:
   script:
     - scp $SCP_FLAGS deb_xenial/*.deb $REPOSITORY_URL/xenial/    
     - scp $SCP_FLAGS deb_bionic/*.deb $REPOSITORY_URL/bionic/
+    - scp $SCP_FLAGS deb_focal/*.deb $REPOSITORY_URL/focal/
     
 
 .docker_build_template: &docker_build_definition
@@ -384,3 +408,10 @@ repository-check-xenial:
   variables:
     GIT_STRATEGY: none
     REPO_NAME: xenial
+
+repository-check-bionic:
+  image: ubuntu:20.04
+  <<: *repository_check_definition
+  variables:
+    GIT_STRATEGY: none
+    REPO_NAME: focal
