@@ -237,13 +237,13 @@ void startRecording(const std::string &dir_path) {
 
     dataset_dir = dir_path + "dataset_" + get_date() + "/";
 
-    fs::create_directory(dataset_dir);
-    fs::create_directory(dataset_dir + "mav0/");
-    fs::create_directory(dataset_dir + "mav0/cam0/");
-    fs::create_directory(dataset_dir + "mav0/cam0/data/");
-    fs::create_directory(dataset_dir + "mav0/cam1/");
-    fs::create_directory(dataset_dir + "mav0/cam1/data/");
-    fs::create_directory(dataset_dir + "mav0/imu0/");
+    basalt::fs::create_directory(dataset_dir);
+    basalt::fs::create_directory(dataset_dir + "mav0/");
+    basalt::fs::create_directory(dataset_dir + "mav0/cam0/");
+    basalt::fs::create_directory(dataset_dir + "mav0/cam0/data/");
+    basalt::fs::create_directory(dataset_dir + "mav0/cam1/");
+    basalt::fs::create_directory(dataset_dir + "mav0/cam1/data/");
+    basalt::fs::create_directory(dataset_dir + "mav0/imu0/");
 
     cam_data[0].open(dataset_dir + "mav0/cam0/data.csv");
     cam_data[1].open(dataset_dir + "mav0/cam1/data.csv");
@@ -252,7 +252,7 @@ void startRecording(const std::string &dir_path) {
     imu0_data.open(dataset_dir + "mav0/imu0/data.csv");
 
     if (!manual_exposure) {
-      fs::create_directory(dataset_dir + "mav0/realsense0/");
+      basalt::fs::create_directory(dataset_dir + "mav0/realsense0/");
       pose_data.open(dataset_dir + "mav0/realsense0/data.csv");
       pose_data << "#timestamp [ns], p_RS_R_x [m], p_RS_R_y [m], p_RS_R_z [m], "
                    "q_RS_w [], q_RS_x [], q_RS_y [], q_RS_z []\n";
