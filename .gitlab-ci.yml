@@ -347,6 +347,13 @@ docker-build-xenial:
     GIT_SUBMODULE_STRATEGY: none
     B_IMAGE_NAME: b_image_xenial
 
+docker-build-focal:
+  <<: *docker_build_definition
+  variables:
+    DOCKER_TLS_CERTDIR: '/certs'
+    GIT_SUBMODULE_STRATEGY: none
+    B_IMAGE_NAME: b_image_focal
+
 
 
 .repository_check_template: &repository_check_definition
