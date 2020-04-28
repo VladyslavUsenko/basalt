@@ -409,7 +409,7 @@ repository-check-xenial:
     GIT_STRATEGY: none
     REPO_NAME: xenial
 
-repository-check-bionic:
+repository-check-focal:
   image: ubuntu:20.04
   <<: *repository_check_definition
   variables:
