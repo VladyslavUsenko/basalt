@@ -26,7 +26,10 @@ if(LSB_RELEASE_PROGRAM)
     OUTPUT_VARIABLE LSB_RELEASE_ID_SHORT
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-  if(${LSB_RELEASE_ID_SHORT} EQUAL "18.04")
+  if(${LSB_RELEASE_ID_SHORT} EQUAL "20.04")
+    set(DEBIAN_DEPENDS "libtbb2, liblz4-1, libbz2-1.0, libboost-filesystem1.67.1, libboost-date-time1.67.1, libboost-program-options1.67.1, libboost-regex1.67.1, libopencv-dev, libglew2.1, libjpeg8, libpng16-16, librealsense2, librealsense2-dkms, librealsense2-gl, librealsense2-utils")
+
+  elseif(${LSB_RELEASE_ID_SHORT} EQUAL "18.04")
     set(DEBIAN_DEPENDS "libtbb2, liblz4-1, libbz2-1.0, libboost-filesystem1.65.1, libboost-date-time1.65.1, libboost-program-options1.65.1, libboost-regex1.65.1, libopencv-dev, libglew2.0, libjpeg8, libpng16-16, librealsense2, librealsense2-dkms, librealsense2-gl, librealsense2-utils")
 
   elseif(${LSB_RELEASE_ID_SHORT} EQUAL "16.04")
@@ -99,6 +102,11 @@ set(BASALT_CXX_FLAGS "-Wall -Wextra -Werror -Wno-error=unused-parameter -ftempla
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
   set(BASALT_CXX_FLAGS "${BASALT_CXX_FLAGS} -Wno-exceptions -fcolor-diagnostics -frelaxed-template-template-args -Wno-error=deprecated-declarations")
 
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 10)
+      # These are disabled to avoid lot's of warnings in Eigen code with clang 10
+      set(BASALT_CXX_FLAGS "${BASALT_HEADERS_CXX_FLAGS} -Wno-error=misleading-indentation -Wno-error=deprecated-copy")
+  endif()
+
   #   - Added TBB_USE_GLIBCXX_VERSION macro to specify the version of GNU
   #     libstdc++ when it cannot be properly recognized, e.g. when used
   #     with Clang on Linux* OS. Adopted from https://github.com/wjakob/tbb
@@ -110,6 +118,11 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "App
   endif()
 else()
   set(BASALT_CXX_FLAGS "${BASALT_CXX_FLAGS} -Wno-error=maybe-uninitialized -Wno-error=implicit-fallthrough")
+
+  if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 9)
+      # These are disabled to avoid lot's of warnings in Eigen code with gcc-9
+      set(BASALT_CXX_FLAGS "${BASALT_HEADERS_CXX_FLAGS} -Wno-error=deprecated-copy")
+  endif()
 endif()
 
 

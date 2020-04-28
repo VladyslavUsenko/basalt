@@ -235,7 +235,7 @@ class RosbagIO : public DatasetIoInterface {
 
     std::set<int64_t> image_timestamps;
 
-    for (rosbag::MessageInstance const m : view) {
+    for (const rosbag::MessageInstance &m : view) {
       const std::string &topic = m.getTopic();
 
       if (cam_topics.find(topic) != cam_topics.end()) {
