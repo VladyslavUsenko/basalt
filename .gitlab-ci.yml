@@ -1,4 +1,4 @@
-image: vladyslavusenko/b_image:latest
+image: vladyslavusenko/b_image_bionic:latest
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
@@ -141,6 +141,7 @@ stages:
 bionic-release-compile:
   <<: *prepare_docker_definition
   <<: *compile_test_package_definition
+  image: vladyslavusenko/b_image_bionic:latest
   variables:
     CXX_MARCH: 'sandybridge'
     DEB_DIR: deb_bionic
@@ -224,6 +225,7 @@ clang-format:
 
 bionic-test:
   <<: *test_deb_definition
+  image: vladyslavusenko/b_image_bionic:latest
   only:
     - master
   variables:
@@ -362,7 +364,7 @@ docker-build-bionic:
   variables:
     DOCKER_TLS_CERTDIR: '/certs'
     GIT_SUBMODULE_STRATEGY: none
-    B_IMAGE_NAME: b_image
+    B_IMAGE_NAME: b_image_bionic
 
 docker-build-xenial:
   <<: *docker_build_definition
@@ -395,21 +397,21 @@ docker-build-focal:
     - basalt_rs_t265_vio --help
     - basalt_rs_t265_record --help
 
-repository-check-bionic:
+bionic-repository-check:
   image: ubuntu:18.04
   <<: *repository_check_definition
   variables:
     GIT_STRATEGY: none
     REPO_NAME: bionic
 
-repository-check-xenial:
+xenial-repository-check:
   image: ubuntu:16.04
   <<: *repository_check_definition
   variables:
     GIT_STRATEGY: none
     REPO_NAME: xenial
 
-repository-check-focal:
+focal-repository-check:
   image: ubuntu:20.04
   <<: *repository_check_definition
   variables:
