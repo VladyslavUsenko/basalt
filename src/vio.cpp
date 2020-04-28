@@ -130,7 +130,7 @@ Eigen::aligned_vector<Eigen::Vector3d> gt_t_w_i;
 std::string marg_data_path;
 size_t last_frame_processed = 0;
 
-tbb::concurrent_unordered_map<int64_t, int> timestamp_to_id;
+tbb::concurrent_unordered_map<int64_t, int, std::hash<int64_t>> timestamp_to_id;
 
 std::mutex m;
 std::condition_variable cv;

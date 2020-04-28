@@ -109,7 +109,8 @@ struct KeypointsData {
 };
 
 /// feature corners is a collection of { imageId => KeypointsData }
-using Corners = tbb::concurrent_unordered_map<TimeCamId, KeypointsData>;
+using Corners = tbb::concurrent_unordered_map<TimeCamId, KeypointsData,
+                                              std::hash<TimeCamId>>;
 
 /// feature matches for an image pair
 struct MatchData {
@@ -127,7 +128,7 @@ struct MatchData {
 /// feature matches is a collection of { (imageId, imageId) => MatchData }
 using Matches = tbb::concurrent_unordered_map<
     std::pair<TimeCamId, TimeCamId>, MatchData,
-    tbb::tbb_hash<std::pair<TimeCamId, TimeCamId>>,
+    std::hash<std::pair<TimeCamId, TimeCamId>>,
     std::equal_to<std::pair<TimeCamId, TimeCamId>>,
     Eigen::aligned_allocator<
         std::pair<const std::pair<TimeCamId, TimeCamId>, MatchData>>>;

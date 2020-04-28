@@ -69,20 +69,23 @@ struct CalibInitPoseData {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
+using CalibCornerMap = tbb::concurrent_unordered_map<TimeCamId, CalibCornerData,
+                                                     std::hash<TimeCamId>>;
+
+using CalibInitPoseMap =
+    tbb::concurrent_unordered_map<TimeCamId, CalibInitPoseData,
+                                  std::hash<TimeCamId>>;
+
 class CalibHelper {
  public:
-  static void detectCorners(
-      const VioDatasetPtr& vio_data,
-      tbb::concurrent_unordered_map<TimeCamId, CalibCornerData>& calib_corners,
-      tbb::concurrent_unordered_map<TimeCamId, CalibCornerData>&
-          calib_corners_rejected);
+  static void detectCorners(const VioDatasetPtr& vio_data,
+                            CalibCornerMap& calib_corners,
+                            CalibCornerMap& calib_corners_rejected);
 
   static void initCamPoses(
       const Calibration<double>::Ptr& calib,
       const Eigen::aligned_vector<Eigen::Vector4d>& aprilgrid_corner_pos_3d,
-      tbb::concurrent_unordered_map<TimeCamId, CalibCornerData>& calib_corners,
-      tbb::concurrent_unordered_map<TimeCamId, CalibInitPoseData>&
-          calib_init_poses);
+      CalibCornerMap& calib_corners, CalibInitPoseMap& calib_init_poses);
 
   static bool initializeIntrinsics(
       const Eigen::aligned_vector<Eigen::Vector2d>& corners,

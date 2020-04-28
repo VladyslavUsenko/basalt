@@ -97,11 +97,9 @@ bool estimateTransformation(
   return ransac.inliers_.size() > 8;
 }
 
-void CalibHelper::detectCorners(
-    const VioDatasetPtr &vio_data,
-    tbb::concurrent_unordered_map<TimeCamId, CalibCornerData> &calib_corners,
-    tbb::concurrent_unordered_map<TimeCamId, CalibCornerData>
-        &calib_corners_rejected) {
+void CalibHelper::detectCorners(const VioDatasetPtr &vio_data,
+                                CalibCornerMap &calib_corners,
+                                CalibCornerMap &calib_corners_rejected) {
   calib_corners.clear();
   calib_corners_rejected.clear();
 
@@ -144,9 +142,7 @@ void CalibHelper::detectCorners(
 void CalibHelper::initCamPoses(
     const Calibration<double>::Ptr &calib,
     const Eigen::aligned_vector<Eigen::Vector4d> &aprilgrid_corner_pos_3d,
-    tbb::concurrent_unordered_map<TimeCamId, CalibCornerData> &calib_corners,
-    tbb::concurrent_unordered_map<TimeCamId, CalibInitPoseData>
-        &calib_init_poses) {
+    CalibCornerMap &calib_corners, CalibInitPoseMap &calib_init_poses) {
   calib_init_poses.clear();
 
   std::vector<TimeCamId> corners;

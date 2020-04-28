@@ -110,10 +110,9 @@ class CamImuCalib {
 
   VioDatasetPtr vio_dataset;
 
-  tbb::concurrent_unordered_map<TimeCamId, CalibCornerData> calib_corners;
-  tbb::concurrent_unordered_map<TimeCamId, CalibCornerData>
-      calib_corners_rejected;
-  tbb::concurrent_unordered_map<TimeCamId, CalibInitPoseData> calib_init_poses;
+  CalibCornerMap calib_corners;
+  CalibCornerMap calib_corners_rejected;
+  CalibInitPoseMap calib_init_poses;
 
   std::shared_ptr<std::thread> processing_thread;
 

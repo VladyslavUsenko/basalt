@@ -57,12 +57,6 @@ class HashBow;
 class NfrMapper : public BundleAdjustmentBase {
  public:
   using Ptr = std::shared_ptr<NfrMapper>;
-  using Matches = tbb::concurrent_unordered_map<
-      std::pair<TimeCamId, TimeCamId>, MatchData,
-      tbb::tbb_hash<std::pair<TimeCamId, TimeCamId>>,
-      std::equal_to<std::pair<TimeCamId, TimeCamId>>,
-      Eigen::aligned_allocator<
-          std::pair<const std::pair<TimeCamId, TimeCamId>, MatchData>>>;
 
   template <class AccumT>
   struct MapperLinearizeAbsReduce

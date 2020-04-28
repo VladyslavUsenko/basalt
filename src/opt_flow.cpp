@@ -83,7 +83,8 @@ basalt::VioDatasetPtr vio_dataset;
 basalt::VioConfig vio_config;
 basalt::OpticalFlowBase::Ptr opt_flow_ptr;
 
-tbb::concurrent_unordered_map<int64_t, basalt::OpticalFlowResult::Ptr>
+tbb::concurrent_unordered_map<int64_t, basalt::OpticalFlowResult::Ptr,
+                              std::hash<int64_t>>
     observations;
 tbb::concurrent_bounded_queue<basalt::OpticalFlowResult::Ptr>
     observations_queue;
