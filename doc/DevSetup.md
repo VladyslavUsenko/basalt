@@ -1,14 +1,14 @@
 
 
 ### Clang-format
-We use clang-format to maintain a consistent formating of the code. Since there are small differences between different version of clang-format we use version 8 on all platforms.
+We use clang-format to maintain a consistent formating of the code. Since there are small differences between different version of clang-format we use version 10 on all platforms.
 
-On **Ubuntu 18.04** run the following commands to install clang-format-9
+On **Ubuntu 20.04 or 18.04** run the following commands to install clang-format-10
 ```
 wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add -
-sudo sh -c 'echo "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-9 main" > /etc/apt/sources.list.d/llvm9.list'
+sudo sh -c 'echo "deb http://apt.llvm.org/$(lsb_release -sc)/ llvm-toolchain-$(lsb_release -sc)-10 main" > /etc/apt/sources.list.d/llvm10.list'
 sudo apt-get update
-sudo apt-get install clang-format-9
+sudo apt-get install clang-format-10
 ```
 
 On **MacOS** [Homebrew](https://brew.sh/) should install the right version of clang-format:
@@ -19,7 +19,7 @@ brew install clang-format
 ### Realsense Drivers (Optional)
 If you want to use the code with Realsense T265 cameras you should install the realsense library.
 
-On **Ubuntu 18.04** run the following commands:
+On **Ubuntu 20.04 or 18.04** run the following commands:
 ```
 sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-key C8B3A55A6F3EFCDE
 sudo sh -c 'echo "deb http://realsense-hw-public.s3.amazonaws.com/Debian/apt-repo bionic main" > /etc/apt/sources.list.d/realsense.list'
@@ -33,7 +33,7 @@ brew install librealsense
 ```
 
 ### Install and configure QtCreator
-Download and install QtCreator. On **Ubuntu 18.04** run:
+Download and install QtCreator. On **Ubuntu 20.04 or 18.04** run:
 ```
 wget https://download.qt.io/official_releases/qtcreator/4.10/4.10.0/qt-creator-opensource-linux-x86_64-4.10.0.run
 chmod +x qt-creator-opensource-linux-x86_64-4.10.0.run
@@ -53,7 +53,7 @@ Go to `Tools` -> `Options` and select the Beautifier tab. There select ClangForm
 
 ![qt_creator_beautifier_general](/doc/img/qt_creator_beautifier_general.png)
 
-Select file as predefined style in `Clang Format` tab. Also select `None` as the fallback style. For **Ubuntu 18.04** change the executable name to `/usr/bin/clang-format-8`.
+Select file as predefined style in `Clang Format` tab. Also select `None` as the fallback style. For **Ubuntu 20.04 or 18.04** change the executable name to `/usr/bin/clang-format-10`.
 
 ![qt_creator_beautifier_clang_format](/doc/img/qt_creator_beautifier_clang_format.png)
 
