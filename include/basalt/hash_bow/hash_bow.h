@@ -72,7 +72,7 @@ class HashBow {
       const int64_t* max_t_ns = nullptr) const {
     results.clear();
 
-    std::unordered_map<TimeCamId, double, tbb::tbb_hash<TimeCamId>> scores;
+    std::unordered_map<TimeCamId, double> scores;
 
     for (const auto& kv : bow_vector) {
       const auto range_it = inverted_index.find(kv.first);
