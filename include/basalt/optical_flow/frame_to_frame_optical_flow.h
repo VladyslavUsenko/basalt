@@ -49,8 +49,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <basalt/image/image_pyr.h>
 #include <basalt/utils/keypoints.h>
 
-#include <tbb/parallel_for.h>
-
 namespace basalt {
 
 template <typename Scalar, template <typename> typename Pattern>

@@ -45,6 +45,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <basalt/serialization/headers_serialization.h>
 
+#include <tbb/parallel_reduce.h>
+
 #include <chrono>
 
 namespace basalt {

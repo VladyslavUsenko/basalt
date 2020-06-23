@@ -42,8 +42,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <sophus/se3.hpp>
 
-#include <tbb/concurrent_unordered_map.h>
-#include <tbb/tbb.h>
+#include <tbb/concurrent_queue.h>
+#include <tbb/global_control.h>
 
 #include <pangolin/display/image_view.h>
 #include <pangolin/gl/gldraw.h>
@@ -137,8 +137,11 @@ int main(int argc, char** argv) {
   app.add_option("--num-threads", num_threads, "Number of threads.");
   app.add_option("--step-by-step", step_by_step, "Path to config file.");
 
+  // global thread limit is in effect until global_control object is destroyed
+  std::unique_ptr<tbb::global_control> tbb_global_control;
   if (num_threads > 0) {
-    tbb::task_scheduler_init init(num_threads);
+    tbb_global_control = std::make_unique<tbb::global_control>(
+        tbb::global_control::max_allowed_parallelism, num_threads);
   }
 
   try {

@@ -45,8 +45,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <basalt/utils/filesystem.h>
 #include <basalt/calibration/calibration.hpp>
 
-#include <tbb/tbb.h>
-
 #include <CLI/CLI.hpp>
 
 basalt::Calibration<double> calib;
@@ -86,9 +84,6 @@ double compute_error(
 }
 
 int main(int argc, char **argv) {
-  tbb::task_scheduler_init init(
-      tbb::task_scheduler_init::default_num_threads());
-
   std::string dataset_path;
   std::string calibration_path;
   std::string mocap_calibration_path;

@@ -1,5 +1,4 @@
 
-
 #include <basalt/optimization/spline_optimize.h>
 
 #include <iostream>
@@ -8,9 +7,6 @@
 #include "test_utils.h"
 
 TEST(SplineOpt, SplineOptTest) {
-  tbb::task_scheduler_init init(
-      tbb::task_scheduler_init::default_num_threads());
-
   int num_knots = 15;
 
   basalt::CalibAccelBias<double> accel_bias_full;
