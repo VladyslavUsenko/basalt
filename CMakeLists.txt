@@ -104,7 +104,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "App
 
   if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 10)
       # These are disabled to avoid lot's of warnings in Eigen code with clang 10
-      set(BASALT_CXX_FLAGS "${BASALT_HEADERS_CXX_FLAGS} -Wno-error=misleading-indentation -Wno-error=deprecated-copy")
+      set(BASALT_CXX_FLAGS "${BASALT_CXX_FLAGS} -Wno-misleading-indentation -Wno-error=deprecated-copy")
   endif()
 
   #   - Added TBB_USE_GLIBCXX_VERSION macro to specify the version of GNU
@@ -121,7 +121,7 @@ else()
 
   if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 9)
       # These are disabled to avoid lot's of warnings in Eigen code with gcc-9
-      set(BASALT_CXX_FLAGS "${BASALT_HEADERS_CXX_FLAGS} -Wno-error=deprecated-copy")
+      set(BASALT_CXX_FLAGS "${BASALT_CXX_FLAGS} -Wno-error=deprecated-copy")
   endif()
 endif()
 

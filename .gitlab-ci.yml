@@ -211,6 +211,24 @@ mojave-relwithdebinfo-compile:
   variables:
     BUILD_TYPE: CiRelWithDebInfo
 
+catalina-relwithdebinfo-compile:
+  <<: *compile_test_definition
+  tags: [macos, "10.15"]
+  only:
+    - master
+  variables:
+    BUILD_TYPE: CiRelWithDebInfo
+
+catalina-brewclang-relwithdebinfo-compile:
+  <<: *compile_test_definition
+  tags: [macos, "10.15"]
+  only:
+    - master
+  variables:
+    BUILD_TYPE: CiRelWithDebInfo
+    CC: /usr/local/opt/llvm/bin/clang
+    CXX: /usr/local/opt/llvm/bin/clang++
+
 # check if clang-format would make any changes
 clang-format:
   tags:
