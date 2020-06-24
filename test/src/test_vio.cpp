@@ -133,7 +133,7 @@ TEST(VioTestSuite, ImuNullspace2Test) {
     double e2 = 0.5 * rand_inc.transpose() * H * rand_inc;
     e2 += rand_inc.transpose() * b;
 
-    EXPECT_LE(std::abs(e1 - e2), 1e-2) << "e1 " << e1 << " e2 " << e2;
+    EXPECT_LE(std::abs(e1 - e2), 2e-2) << "e1 " << e1 << " e2 " << e2;
   }
 
   std::cout << "=========================================" << std::endl;
