@@ -52,6 +52,7 @@ TEST(SplineOpt, SplineOptTest) {
   spline_opt.resetCalib(0, {});
 
   spline_opt.initSpline(gt_spline);
+  spline_opt.setG(g + Eigen::Vector3d::Random() / 10);
   spline_opt.init();
 
   double error;
@@ -84,8 +85,8 @@ TEST(SplineOpt, SplineOptTest) {
     Eigen::Vector3d pos_gt = pose_gt.translation();
     Eigen::Vector3d pos = pose.translation();
 
-    Eigen::Vector4d quat_gt = pose_gt.unit_quaternion().coeffs();
-    Eigen::Vector4d quat = pose.unit_quaternion().coeffs();
+    Eigen::Quaterniond quat_gt = pose_gt.unit_quaternion();
+    Eigen::Quaterniond quat = pose.unit_quaternion();
 
     Eigen::Vector3d accel_gt = gt_spline.transAccelWorld(t_ns);
     Eigen::Vector3d accel = spline_opt.getSpline().transAccelWorld(t_ns);
@@ -95,7 +96,8 @@ TEST(SplineOpt, SplineOptTest) {
 
     ASSERT_TRUE(pos_gt.isApprox(pos)) << "pos_gt and pos are not the same";
 
-    ASSERT_TRUE(quat_gt.isApprox(quat)) << "quat_gt and quat are not the same";
+    ASSERT_TRUE(quat_gt.angularDistance(quat) < 1e-2)
+        << "quat_gt and quat are not the same";
 
     ASSERT_TRUE(accel_gt.isApprox(accel))
         << "accel_gt and accel are not the same";
