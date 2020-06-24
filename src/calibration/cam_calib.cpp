@@ -486,7 +486,8 @@ void CamCalib::initCamIntrinsics() {
   for (size_t j = 0; j < vio_dataset->get_num_cams(); j++) {
     if (!cam_initialized[j]) {
       std::vector<CalibCornerData *> pinhole_corners;
-      int w, h;
+      int w = 0;
+      int h = 0;
 
       for (size_t i = 0; i < vio_dataset->get_image_timestamps().size();
            i += inc) {
@@ -506,6 +507,8 @@ void CamCalib::initCamIntrinsics() {
         w = img_vec[j].img->w;
         h = img_vec[j].img->h;
       }
+
+      BASALT_ASSERT(w > 0 && h > 0);
 
       Eigen::Vector4d init_intr;
 

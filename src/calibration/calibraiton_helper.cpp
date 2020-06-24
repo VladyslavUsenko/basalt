@@ -69,7 +69,9 @@ bool estimateTransformation(
 
   for (size_t i = 0; i < corners.size(); i++) {
     Eigen::Vector4d tmp;
-    cam_calib.unproject(corners[i], tmp);
+    if (!cam_calib.unproject(corners[i], tmp)) {
+      continue;
+    }
     Eigen::Vector3d bearing = tmp.head<3>();
     Eigen::Vector3d point = aprilgrid_corner_pos_3d[corner_ids[i]].head<3>();
     bearing.normalize();
