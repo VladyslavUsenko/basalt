@@ -79,6 +79,16 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION
   target_compile_options(pangolin PRIVATE "-Wno-defaulted-function-deleted")
 endif()
 
+# fix pangolin: clang >= 10.0
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 10.0.0)
+  target_compile_options(pangolin PRIVATE "-Wno-deprecated-copy")
+endif()
+
+# fix pangolin: GCC >= 9.0
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 9.0)
+  target_compile_options(pangolin PRIVATE "-Wno-stringop-truncation;-Wno-deprecated-copy")
+endif()
+
 # check here the directories for the pangolin and opengv targets, and
 # confirm that the eigen-related include dirs match.
 foreach(_target opengv pangolin)
