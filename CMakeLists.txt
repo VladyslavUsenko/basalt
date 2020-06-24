@@ -209,6 +209,11 @@ endif()
 
 find_package(TBB REQUIRED)
 include_directories(${TBB_INCLUDE_DIR})
+message(STATUS "TBB_INTERFACE_VERSION: ${TBB_INTERFACE_VERSION}")
+if (TBB_INTERFACE_VERSION LESS 11004)
+  # enable global_control header for earlier TBB versions (Ubuntu 16.04, 18.04)
+  add_definitions(-DTBB_PREVIEW_GLOBAL_CONTROL)
+endif()
 
 find_package(OpenCV REQUIRED core imgproc calib3d highgui)
 include_directories(${OpenCV_INCLUDE_DIR})

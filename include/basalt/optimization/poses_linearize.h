@@ -43,7 +43,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <basalt/optimization/accumulator.h>
 
-#include <tbb/tbb.h>
+#include <tbb/blocked_range.h>
 
 namespace basalt {
 

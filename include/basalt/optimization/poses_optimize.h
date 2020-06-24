@@ -38,6 +38,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <basalt/calibration/calibration_helper.h>
 #include <basalt/optimization/poses_linearize.h>
 
+#include <tbb/parallel_reduce.h>
+
 namespace basalt {
 
 class PosesOptimization {
@@ -308,7 +310,6 @@ class PosesOptimization {
   Eigen::aligned_vector<AprilgridCornersData> aprilgrid_corners_measurements;
 
   Eigen::aligned_vector<Eigen::Vector4d> aprilgrid_corner_pos_3d;
-
-};  // namespace basalt
+};
 
 }  // namespace basalt

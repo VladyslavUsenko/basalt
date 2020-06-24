@@ -44,7 +44,7 @@
 # TBB_INSTALL_DIR or $ENV{TBB21_INSTALL_DIR} or $ENV{TBB_INSTALL_DIR}
 
 # This module defines
-# TBB_INCLUDE_DIRS, where to find task_scheduler_init.h, etc.
+# TBB_INCLUDE_DIRS, where to find tbb_stddef.h, etc.
 # TBB_LIBRARY_DIRS, where to find libtbb, libtbbmalloc
 # TBB_DEBUG_LIBRARY_DIRS, where to find libtbb_debug, libtbbmalloc_debug
 # TBB_INSTALL_DIR, the base TBB install directory
@@ -184,7 +184,7 @@ set (TBB_INC_SEARCH_DIR ${_TBB_INSTALL_DIR}/include)
 # Jiri: tbbvars now sets the CPATH environment variable to the directory
 #       containing the headers.
 find_path(TBB_INCLUDE_DIR
-    tbb/task_scheduler_init.h
+    tbb/tbb_stddef.h
     PATHS ${TBB_INC_SEARCH_DIR} ENV CPATH
 )
 mark_as_advanced(TBB_INCLUDE_DIR)

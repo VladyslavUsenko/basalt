@@ -43,6 +43,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unordered_map>
 
 #include <basalt/utils/assert.h>
+#include <basalt/utils/hash.h>
 
 #if defined(BASALT_USE_CHOLMOD)
 
@@ -256,13 +257,9 @@ class SparseHashAccumulator {
     inline size_t operator()(const KeyT& c) const {
       size_t seed = 0;
       for (int i = 0; i < 4; i++) {
-        hash_combine(seed, std::hash<int>()(c[i]));
+        hash_combine(seed, c[i]);
       }
       return seed;
-    }
-
-    inline void hash_combine(std::size_t& seed, std::size_t value) const {
-      seed ^= value + 0x9e3779b9 + (seed << 6) + (seed >> 2);
     }
   };
 

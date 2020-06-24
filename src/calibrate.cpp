@@ -35,14 +35,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <basalt/calibration/cam_calib.h>
 
-#include <tbb/tbb.h>
-
 #include <CLI/CLI.hpp>
 
 int main(int argc, char **argv) {
-  tbb::task_scheduler_init init(
-      tbb::task_scheduler_init::default_num_threads());
-
   std::string dataset_path;
   std::string dataset_type;
   std::string aprilgrid_path;
