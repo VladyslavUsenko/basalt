@@ -194,7 +194,8 @@ class RosbagIO : public DatasetIoInterface {
 
       if (info->datatype == std::string("sensor_msgs/Image")) {
         cam_topics.insert(info->topic);
-      } else if (info->datatype == std::string("sensor_msgs/Imu")) {
+      } else if (info->datatype == std::string("sensor_msgs/Imu") &&
+                 info->topic.rfind("/fcu", 0) != 0) {
         imu_topic = info->topic;
       } else if (info->datatype ==
                      std::string("geometry_msgs/TransformStamped") ||
