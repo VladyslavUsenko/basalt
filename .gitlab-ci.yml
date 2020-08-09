@@ -102,7 +102,7 @@ stages:
     - scripts/eval_full/eval_results/*
     expire_in: 1 week
   script:
-    - dpkg -i deb_bionic/*.deb
+    - dpkg -i deb_focal/*.deb
     - cd scripts/eval_full
     - ./run_evaluations.sh
 
@@ -118,7 +118,7 @@ stages:
     - scripts/eval_full/eval_results_tumvi/*
     expire_in: 1 week
   script:
-    - dpkg -i deb_bionic/*.deb
+    - dpkg -i deb_focal/*.deb
     - cd scripts/eval_full
     - ./run_evaluations_tumvi.sh
 
@@ -134,7 +134,7 @@ stages:
     - scripts/eval_full/eval_results_kitti/*
     expire_in: 1 week
   script:
-    - dpkg -i deb_bionic/*.deb
+    - dpkg -i deb_focal/*.deb
     - cd scripts/eval_full
     - ./run_evaluations_kitti.sh
 
@@ -148,7 +148,6 @@ bionic-release-compile:
   artifacts:
     paths:
     - deb_bionic/*.deb
-    - scripts/eval_full/*
     expire_in: 1 week
 
 xenial-release-compile:
@@ -177,6 +176,7 @@ focal-release-compile:
   artifacts:
     paths:
     - deb_focal/*.deb
+    - scripts/eval_full/*
     expire_in: 1 week
 
 bionic-debug-compile:
