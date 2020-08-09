@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import os
 import sys
@@ -41,12 +41,12 @@ row_format ="{:>17}" + "{:>13}" * (len(datasets)-1)
 
 datasets_short = [x[8:].split('_')[0] for x in datasets]
 
-print '\nVisual-Inertial Odometry'
-print row_format.format(*datasets_short)
+print('\nVisual-Inertial Odometry')
+print(row_format.format(*datasets_short))
 
-print row_format.format(*vio['ate'])
-#print row_format.format(*vio['time'])
-print row_format.format(*vio['num_frames'])
+print(row_format.format(*vio['ate']))
+#print(row_format.format(*vio['time']))
+print(row_format.format(*vio['num_frames']))
 
 
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import os
 import sys
@@ -65,34 +65,34 @@ row_format ="{:>17}" + "{:>13}" * (len(datasets)-1)
 
 datasets_short = [x[:5] for x in datasets]
 
-print '\nVisual-Inertial Odometry'
-print row_format.format(*datasets_short)
+print('\nVisual-Inertial Odometry')
+print(row_format.format(*datasets_short))
 
-print row_format.format(*vio['ate'])
-#print row_format.format(*vio['time'])
-print row_format.format(*vio['num_frames'])
+print(row_format.format(*vio['ate']))
+#print(row_format.format(*vio['time']))
+print(row_format.format(*vio['num_frames']))
 
-print '\nVisual-Inertial Mapping'
-print row_format.format(*datasets_short)
+print('\nVisual-Inertial Mapping')
+print(row_format.format(*datasets_short))
 
-print row_format.format(*mapping['ate'])
-#print row_format.format(*mapping['time'])
-print row_format.format(*mapping['num_frames'])
-
-
-print '\nPose-Graph optimization (Identity weights for all factors)'
-print row_format.format(*datasets_short)
-
-print row_format.format(*pose_graph['ate'])
-#print row_format.format(*pose_graph['time'])
-print row_format.format(*pose_graph['num_frames'])
+print(row_format.format(*mapping['ate']))
+#print(row_format.format(*mapping['time']))
+print(row_format.format(*mapping['num_frames']))
 
 
-print '\nPure BA optimization (no factors from the recovery used)'
-print row_format.format(*datasets_short)
+print('\nPose-Graph optimization (Identity weights for all factors)')
+print(row_format.format(*datasets_short))
 
-print row_format.format(*pure_ba['ate'])
-#print row_format.format(*pure_ba['time'])
-print row_format.format(*pure_ba['num_frames'])
+print(row_format.format(*pose_graph['ate']))
+#print(row_format.format(*pose_graph['time']))
+print(row_format.format(*pose_graph['num_frames']))
+
+
+print('\nPure BA optimization (no factors from the recovery used)')
+print(row_format.format(*datasets_short))
+
+print(row_format.format(*pure_ba['ate']))
+#print(row_format.format(*pure_ba['time']))
+print(row_format.format(*pure_ba['num_frames']))
 
 

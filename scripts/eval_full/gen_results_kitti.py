@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import os
 import sys
@@ -58,16 +58,16 @@ row_format ="{:>24}" + "{:>10}" * (len(datasets)-1)
 
 datasets_short = [x[:5] for x in datasets]
 
-print '\nVisual Odometry (Stereo)'
-print row_format.format(*datasets_short)
+print('\nVisual Odometry (Stereo)')
+print(row_format.format(*datasets_short))
 
 for l in lengths:
-        print row_format.format(*(vo['trans_error'][l]))
+        print(row_format.format(*(vo['trans_error'][l])))
 
-print
+print()
 
 for l in lengths:
-        print row_format.format(*(vo['rot_error'][l]))
+        print(row_format.format(*(vo['rot_error'][l])))
 
 
 print('Mean translation error [%] ',  mean_values['mean_trans_error']/mean_values['total_num_meas'])
