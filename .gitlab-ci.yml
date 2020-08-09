@@ -1,4 +1,4 @@
-image: vladyslavusenko/b_image_bionic:latest
+image: vladyslavusenko/b_image_focal:latest
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
