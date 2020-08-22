@@ -71,6 +71,8 @@ RsT265Device::RsT265Device(bool manual_exposure, int skip_frames,
   }
 
   auto device = context.query_devices()[0];
+  device.hardware_reset();
+
   std::cout << "Device " << device.get_info(RS2_CAMERA_INFO_NAME)
             << " connected" << std::endl;
   sensor = device.query_sensors()[0];
