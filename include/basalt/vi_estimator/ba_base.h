@@ -399,7 +399,7 @@ class BundleAdjustmentBase {
 
   inline void restore() {
     for (auto& kv : frame_states) kv.second.restore();
-    for (auto& kv : frame_poses) kv.second.backup();
+    for (auto& kv : frame_poses) kv.second.restore();
     lmdb.restore();
   }
 
