@@ -142,6 +142,8 @@ bionic-release-compile:
   <<: *prepare_docker_definition
   <<: *compile_test_package_definition
   image: vladyslavusenko/b_image_bionic:latest
+  only:
+    - master
   variables:
     CXX_MARCH: 'sandybridge'
     DEB_DIR: deb_bionic
@@ -168,8 +170,6 @@ focal-release-compile:
   <<: *prepare_docker_definition
   <<: *compile_test_package_definition
   image: vladyslavusenko/b_image_focal:latest
-  only:
-    - master
   variables:
     CXX_MARCH: 'sandybridge'
     DEB_DIR: deb_focal
