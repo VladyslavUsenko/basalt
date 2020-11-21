@@ -29,7 +29,7 @@ Calibration (describes B-spline trajectory representation used in camera-IMU cal
 
 
 ## Installation
-### APT installation for Ubuntu 20.04, 18.04 and 16.04 (Fast)
+### APT installation for Ubuntu 20.04 and 18.04 (Fast)
 Set up keys, add the repository to the sources list, update the Ubuntu package index and install Basalt:
 ```
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 0D97B6C9

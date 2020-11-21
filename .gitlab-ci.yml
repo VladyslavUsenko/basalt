@@ -422,13 +422,6 @@ bionic-repository-check:
     GIT_STRATEGY: none
     REPO_NAME: bionic
 
-xenial-repository-check:
-  image: ubuntu:16.04
-  <<: *repository_check_definition
-  variables:
-    GIT_STRATEGY: none
-    REPO_NAME: xenial
-
 focal-repository-check:
   image: ubuntu:20.04
   <<: *repository_check_definition
