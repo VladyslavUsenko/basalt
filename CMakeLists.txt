@@ -129,7 +129,7 @@ endif()
 # Set platform / compiler specific compile flags and checks
 if(APPLE)
   # Need to investigate how to reliably detect and use OpenMP on macOS...
-  set(USE_OPENMP_DEFAULT OFF)
+#  set(USE_OPENMP_DEFAULT OFF)
 
   # Among others, setting CMAKE_FIND_FRAMEWORK to LAST fixed issues
   # with installed Mono that contains old headers (libpng, ...).
@@ -163,7 +163,7 @@ if(APPLE)
   endif()
 
 elseif(UNIX)
-  set(USE_OPENMP_DEFAULT ON)
+#  set(USE_OPENMP_DEFAULT ON)
 
   # assume libstdc++
   set(STD_CXX_FS stdc++fs)
@@ -186,13 +186,37 @@ endif()
 
 
 # OpenMP option and compile flags
-option(USE_OPENMP "Use OpenMP (e.g. for parallel computation in Eigen)" ${USE_OPENMP_DEFAULT})
-if(USE_OPENMP)
-  message(STATUS "OpenMP Enabled")
-  set(BASALT_CXX_FLAGS "${BASALT_CXX_FLAGS} -fopenmp")
-else()
-  message(STATUS "OpenMP Disabled")
-endif()
+#
+# Note: OpenMP and TBB don't mix well, so we disable Eigen's parallelization.
+# It's trying to paralellize matrix products during SC, which we run in a parallel_reduce using TBB.
+# Turns out using OpenMP can slow down the computby factor 10-100x! So for now we discable it completely.
+# One place where Eigen's parallelization could still have been useful is the CG solver in the mapper.
+# We could in the future investiagte other implementations (paralellized with TBB) or selectively enabling
+# Eigen's parallelization just for CG, setting number of threads to 1 everywhere else.
+# Another way to ensure Eigen doesn't use OpenMP regardless of how it was built is setting the environment
+# variable OMP_NUM_THREADS=1 beofre running the application.
+#
+# See: https://eigen.tuxfamily.org/dox/TopicMultiThreading.html
+#
+# If we enable BLAS / LAPACK either directly or via thirdparty libs like ceres,
+# make sure to disable OpenMP for the linked BLAS library. In particular on Ubuntu it seems OpenBLAS is often installed,
+# and it can have similar issues in multithreaded applications if it's own parallelization with OpenMP is enabled.
+# You can set the environment varaibles OPENBLAS_NUM_THREADS=1 or OMP_NUM_THREADS=1. This is also mentioned in the ceres
+# installation documentation.
+#
+# See also: https://github.com/xianyi/OpenBLAS/wiki/faq#multi-threaded
+#
+# Set EIGEN_DONT_PARALLELIZE to be sure it doesn't use openmp,
+# just in case some dependency enables openmp without us noticing.
+set(BASALT_CXX_FLAGS "${BASALT_CXX_FLAGS} -DEIGEN_DONT_PARALLELIZE")
+
+#option(USE_OPENMP "Use OpenMP (e.g. for parallel computation in Eigen)" ${USE_OPENMP_DEFAULT})
+#if(USE_OPENMP)
+#  message(STATUS "OpenMP Enabled")
+#  set(BASALT_CXX_FLAGS "${BASALT_CXX_FLAGS} -fopenmp")
+#else()
+#  message(STATUS "OpenMP Disabled")
+#endif()
 
 
 # setup combined compiler flags

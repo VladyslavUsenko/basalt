@@ -201,6 +201,10 @@ class SparseHashAccumulator {
     VectorX res;
 
     if (iterative_solver) {
+      // NOTE: since we have to disable Eigen's parallelization with OpenMP
+      // (interferes with TBB), the current CG is single-threaded, and we
+      // can expect a substantial speedup by switching to a parallel
+      // implementation of CG.
       Eigen::ConjugateGradient<Eigen::SparseMatrix<double>,
                                Eigen::Lower | Eigen::Upper>
           cg;
