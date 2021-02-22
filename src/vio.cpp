@@ -222,17 +222,17 @@ int main(int argc, char** argv) {
                  "Save trajectory. Supported formats <tum, euroc, kitti>");
   app.add_option("--use-imu", use_imu, "Use IMU.");
 
+  try {
+    app.parse(argc, argv);
+  } catch (const CLI::ParseError& e) {
+    return app.exit(e);
+  }
+
   // global thread limit is in effect until global_control object is destroyed
   std::unique_ptr<tbb::global_control> tbb_global_control;
   if (num_threads > 0) {
     tbb_global_control = std::make_unique<tbb::global_control>(
         tbb::global_control::max_allowed_parallelism, num_threads);
-  }
-
-  try {
-    app.parse(argc, argv);
-  } catch (const CLI::ParseError& e) {
-    return app.exit(e);
   }
 
   if (!config_path.empty()) {
