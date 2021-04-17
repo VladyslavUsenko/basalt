@@ -257,8 +257,9 @@ class BundleAdjustmentBase {
   static Eigen::VectorXd checkNullspace(
       const Eigen::MatrixXd& marg_H, const Eigen::VectorXd& marg_b,
       const AbsOrderMap& marg_order,
-      const Eigen::aligned_map<int64_t, PoseVelBiasStateWithLin>& frame_states,
-      const Eigen::aligned_map<int64_t, PoseStateWithLin>& frame_poses);
+      const Eigen::aligned_map<int64_t, PoseVelBiasStateWithLin<double>>&
+          frame_states,
+      const Eigen::aligned_map<int64_t, PoseStateWithLin<double>>& frame_poses);
 
   /// Triangulates the point and returns homogenous representation. First 3
   /// components - unit-length direction vector. Last component inverse
@@ -404,7 +405,7 @@ class BundleAdjustmentBase {
   }
 
   // protected:
-  PoseStateWithLin getPoseStateWithLin(int64_t t_ns) const {
+  PoseStateWithLin<double> getPoseStateWithLin(int64_t t_ns) const {
     auto it = frame_poses.find(t_ns);
     if (it != frame_poses.end()) return it->second;
 
@@ -417,8 +418,8 @@ class BundleAdjustmentBase {
     return PoseStateWithLin(it2->second);
   }
 
-  Eigen::aligned_map<int64_t, PoseVelBiasStateWithLin> frame_states;
-  Eigen::aligned_map<int64_t, PoseStateWithLin> frame_poses;
+  Eigen::aligned_map<int64_t, PoseVelBiasStateWithLin<double>> frame_states;
+  Eigen::aligned_map<int64_t, PoseStateWithLin<double>> frame_poses;
 
   // Point management
   LandmarkDatabase lmdb;

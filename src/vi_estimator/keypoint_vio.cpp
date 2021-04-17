@@ -99,7 +99,7 @@ void KeypointVioEstimator::initialize(int64_t t_ns, const Sophus::SE3d& T_w_i,
   last_state_t_ns = t_ns;
   imu_meas[t_ns] = IntegratedImuMeasurement(t_ns, bg, ba);
   frame_states[t_ns] =
-      PoseVelBiasStateWithLin(t_ns, T_w_i, vel_w_i, bg, ba, true);
+      PoseVelBiasStateWithLin<double>(t_ns, T_w_i, vel_w_i, bg, ba, true);
 
   marg_order.abs_order_map[t_ns] = std::make_pair(0, POSE_VEL_BIAS_SIZE);
   marg_order.total_size = POSE_VEL_BIAS_SIZE;
@@ -112,14 +112,14 @@ void KeypointVioEstimator::initialize(const Eigen::Vector3d& bg,
                                       const Eigen::Vector3d& ba) {
   auto proc_func = [&, bg, ba] {
     OpticalFlowResult::Ptr prev_frame, curr_frame;
-    IntegratedImuMeasurement::Ptr meas;
+    IntegratedImuMeasurement<double>::Ptr meas;
 
     const Eigen::Vector3d accel_cov =
         calib.dicrete_time_accel_noise_std().array().square();
     const Eigen::Vector3d gyro_cov =
         calib.dicrete_time_gyro_noise_std().array().square();
 
-    ImuData::Ptr data;
+    ImuData<double>::Ptr data;
     imu_data_queue.pop(data);
     data->accel = calib.calib_accel_bias.getCalibrated(data->accel);
     data->gyro = calib.calib_gyro_bias.getCalibrated(data->gyro);
@@ -157,7 +157,7 @@ void KeypointVioEstimator::initialize(const Eigen::Vector3d& bg,
         last_state_t_ns = curr_frame->t_ns;
         imu_meas[last_state_t_ns] =
             IntegratedImuMeasurement(last_state_t_ns, bg, ba);
-        frame_states[last_state_t_ns] = PoseVelBiasStateWithLin(
+        frame_states[last_state_t_ns] = PoseVelBiasStateWithLin<double>(
             last_state_t_ns, T_w_i_init, vel_w_i_init, bg, ba, true);
 
         marg_order.abs_order_map[last_state_t_ns] =
@@ -177,7 +177,7 @@ void KeypointVioEstimator::initialize(const Eigen::Vector3d& bg,
 
         auto last_state = frame_states.at(last_state_t_ns);
 
-        meas.reset(new IntegratedImuMeasurement(
+        meas.reset(new IntegratedImuMeasurement<double>(
             prev_frame->t_ns, last_state.getState().bias_gyro,
             last_state.getState().bias_accel));
 
@@ -221,7 +221,7 @@ void KeypointVioEstimator::initialize(const Eigen::Vector3d& bg,
   processing_thread.reset(new std::thread(proc_func));
 }
 
-void KeypointVioEstimator::addIMUToQueue(const ImuData::Ptr& data) {
+void KeypointVioEstimator::addIMUToQueue(const ImuData<double>::Ptr& data) {
   imu_data_queue.emplace(data);
 }
 
@@ -230,8 +230,9 @@ void KeypointVioEstimator::addVisionToQueue(
   vision_data_queue.push(data);
 }
 
-bool KeypointVioEstimator::measure(const OpticalFlowResult::Ptr& opt_flow_meas,
-                                   const IntegratedImuMeasurement::Ptr& meas) {
+bool KeypointVioEstimator::measure(
+    const OpticalFlowResult::Ptr& opt_flow_meas,
+    const IntegratedImuMeasurement<double>::Ptr& meas) {
   if (meas.get()) {
     BASALT_ASSERT(frame_states[last_state_t_ns].getState().t_ns ==
                   meas->get_start_t_ns());
@@ -392,7 +393,7 @@ bool KeypointVioEstimator::measure(const OpticalFlowResult::Ptr& opt_flow_meas,
   if (out_state_queue) {
     PoseVelBiasStateWithLin p = frame_states.at(last_state_t_ns);
 
-    PoseVelBiasState::Ptr data(new PoseVelBiasState(p.getState()));
+    PoseVelBiasState<double>::Ptr data(new PoseVelBiasState(p.getState()));
 
     out_state_queue->push(data);
   }
@@ -692,7 +693,7 @@ void KeypointVioEstimator::marginalize(
     }
 
     for (const int64_t id : states_to_marg_vel_bias) {
-      const PoseVelBiasStateWithLin& state = frame_states.at(id);
+      const PoseVelBiasStateWithLin<double>& state = frame_states.at(id);
       PoseStateWithLin pose(state);
 
       frame_poses[id] = pose;

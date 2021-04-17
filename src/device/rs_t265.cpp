@@ -135,8 +135,8 @@ void RsT265Device::start() {
             Eigen::Vector3d accel_interpolated =
                 w0 * prev_accel_data->data + w1 * d.data;
 
-            basalt::ImuData::Ptr data;
-            data.reset(new basalt::ImuData);
+            basalt::ImuData<double>::Ptr data;
+            data.reset(new basalt::ImuData<double>);
             data->t_ns = gyro_data.timestamp * 1e6;
             data->accel = accel_interpolated;
             data->gyro = gyro_data.data;

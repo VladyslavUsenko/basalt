@@ -40,8 +40,9 @@ namespace basalt {
 void KeypointVioEstimator::linearizeAbsIMU(
     const AbsOrderMap& aom, Eigen::MatrixXd& abs_H, Eigen::VectorXd& abs_b,
     double& imu_error, double& bg_error, double& ba_error,
-    const Eigen::aligned_map<int64_t, PoseVelBiasStateWithLin>& states,
-    const Eigen::aligned_map<int64_t, IntegratedImuMeasurement>& imu_meas,
+    const Eigen::aligned_map<int64_t, PoseVelBiasStateWithLin<double>>& states,
+    const Eigen::aligned_map<int64_t, IntegratedImuMeasurement<double>>&
+        imu_meas,
     const Eigen::Vector3d& gyro_bias_weight,
     const Eigen::Vector3d& accel_bias_weight, const Eigen::Vector3d& g) {
   imu_error = 0;
@@ -62,10 +63,10 @@ void KeypointVioEstimator::linearizeAbsIMU(
       PoseVelBiasStateWithLin start_state = states.at(start_t);
       PoseVelBiasStateWithLin end_state = states.at(end_t);
 
-      IntegratedImuMeasurement::MatNN d_res_d_start, d_res_d_end;
-      IntegratedImuMeasurement::MatN3 d_res_d_bg, d_res_d_ba;
+      IntegratedImuMeasurement<double>::MatNN d_res_d_start, d_res_d_end;
+      IntegratedImuMeasurement<double>::MatN3 d_res_d_bg, d_res_d_ba;
 
-      PoseVelState::VecN res = kv.second.residual(
+      PoseVelState<double>::VecN res = kv.second.residual(
           start_state.getStateLin(), g, end_state.getStateLin(),
           start_state.getStateLin().bias_gyro,
           start_state.getStateLin().bias_accel, &d_res_d_start, &d_res_d_end,
@@ -97,7 +98,7 @@ void KeypointVioEstimator::linearizeAbsIMU(
           d_res_d_end.transpose() * kv.second.get_cov_inv() * res;
 
       // bias
-      IntegratedImuMeasurement::MatN6 d_res_d_bga;
+      IntegratedImuMeasurement<double>::MatN6 d_res_d_bga;
       d_res_d_bga.topLeftCorner<9, 3>() = d_res_d_bg;
       d_res_d_bga.topRightCorner<9, 3>() = d_res_d_ba;
 
@@ -179,8 +180,9 @@ void KeypointVioEstimator::linearizeAbsIMU(
 void KeypointVioEstimator::computeImuError(
     const AbsOrderMap& aom, double& imu_error, double& bg_error,
     double& ba_error,
-    const Eigen::aligned_map<int64_t, PoseVelBiasStateWithLin>& states,
-    const Eigen::aligned_map<int64_t, IntegratedImuMeasurement>& imu_meas,
+    const Eigen::aligned_map<int64_t, PoseVelBiasStateWithLin<double>>& states,
+    const Eigen::aligned_map<int64_t, IntegratedImuMeasurement<double>>&
+        imu_meas,
     const Eigen::Vector3d& gyro_bias_weight,
     const Eigen::Vector3d& accel_bias_weight, const Eigen::Vector3d& g) {
   imu_error = 0;
@@ -198,7 +200,7 @@ void KeypointVioEstimator::computeImuError(
       PoseVelBiasStateWithLin start_state = states.at(start_t);
       PoseVelBiasStateWithLin end_state = states.at(end_t);
 
-      const PoseVelState::VecN res = kv.second.residual(
+      const PoseVelState<double>::VecN res = kv.second.residual(
           start_state.getState(), g, end_state.getState(),
           start_state.getState().bias_gyro, start_state.getState().bias_accel);
 

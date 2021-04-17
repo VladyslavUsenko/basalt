@@ -69,7 +69,8 @@ class NfrMapper : public BundleAdjustmentBase {
 
     MapperLinearizeAbsReduce(
         AbsOrderMap& aom,
-        const Eigen::aligned_map<int64_t, PoseStateWithLin>* frame_poses)
+        const Eigen::aligned_map<int64_t, PoseStateWithLin<double>>*
+            frame_poses)
         : BundleAdjustmentBase::LinearizeAbsReduce<AccumT>(aom),
           frame_poses(frame_poses) {
       this->accum.reset(aom.total_size);
@@ -154,7 +155,7 @@ class NfrMapper : public BundleAdjustmentBase {
     double roll_pitch_error;
     double rel_error;
 
-    const Eigen::aligned_map<int64_t, PoseStateWithLin>* frame_poses;
+    const Eigen::aligned_map<int64_t, PoseStateWithLin<double>>* frame_poses;
   };
 
   NfrMapper(const basalt::Calibration<double>& calib, const VioConfig& config);
@@ -167,7 +168,7 @@ class NfrMapper : public BundleAdjustmentBase {
 
   void optimize(int num_iterations = 10);
 
-  Eigen::aligned_map<int64_t, PoseStateWithLin>& getFramePoses();
+  Eigen::aligned_map<int64_t, PoseStateWithLin<double>>& getFramePoses();
 
   void computeRelPose(double& rel_error);
 

@@ -62,7 +62,7 @@ void NfrMapper::addMargData(MargData::Ptr& data) {
 
   if (valid) {
     for (const auto& kv : data->frame_poses) {
-      PoseStateWithLin p(kv.second.getT_ns(), kv.second.getPose());
+      PoseStateWithLin<double> p(kv.second.getT_ns(), kv.second.getPose());
 
       frame_poses[kv.first] = p;
     }
@@ -70,7 +70,8 @@ void NfrMapper::addMargData(MargData::Ptr& data) {
     for (const auto& kv : data->frame_states) {
       if (data->kfs_all.count(kv.first) > 0) {
         auto state = kv.second;
-        PoseStateWithLin p(state.getState().t_ns, state.getState().T_w_i);
+        PoseStateWithLin<double> p(state.getState().t_ns,
+                                   state.getState().T_w_i);
         frame_poses[kv.first] = p;
       }
     }
@@ -420,7 +421,8 @@ void NfrMapper::optimize(int num_iterations) {
   }
 }
 
-Eigen::aligned_map<int64_t, PoseStateWithLin>& NfrMapper::getFramePoses() {
+Eigen::aligned_map<int64_t, PoseStateWithLin<double>>&
+NfrMapper::getFramePoses() {
   return frame_poses;
 }
 

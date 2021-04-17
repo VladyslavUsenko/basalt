@@ -91,7 +91,7 @@ void KeypointVoEstimator::initialize(int64_t t_ns, const Sophus::SE3d& T_w_i,
   T_w_i_init = T_w_i;
 
   last_state_t_ns = t_ns;
-  frame_poses[t_ns] = PoseStateWithLin(t_ns, T_w_i, true);
+  frame_poses[t_ns] = PoseStateWithLin<double>(t_ns, T_w_i, true);
 
   marg_order.abs_order_map[t_ns] = std::make_pair(0, POSE_SIZE);
   marg_order.total_size = POSE_SIZE;
@@ -122,7 +122,7 @@ void KeypointVoEstimator::initialize(const Eigen::Vector3d& bg,
       // curr_frame->t_ns += calib.cam_time_offset_ns;
 
       while (!imu_data_queue.empty()) {
-        ImuData::Ptr d;
+        ImuData<double>::Ptr d;
         imu_data_queue.pop(d);
       }
 
@@ -132,7 +132,7 @@ void KeypointVoEstimator::initialize(const Eigen::Vector3d& bg,
         last_state_t_ns = curr_frame->t_ns;
 
         frame_poses[last_state_t_ns] =
-            PoseStateWithLin(last_state_t_ns, T_w_i_init, true);
+            PoseStateWithLin<double>(last_state_t_ns, T_w_i_init, true);
 
         marg_order.abs_order_map[last_state_t_ns] =
             std::make_pair(0, POSE_SIZE);
@@ -172,11 +172,13 @@ void KeypointVoEstimator::addVisionToQueue(const OpticalFlowResult::Ptr& data) {
 bool KeypointVoEstimator::measure(const OpticalFlowResult::Ptr& opt_flow_meas,
                                   const bool add_pose) {
   if (add_pose) {
-    const PoseStateWithLin& curr_state = frame_poses.at(last_state_t_ns);
+    const PoseStateWithLin<double>& curr_state =
+        frame_poses.at(last_state_t_ns);
 
     last_state_t_ns = opt_flow_meas->t_ns;
 
-    PoseStateWithLin next_state(opt_flow_meas->t_ns, curr_state.getPose());
+    PoseStateWithLin<double> next_state(opt_flow_meas->t_ns,
+                                        curr_state.getPose());
     frame_poses[last_state_t_ns] = next_state;
   }
 
@@ -319,11 +321,11 @@ bool KeypointVoEstimator::measure(const OpticalFlowResult::Ptr& opt_flow_meas,
   marginalize(num_points_connected);
 
   if (out_state_queue) {
-    const PoseStateWithLin& p = frame_poses.at(last_state_t_ns);
+    const PoseStateWithLin<double>& p = frame_poses.at(last_state_t_ns);
 
-    PoseVelBiasState::Ptr data(
-        new PoseVelBiasState(p.getT_ns(), p.getPose(), Eigen::Vector3d::Zero(),
-                             Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero()));
+    PoseVelBiasState<double>::Ptr data(new PoseVelBiasState<double>(
+        p.getT_ns(), p.getPose(), Eigen::Vector3d::Zero(),
+        Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero()));
 
     out_state_queue->push(data);
   }

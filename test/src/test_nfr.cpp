@@ -38,7 +38,7 @@ TEST(PreIntegrationTestSuite, RelPoseTest) {
         "d_res_d_T_w_i", d_res_d_T_w_i,
         [&](const Sophus::Vector6d& x) {
           auto T_w_i_new = T_w_i;
-          basalt::PoseState::incPose(x, T_w_i_new);
+          basalt::PoseState<double>::incPose(x, T_w_i_new);
 
           return basalt::relPoseError(T_i_j, T_w_i_new, T_w_j);
         },
@@ -52,7 +52,7 @@ TEST(PreIntegrationTestSuite, RelPoseTest) {
         "d_res_d_T_w_j", d_res_d_T_w_j,
         [&](const Sophus::Vector6d& x) {
           auto T_w_j_new = T_w_j;
-          basalt::PoseState::incPose(x, T_w_j_new);
+          basalt::PoseState<double>::incPose(x, T_w_j_new);
 
           return basalt::relPoseError(T_i_j, T_w_i, T_w_j_new);
         },
@@ -75,7 +75,7 @@ TEST(PreIntegrationTestSuite, AbsPositionTest) {
         "d_res_d_T_w_i", d_res_d_T_w_i,
         [&](const Sophus::Vector6d& x) {
           auto T_w_i_new = T_w_i;
-          basalt::PoseState::incPose(x, T_w_i_new);
+          basalt::PoseState<double>::incPose(x, T_w_i_new);
 
           return basalt::absPositionError(T_w_i_new, pos);
         },
@@ -101,7 +101,7 @@ TEST(PreIntegrationTestSuite, YawTest) {
         "d_res_d_T_w_i", d_res_d_T_w_i,
         [&](const Sophus::Vector6d& x) {
           auto T_w_i_new = T_w_i;
-          basalt::PoseState::incPose(x, T_w_i_new);
+          basalt::PoseState<double>::incPose(x, T_w_i_new);
 
           double res = basalt::yawError(T_w_i_new, yaw_dir_body);
 
@@ -128,7 +128,7 @@ TEST(PreIntegrationTestSuite, RollPitchTest) {
         "d_res_d_T_w_i", d_res_d_T_w_i,
         [&](const Sophus::Vector6d& x) {
           auto T_w_i_new = T_w_i;
-          basalt::PoseState::incPose(x, T_w_i_new);
+          basalt::PoseState<double>::incPose(x, T_w_i_new);
 
           return basalt::rollPitchError(T_w_i_new, R_w_i);
         },

@@ -634,8 +634,9 @@ void BundleAdjustmentBase::computeMargPriorError(
 Eigen::VectorXd BundleAdjustmentBase::checkNullspace(
     const Eigen::MatrixXd& H, const Eigen::VectorXd& b,
     const AbsOrderMap& order,
-    const Eigen::aligned_map<int64_t, PoseVelBiasStateWithLin>& frame_states,
-    const Eigen::aligned_map<int64_t, PoseStateWithLin>& frame_poses) {
+    const Eigen::aligned_map<int64_t, PoseVelBiasStateWithLin<double>>&
+        frame_states,
+    const Eigen::aligned_map<int64_t, PoseStateWithLin<double>>& frame_poses) {
   BASALT_ASSERT(size_t(H.cols()) == order.total_size);
   size_t marg_size = order.total_size;
 

@@ -77,10 +77,10 @@ class VioEstimatorBase {
   std::atomic<bool> finished;
 
   tbb::concurrent_bounded_queue<OpticalFlowResult::Ptr> vision_data_queue;
-  tbb::concurrent_bounded_queue<ImuData::Ptr> imu_data_queue;
+  tbb::concurrent_bounded_queue<ImuData<double>::Ptr> imu_data_queue;
 
-  tbb::concurrent_bounded_queue<PoseVelBiasState::Ptr>* out_state_queue =
-      nullptr;
+  tbb::concurrent_bounded_queue<PoseVelBiasState<double>::Ptr>*
+      out_state_queue = nullptr;
   tbb::concurrent_bounded_queue<MargData::Ptr>* out_marg_queue = nullptr;
   tbb::concurrent_bounded_queue<VioVisualizationData::Ptr>* out_vis_queue =
       nullptr;

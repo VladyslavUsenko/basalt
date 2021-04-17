@@ -75,25 +75,29 @@ class KeypointVioEstimator : public VioEstimatorBase,
 
   virtual ~KeypointVioEstimator() { processing_thread->join(); }
 
-  void addIMUToQueue(const ImuData::Ptr& data);
+  void addIMUToQueue(const ImuData<double>::Ptr& data);
   void addVisionToQueue(const OpticalFlowResult::Ptr& data);
 
   bool measure(const OpticalFlowResult::Ptr& data,
-               const IntegratedImuMeasurement::Ptr& meas);
+               const IntegratedImuMeasurement<double>::Ptr& meas);
 
   static void linearizeAbsIMU(
       const AbsOrderMap& aom, Eigen::MatrixXd& abs_H, Eigen::VectorXd& abs_b,
       double& imu_error, double& bg_error, double& ba_error,
-      const Eigen::aligned_map<int64_t, PoseVelBiasStateWithLin>& states,
-      const Eigen::aligned_map<int64_t, IntegratedImuMeasurement>& imu_meas,
+      const Eigen::aligned_map<int64_t, PoseVelBiasStateWithLin<double>>&
+          states,
+      const Eigen::aligned_map<int64_t, IntegratedImuMeasurement<double>>&
+          imu_meas,
       const Eigen::Vector3d& gyro_bias_weight,
       const Eigen::Vector3d& accel_bias_weight, const Eigen::Vector3d& g);
 
   static void computeImuError(
       const AbsOrderMap& aom, double& imu_error, double& bg_error,
       double& ba_error,
-      const Eigen::aligned_map<int64_t, PoseVelBiasStateWithLin>& states,
-      const Eigen::aligned_map<int64_t, IntegratedImuMeasurement>& imu_meas,
+      const Eigen::aligned_map<int64_t, PoseVelBiasStateWithLin<double>>&
+          states,
+      const Eigen::aligned_map<int64_t, IntegratedImuMeasurement<double>>&
+          imu_meas,
       const Eigen::Vector3d& gyro_bias_weight,
       const Eigen::Vector3d& accel_bias_weight, const Eigen::Vector3d& g);
 
@@ -116,11 +120,11 @@ class KeypointVioEstimator : public VioEstimatorBase,
     return frame_states.at(last_state_t_ns).getState().vel_w_i;
   }
 
-  const PoseVelBiasState& get_state() const {
+  const PoseVelBiasState<double>& get_state() const {
     return frame_states.at(last_state_t_ns).getState();
   }
-  PoseVelBiasState get_state(int64_t t_ns) const {
-    PoseVelBiasState state;
+  PoseVelBiasState<double> get_state(int64_t t_ns) const {
+    PoseVelBiasState<double> state;
 
     auto it = frame_states.find(t_ns);
 
@@ -187,7 +191,7 @@ class KeypointVioEstimator : public VioEstimatorBase,
   std::set<int64_t> kf_ids;
 
   int64_t last_state_t_ns;
-  Eigen::aligned_map<int64_t, IntegratedImuMeasurement> imu_meas;
+  Eigen::aligned_map<int64_t, IntegratedImuMeasurement<double>> imu_meas;
 
   const Eigen::Vector3d g;
 

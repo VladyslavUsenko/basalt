@@ -116,7 +116,8 @@ basalt::VioEstimatorBase::Ptr vio;
 // Visualization vars
 std::unordered_map<int64_t, basalt::VioVisualizationData::Ptr> vis_map;
 tbb::concurrent_bounded_queue<basalt::VioVisualizationData::Ptr> out_vis_queue;
-tbb::concurrent_bounded_queue<basalt::PoseVelBiasState::Ptr> out_state_queue;
+tbb::concurrent_bounded_queue<basalt::PoseVelBiasState<double>::Ptr>
+    out_state_queue;
 
 std::vector<pangolin::TypedImage> images;
 
@@ -208,7 +209,7 @@ int main(int argc, char** argv) {
 
   std::thread t0([&]() {
     for (size_t i = 0; i < gt_imu_t_ns.size(); i++) {
-      basalt::ImuData::Ptr data(new basalt::ImuData);
+      basalt::ImuData<double>::Ptr data(new basalt::ImuData<double>);
       data->t_ns = gt_imu_t_ns[i];
 
       data->accel = noisy_accel[i];
@@ -264,7 +265,7 @@ int main(int argc, char** argv) {
   });
 
   std::thread t3([&]() {
-    basalt::PoseVelBiasState::Ptr data;
+    basalt::PoseVelBiasState<double>::Ptr data;
 
     while (true) {
       out_state_queue.pop(data);

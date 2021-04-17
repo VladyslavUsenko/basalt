@@ -532,7 +532,7 @@ void randomInc() {
 
   for (auto& kv : nrf_mapper->getFramePoses()) {
     Sophus::SE3d pose = random_inc * kv.second.getPose();
-    basalt::PoseStateWithLin p(kv.first, pose);
+    basalt::PoseStateWithLin<double> p(kv.first, pose);
     kv.second = p;
   }
 
@@ -550,7 +550,7 @@ void randomYawInc() {
 
   for (auto& kv : nrf_mapper->getFramePoses()) {
     Sophus::SE3d pose = random_inc * kv.second.getPose();
-    basalt::PoseStateWithLin p(kv.first, pose);
+    basalt::PoseStateWithLin<double> p(kv.first, pose);
     kv.second = p;
   }
 

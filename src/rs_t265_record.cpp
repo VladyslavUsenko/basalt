@@ -72,7 +72,7 @@ pangolin::Var<float> exposure("ui.exposure", 5.0, 1, 20);
 
 tbb::concurrent_bounded_queue<basalt::OpticalFlowInput::Ptr> image_data_queue,
     image_data_queue2;
-tbb::concurrent_bounded_queue<basalt::ImuData::Ptr> imu_data_queue;
+tbb::concurrent_bounded_queue<basalt::ImuData<double>::Ptr> imu_data_queue;
 tbb::concurrent_bounded_queue<basalt::RsPoseData> pose_data_queue;
 
 std::atomic<bool> stop_workers;
@@ -164,7 +164,7 @@ void image_save_worker() {
 }
 
 void imu_save_worker() {
-  basalt::ImuData::Ptr data;
+  basalt::ImuData<double>::Ptr data;
 
   while (!stop_workers) {
     if (imu_data_queue.try_pop(data)) {

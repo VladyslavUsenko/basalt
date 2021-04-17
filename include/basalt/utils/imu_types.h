@@ -57,8 +57,13 @@ static const Eigen::Vector3d g(0, 0, -9.81);
 static const Eigen::Vector3d g_dir(0, 0, -1);
 }  // namespace constants
 
+template <class Scalar>
+struct PoseStateWithLin;
+
+template <class Scalar_>
 struct PoseVelBiasStateWithLin {
-  using VecN = PoseVelBiasState::VecN;
+  using Scalar = Scalar_;
+  using VecN = typename PoseVelBiasState<Scalar>::VecN;
 
   PoseVelBiasStateWithLin() {
     linearized = false;
@@ -75,7 +80,7 @@ struct PoseVelBiasStateWithLin {
     state_current = state_linearized;
   }
 
-  PoseVelBiasStateWithLin(const PoseVelBiasState& other)
+  PoseVelBiasStateWithLin(const PoseVelBiasState<Scalar>& other)
       : linearized(false), state_linearized(other) {
     delta.setZero();
     state_current = other;
@@ -102,7 +107,7 @@ struct PoseVelBiasStateWithLin {
     }
   }
 
-  inline const PoseVelBiasState& getState() const {
+  inline const PoseVelBiasState<Scalar>& getState() const {
     if (!linearized) {
       return state_linearized;
     } else {
@@ -110,7 +115,7 @@ struct PoseVelBiasStateWithLin {
     }
   }
 
-  inline const PoseVelBiasState& getStateLin() const {
+  inline const PoseVelBiasState<Scalar>& getStateLin() const {
     return state_linearized;
   }
 
@@ -118,7 +123,7 @@ struct PoseVelBiasStateWithLin {
   inline const VecN& getDelta() const { return delta; }
   inline int64_t getT_ns() const { return state_linearized.t_ns; }
 
-  friend struct PoseStateWithLin;
+  friend struct PoseStateWithLin<Scalar>;
 
   inline void backup() {
     backup_delta = delta;
@@ -136,10 +141,10 @@ struct PoseVelBiasStateWithLin {
  private:
   bool linearized;
   VecN delta;
-  PoseVelBiasState state_linearized, state_current;
+  PoseVelBiasState<Scalar> state_linearized, state_current;
 
   VecN backup_delta;
-  PoseVelBiasState backup_state_linearized, backup_state_current;
+  PoseVelBiasState<Scalar> backup_state_linearized, backup_state_current;
 
   friend class cereal::access;
 
@@ -159,8 +164,11 @@ struct PoseVelBiasStateWithLin {
   }
 };
 
+template <typename Scalar_>
 struct PoseStateWithLin {
-  using VecN = PoseState::VecN;
+  using Scalar = Scalar_;
+  using VecN = typename PoseState<Scalar>::VecN;
+  using SE3 = typename PoseState<Scalar>::SE3;
 
   PoseStateWithLin() {
     linearized = false;
@@ -174,13 +182,13 @@ struct PoseStateWithLin {
     T_w_i_current = T_w_i;
   }
 
-  PoseStateWithLin(const PoseVelBiasStateWithLin& other)
+  PoseStateWithLin(const PoseVelBiasStateWithLin<Scalar>& other)
       : linearized(other.linearized),
-        delta(other.delta.head<6>()),
+        delta(other.delta.template head<6>()),
         pose_linearized(other.state_linearized.t_ns,
                         other.state_linearized.T_w_i) {
     T_w_i_current = pose_linearized.T_w_i;
-    PoseState::incPose(delta, T_w_i_current);
+    PoseState<Scalar>::incPose(delta, T_w_i_current);
   }
 
   void setLinTrue() {
@@ -203,11 +211,11 @@ struct PoseStateWithLin {
 
   inline void applyInc(const VecN& inc) {
     if (!linearized) {
-      PoseState::incPose(inc, pose_linearized.T_w_i);
+      PoseState<Scalar>::incPose(inc, pose_linearized.T_w_i);
     } else {
       delta += inc;
       T_w_i_current = pose_linearized.T_w_i;
-      PoseState::incPose(delta, T_w_i_current);
+      PoseState<Scalar>::incPose(delta, T_w_i_current);
     }
   }
 
@@ -231,12 +239,12 @@ struct PoseStateWithLin {
  private:
   bool linearized;
   VecN delta;
-  PoseState pose_linearized;
-  Sophus::SE3d T_w_i_current;
+  PoseState<Scalar> pose_linearized;
+  SE3 T_w_i_current;
 
   VecN backup_delta;
-  PoseState backup_pose_linearized;
-  Sophus::SE3d backup_T_w_i_current;
+  PoseState<Scalar> backup_pose_linearized;
+  SE3 backup_T_w_i_current;
 
   friend class cereal::access;
 
@@ -270,8 +278,8 @@ struct MargData {
   AbsOrderMap aom;
   Eigen::MatrixXd abs_H;
   Eigen::VectorXd abs_b;
-  Eigen::aligned_map<int64_t, PoseVelBiasStateWithLin> frame_states;
-  Eigen::aligned_map<int64_t, PoseStateWithLin> frame_poses;
+  Eigen::aligned_map<int64_t, PoseVelBiasStateWithLin<double>> frame_states;
+  Eigen::aligned_map<int64_t, PoseStateWithLin<double>> frame_poses;
   std::set<int64_t> kfs_all;
   std::set<int64_t> kfs_to_marg;
   bool use_imu;

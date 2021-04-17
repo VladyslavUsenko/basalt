@@ -74,7 +74,7 @@ class KeypointVoEstimator : public VioEstimatorBase,
 
   virtual ~KeypointVoEstimator() { processing_thread->join(); }
 
-  void addIMUToQueue(const ImuData::Ptr& data);
+  void addIMUToQueue(const ImuData<double>::Ptr& data);
   void addVisionToQueue(const OpticalFlowResult::Ptr& data);
 
   bool measure(const OpticalFlowResult::Ptr& data, bool add_frame);
@@ -98,11 +98,11 @@ class KeypointVoEstimator : public VioEstimatorBase,
     return frame_states.at(last_state_t_ns).getState().vel_w_i;
   }
 
-  const PoseVelBiasState& get_state() const {
+  const PoseVelBiasState<double>& get_state() const {
     return frame_states.at(last_state_t_ns).getState();
   }
-  PoseVelBiasState get_state(int64_t t_ns) const {
-    PoseVelBiasState state;
+  PoseVelBiasState<double> get_state(int64_t t_ns) const {
+    PoseVelBiasState<double> state;
 
     auto it = frame_states.find(t_ns);
 

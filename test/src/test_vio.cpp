@@ -33,7 +33,7 @@ TEST(VioTestSuite, ImuNullspace2Test) {
   basalt::Se3Spline<5> gt_spline(int64_t(10e9));
   gt_spline.genRandomTrajectory(num_knots);
 
-  basalt::PoseVelBiasState state0, state1, state1_gt;
+  basalt::PoseVelBiasState<double> state0, state1, state1_gt;
 
   state0.t_ns = 0;
   state0.T_w_i = gt_spline.pose(int64_t(0));
@@ -55,7 +55,7 @@ TEST(VioTestSuite, ImuNullspace2Test) {
         (gt_spline.transAccelWorld(t_ns) - basalt::constants::g);
     Eigen::Vector3d rot_vel_body = gt_spline.rotVelBody(t_ns);
 
-    basalt::ImuData data;
+    basalt::ImuData<double> data;
     data.accel = accel_body + ba;
     data.gyro = rot_vel_body + bg;
 
@@ -86,9 +86,11 @@ TEST(VioTestSuite, ImuNullspace2Test) {
   Eigen::Vector3d accel_weight;
   accel_weight.setConstant(1e6);
 
-  Eigen::aligned_map<int64_t, basalt::IntegratedImuMeasurement> imu_meas_vec;
-  Eigen::aligned_map<int64_t, basalt::PoseVelBiasStateWithLin> frame_states;
-  Eigen::aligned_map<int64_t, basalt::PoseStateWithLin> frame_poses;
+  Eigen::aligned_map<int64_t, basalt::IntegratedImuMeasurement<double>>
+      imu_meas_vec;
+  Eigen::aligned_map<int64_t, basalt::PoseVelBiasStateWithLin<double>>
+      frame_states;
+  Eigen::aligned_map<int64_t, basalt::PoseStateWithLin<double>> frame_poses;
 
   imu_meas_vec[state0.t_ns] = imu_meas;
   frame_states[state0.t_ns] = state0;
@@ -159,7 +161,7 @@ TEST(VioTestSuite, ImuNullspace3Test) {
   basalt::Se3Spline<5> gt_spline(int64_t(10e9));
   gt_spline.genRandomTrajectory(num_knots);
 
-  basalt::PoseVelBiasState state0, state1, state2;
+  basalt::PoseVelBiasState<double> state0, state1, state2;
 
   state0.t_ns = 0;
   state0.T_w_i = gt_spline.pose(int64_t(0));
@@ -181,7 +183,7 @@ TEST(VioTestSuite, ImuNullspace3Test) {
         (gt_spline.transAccelWorld(t_ns) - basalt::constants::g);
     Eigen::Vector3d rot_vel_body = gt_spline.rotVelBody(t_ns);
 
-    basalt::ImuData data;
+    basalt::ImuData<double> data;
     data.accel = accel_body + ba;
     data.gyro = rot_vel_body + bg;
 
@@ -208,7 +210,7 @@ TEST(VioTestSuite, ImuNullspace3Test) {
         (gt_spline.transAccelWorld(t_ns) - basalt::constants::g);
     Eigen::Vector3d rot_vel_body = gt_spline.rotVelBody(t_ns);
 
-    basalt::ImuData data;
+    basalt::ImuData<double> data;
     data.accel = accel_body + ba;
     data.gyro = rot_vel_body + bg;
 
@@ -247,9 +249,11 @@ TEST(VioTestSuite, ImuNullspace3Test) {
   Eigen::Vector3d accel_weight;
   accel_weight.setConstant(1e6);
 
-  Eigen::aligned_map<int64_t, basalt::IntegratedImuMeasurement> imu_meas_vec;
-  Eigen::aligned_map<int64_t, basalt::PoseVelBiasStateWithLin> frame_states;
-  Eigen::aligned_map<int64_t, basalt::PoseStateWithLin> frame_poses;
+  Eigen::aligned_map<int64_t, basalt::IntegratedImuMeasurement<double>>
+      imu_meas_vec;
+  Eigen::aligned_map<int64_t, basalt::PoseVelBiasStateWithLin<double>>
+      frame_states;
+  Eigen::aligned_map<int64_t, basalt::PoseStateWithLin<double>> frame_poses;
 
   imu_meas_vec[imu_meas1.get_start_t_ns()] = imu_meas1;
   imu_meas_vec[imu_meas2.get_start_t_ns()] = imu_meas2;
@@ -305,7 +309,7 @@ TEST(VioTestSuite, RelPoseTest) {
         "d_rel_d_h", d_rel_d_h,
         [&](const Sophus::Vector6d& x) {
           Sophus::SE3d T_w_h_new = T_w_i_h;
-          basalt::PoseState::incPose(x, T_w_h_new);
+          basalt::PoseState<double>::incPose(x, T_w_h_new);
 
           Sophus::SE3d T_t_h_sophus_new =
               basalt::KeypointVioEstimator::computeRelPose(T_w_h_new, T_i_c_h,
@@ -323,7 +327,7 @@ TEST(VioTestSuite, RelPoseTest) {
         "d_rel_d_t", d_rel_d_t,
         [&](const Sophus::Vector6d& x) {
           Sophus::SE3d T_w_t_new = T_w_i_t;
-          basalt::PoseState::incPose(x, T_w_t_new);
+          basalt::PoseState<double>::incPose(x, T_w_t_new);
 
           Sophus::SE3d T_t_h_sophus_new =
               basalt::KeypointVioEstimator::computeRelPose(T_w_i_h, T_i_c_h,

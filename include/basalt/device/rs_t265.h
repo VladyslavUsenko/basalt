@@ -92,7 +92,7 @@ class RsT265Device {
   OpticalFlowInput::Ptr last_img_data;
   tbb::concurrent_bounded_queue<OpticalFlowInput::Ptr>* image_data_queue =
       nullptr;
-  tbb::concurrent_bounded_queue<ImuData::Ptr>* imu_data_queue = nullptr;
+  tbb::concurrent_bounded_queue<ImuData<double>::Ptr>* imu_data_queue = nullptr;
   tbb::concurrent_bounded_queue<RsPoseData>* pose_data_queue = nullptr;
 
  private:
