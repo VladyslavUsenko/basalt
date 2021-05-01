@@ -116,7 +116,7 @@ class PatchOpticalFlow : public OpticalFlowBase {
       transforms->observations.resize(calib.intrinsics.size());
       transforms->t_ns = t_ns;
 
-      pyramid.reset(new std::vector<basalt::ManagedImagePyr<u_int16_t>>);
+      pyramid.reset(new std::vector<basalt::ManagedImagePyr<uint16_t>>);
       pyramid->resize(calib.intrinsics.size());
       for (size_t i = 0; i < calib.intrinsics.size(); i++) {
         pyramid->at(i).setFromImage(*new_img_vec->img_data[i].img,
@@ -133,7 +133,7 @@ class PatchOpticalFlow : public OpticalFlowBase {
 
       old_pyramid = pyramid;
 
-      pyramid.reset(new std::vector<basalt::ManagedImagePyr<u_int16_t>>);
+      pyramid.reset(new std::vector<basalt::ManagedImagePyr<uint16_t>>);
       pyramid->resize(calib.intrinsics.size());
       for (size_t i = 0; i < calib.intrinsics.size(); i++) {
         pyramid->at(i).setFromImage(*new_img_vec->img_data[i].img,
@@ -164,8 +164,8 @@ class PatchOpticalFlow : public OpticalFlowBase {
     frame_counter++;
   }
 
-  void trackPoints(const basalt::ManagedImagePyr<u_int16_t>& pyr_1,
-                   const basalt::ManagedImagePyr<u_int16_t>& pyr_2,
+  void trackPoints(const basalt::ManagedImagePyr<uint16_t>& pyr_1,
+                   const basalt::ManagedImagePyr<uint16_t>& pyr_2,
                    const Eigen::aligned_map<KeypointId, Eigen::AffineCompact2f>&
                        transform_map_1,
                    Eigen::aligned_map<KeypointId, Eigen::AffineCompact2f>&
@@ -246,7 +246,7 @@ class PatchOpticalFlow : public OpticalFlowBase {
     return patch_valid;
   }
 
-  inline bool trackPointAtLevel(const Image<const u_int16_t>& img_2,
+  inline bool trackPointAtLevel(const Image<const uint16_t>& img_2,
                                 const PatchT& dp,
                                 Eigen::AffineCompact2f& transform) const {
     bool patch_valid = true;
@@ -380,7 +380,7 @@ class PatchOpticalFlow : public OpticalFlowBase {
       patches;
 
   OpticalFlowResult::Ptr transforms;
-  std::shared_ptr<std::vector<basalt::ManagedImagePyr<u_int16_t>>> old_pyramid,
+  std::shared_ptr<std::vector<basalt::ManagedImagePyr<uint16_t>>> old_pyramid,
       pyramid;
 
   Eigen::Matrix4d E;

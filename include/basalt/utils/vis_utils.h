@@ -40,13 +40,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <basalt/utils/sophus_utils.hpp>
 
-const u_int8_t cam_color[3]{250, 0, 26};
-const u_int8_t state_color[3]{250, 0, 26};
-const u_int8_t pose_color[3]{0, 50, 255};
-const u_int8_t gt_color[3]{0, 171, 47};
+const uint8_t cam_color[3]{250, 0, 26};
+const uint8_t state_color[3]{250, 0, 26};
+const uint8_t pose_color[3]{0, 50, 255};
+const uint8_t gt_color[3]{0, 171, 47};
 
 inline void render_camera(const Eigen::Matrix4d& T_w_c, float lineWidth,
-                          const u_int8_t* color, float sizeFactor) {
+                          const uint8_t* color, float sizeFactor) {
   const float sz = sizeFactor;
   const float width = 640, height = 480, fx = 500, fy = 500, cx = 320, cy = 240;
 
