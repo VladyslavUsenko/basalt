@@ -536,7 +536,7 @@ void gen_data() {
       gt_spline = basalt::Se3Spline<5>(t_ns);
 
       for (size_t i = 0; i < knots.size(); i++) {
-        gt_spline.knots_push_back(knots[i]);
+        gt_spline.knotsPushBack(knots[i]);
       }
 
       archive(cereal::make_nvp("noisy_accel", noisy_accel));

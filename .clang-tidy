@@ -1,0 +1,80 @@
+Checks: 'readability-*, -readability-magic-numbers, -readability-function-cognitive-complexity, -readability-else-after-return, -readability-redundant-access-specifiers, performance-*, modernize-*, -modernize-use-trailing-return-type, -modernize-avoid-c-arrays, -modernize-use-nodiscard, -modernize-use-auto, -modernize-pass-by-value, misc-assert-side-effect, -clang-analyzer-osx.*, -clang-analyzer-cplusplus.Move, -clang-analyzer-core.uninitialized.UndefReturn, -clang-analyzer-optin.portability.UnixAPI, -clang-analyzer-unix.Malloc'
+WarningsAsErrors: '*'
+HeaderFilterRegex: '.*/thirdparty/basalt-headers/include/basalt/*'
+
+CheckOptions:
+# Classes, structs, ...
+  - key:    readability-identifier-naming.NamespaceCase
+    value:  lower_case
+  - key:    readability-identifier-naming.ClassCase
+    value:  CamelCase
+  - key:    readability-identifier-naming.StructCase
+    value:  CamelCase
+  - key:    readability-identifier-naming.EnumCase
+    value:  CamelCase
+  - key:    readability-identifier-naming.UnionCase
+    value:  CamelCase
+  - key:    readability-identifier-naming.TypedefCase
+    value:  CamelCase
+
+# Variables, member variables, ...
+  - key:    readability-identifier-naming.ParameterCase
+    value:  lower_case
+  - key:    readability-identifier-naming.ParameterIgnoredRegexp
+    value:  'Q[12]?_.*|[A-Z]|[JH]_.*|[TR]_[a-z]+_[a-z]+.*'
+  - key:    readability-identifier-naming.VariableCase
+    value:  lower_case
+  - key:    readability-identifier-naming.VariableIgnoredRegexp
+    value:  'Q[12]?_.*|[A-Z]|[JH]_.*|[TR]_[a-z]+_[a-z]+.*'
+  - key:    readability-identifier-naming.MemberCase
+    value:  lower_case
+  - key:    readability-identifier-naming.PublicMemberCase
+    value:  lower_case
+  - key:    readability-identifier-naming.PublicMemberIgnoredRegexp
+    value:  'Q[12]?_.*|[A-Z]|[JH]_.*|[TR]_[a-z]+_[a-z]+.*'
+  - key:    readability-identifier-naming.ProtectedMemberCase
+    value:  lower_case
+  - key:    readability-identifier-naming.ProtectedMemberSuffix
+    value:  _
+  - key:    readability-identifier-naming.ProtectedMemberIgnoredRegexp
+    value:  'Q[12]?_.*|[A-Z]|[JH]_.*|[TR]_[a-z]+_[a-z]+.*'
+  - key:    readability-identifier-naming.PrivateMemberCase
+    value:  lower_case
+  - key:    readability-identifier-naming.PrivateMemberIgnoredRegexp
+    value:  'Q[12]?_.*|[A-Z]|[JH]_.*|[TR]_[a-z]+_[a-z]+.*'
+  - key:    readability-identifier-naming.PrivateMemberSuffix
+    value:  _
+
+# Functions, methods, ...
+  - key:    readability-identifier-naming.FunctionCase
+    value:  camelBack
+  - key:    readability-identifier-naming.MethodCase
+    value:  camelBack
+
+# Constants
+  - key:    readability-identifier-naming.ConstantPrefix
+    value:  ''
+  - key:    readability-identifier-naming.ConstantCase
+    value:  UPPER_CASE
+  - key:    readability-identifier-naming.ConstantMemberPrefix
+    value:  ''
+  - key:    readability-identifier-naming.ConstantMemberCase
+    value:  lower_case
+  - key:    readability-identifier-naming.ConstantMemberIgnoredRegexp
+    value:  '^.*_$'
+  - key:    readability-identifier-naming.ConstantParameterPrefix
+    value:  ''
+  - key:    readability-identifier-naming.ConstantParameterCase
+    value:  lower_case
+  - key:    readability-identifier-naming.ConstantParameterIgnoredRegexp
+    value:  'Q[12]?_.*|[A-Z]|[JH]_.*|[TR]_[a-z]+_[a-z]+.*'
+  - key:    readability-identifier-naming.LocalConstantParameterPrefix
+    value:  ''
+  - key:    readability-identifier-naming.LocalConstantCase
+    value:  lower_case
+  - key:    readability-identifier-naming.LocalConstantIgnoredRegexp
+    value:  'Q[12]?_.*|[A-Z]|[JH]_.*|[TR]_[a-z]+_[a-z]+.*'
+  - key:    readability-identifier-naming.ConstexprVariablePrefix
+    value:  ''
+  - key:    readability-identifier-naming.ConstexprVariableCase
+    value:  UPPER_CASE

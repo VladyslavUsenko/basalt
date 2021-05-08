@@ -67,11 +67,11 @@ VignetteEstimator::VignetteEstimator(
   for (size_t i = 0; i < vio_dataset->get_num_cams(); i++) {
     while (vign_param[i].maxTimeNs() <
            int64_t(vign_size) * int64_t(1e9 * 0.7)) {
-      vign_param[i].knots_push_back(Eigen::Matrix<double, 1, 1>(1));
+      vign_param[i].knotsPushBack(Eigen::Matrix<double, 1, 1>(1));
     }
 
     while (vign_param[i].maxTimeNs() < int64_t(vign_size) * int64_t(1e9)) {
-      vign_param[i].knots_push_back(Eigen::Matrix<double, 1, 1>(0.01));
+      vign_param[i].knotsPushBack(Eigen::Matrix<double, 1, 1>(0.01));
     }
   }
 
