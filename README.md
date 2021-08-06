@@ -49,7 +49,6 @@ cd build
 cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
 make -j8
 ```
-NOTE: It is possible to compile the code on Ubuntu 16.04, but you need to install cmake-3.10 or higher and gcc-7. See corresponding [Dockerfile](docker/b_image_xenial/Dockerfile) as an example.
 
 ## Usage
 * [Camera, IMU and Mocap calibration. (TUM-VI, Euroc, UZH-FPV and Kalibr datasets)](doc/Calibration.md)

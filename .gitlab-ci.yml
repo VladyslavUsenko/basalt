@@ -152,20 +152,6 @@ bionic-release-compile:
     - deb_bionic/*.deb
     expire_in: 1 week
 
-xenial-release-compile:
-  <<: *prepare_docker_definition
-  <<: *compile_test_package_definition
-  image: vladyslavusenko/b_image_xenial:latest
-  only:
-    - master
-  variables:
-    CXX_MARCH: 'sandybridge'
-    DEB_DIR: deb_xenial
-  artifacts:
-    paths:
-    - deb_xenial/*.deb
-    expire_in: 1 week
-
 focal-release-compile:
   <<: *prepare_docker_definition
   <<: *compile_test_package_definition
@@ -248,15 +234,6 @@ bionic-test:
     - master
   variables:
     DEB_DIR: deb_bionic
-    GIT_STRATEGY: none
-
-xenial-test:
-  <<: *test_deb_definition
-  image: vladyslavusenko/b_image_xenial:latest
-  only:
-    - master
-  variables:
-    DEB_DIR: deb_xenial
     GIT_STRATEGY: none
 
 focal-test:
@@ -354,7 +331,6 @@ deploy:
     - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
     - chmod 644 ~/.ssh/known_hosts
   script:
-    - scp $SCP_FLAGS deb_xenial/*.deb $REPOSITORY_URL/xenial/    
     - scp $SCP_FLAGS deb_bionic/*.deb $REPOSITORY_URL/bionic/
     - scp $SCP_FLAGS deb_focal/*.deb $REPOSITORY_URL/focal/
     
@@ -383,13 +359,6 @@ docker-build-bionic:
     DOCKER_TLS_CERTDIR: '/certs'
     GIT_SUBMODULE_STRATEGY: none
     B_IMAGE_NAME: b_image_bionic
-
-docker-build-xenial:
-  <<: *docker_build_definition
-  variables:
-    DOCKER_TLS_CERTDIR: '/certs'
-    GIT_SUBMODULE_STRATEGY: none
-    B_IMAGE_NAME: b_image_xenial
 
 docker-build-focal:
   <<: *docker_build_definition
