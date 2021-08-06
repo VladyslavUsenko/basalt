@@ -165,7 +165,7 @@ focal-release-compile:
     - scripts/eval_full/*
     expire_in: 1 week
 
-bionic-debug-compile:
+focal-debug-compile:
   <<: *prepare_docker_definition
   <<: *compile_test_package_definition
   only:
@@ -173,7 +173,7 @@ bionic-debug-compile:
   variables:
     BUILD_TYPE: CiDebug
 
-bionic-relwithdebinfo-compile:
+focal-relwithdebinfo-compile:
   <<: *prepare_docker_definition
   <<: *compile_test_package_definition
   variables:
