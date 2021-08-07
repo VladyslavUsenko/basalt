@@ -378,8 +378,8 @@ docker-build-focal:
     - master
   script:
     - apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y gnupg2
-    - apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 0D97B6C9
-    - echo "deb [arch=amd64] http://packages.usenko.eu/ubuntu "$REPO_NAME" main" > /etc/apt/sources.list.d/basalt.list
+    - apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0AD9A3000D97B6C9
+    - echo "deb [arch=amd64] http://packages.usenko.eu/ubuntu $REPO_NAME $REPO_NAME/main" > /etc/apt/sources.list.d/basalt.list
     - apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y basalt
     - basalt_rs_t265_vio --help
     - basalt_rs_t265_record --help
