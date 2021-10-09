@@ -298,7 +298,7 @@ class PatchOpticalFlow : public OpticalFlowBase {
 
       Vector2 pos = kd.corners[i].cast<Scalar>();
 
-      for (int l = 0; l < 4; l++) {
+      for (int l = 0; l <= config.optical_flow_levels; l++) {
         Scalar scale = 1 << l;
         Vector2 pos_scaled = pos / scale;
         p.emplace_back(pyramid->at(0).lvl(l), pos_scaled);
