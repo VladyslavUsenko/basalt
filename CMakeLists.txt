@@ -174,9 +174,11 @@ elseif(UNIX)
   set(STD_CXX_FS stdc++fs)
 
   if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    set(LINUX_CLANG 1)
     message(STATUS "Detected Linux with clang.")
-    message(WARNING "Clang on Linux is currently not fully supported. You'll likely need to get a recent version of TBB.")
+
+    # Note: Whatever the issue was, this seems to not be an issue any more, at least with more recent clang and Ubuntu versions (tested clang-12 and Ubuntu 18.04)
+    #message(WARNING "Clang on Linux is currently not fully supported. You'll likely need to get a recent version of TBB.")
+    #set(LINUX_CLANG 1)
 
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     message(STATUS "Detected Linux with gcc.")
