@@ -55,7 +55,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <basalt/io/marg_data_io.h>
 #include <basalt/spline/se3_spline.h>
 #include <basalt/utils/sim_utils.h>
-#include <basalt/vi_estimator/keypoint_vio.h>
+#include <basalt/vi_estimator/vio_estimator.h>
 
 #include <basalt/calibration/calibration.hpp>
 
@@ -102,7 +102,7 @@ std::string marg_data_path;
 
 // VIO vars
 basalt::Calibration<double> calib;
-basalt::KeypointVioEstimator::Ptr vio;
+basalt::VioEstimatorBase::Ptr vio;
 
 // Visualization vars
 std::unordered_map<int64_t, basalt::VioVisualizationData::Ptr> vis_map;
@@ -723,7 +723,8 @@ void setup_vio() {
   basalt::VioConfig config;
   config.vio_debug = true;
 
-  vio.reset(new basalt::KeypointVioEstimator(g, calib, config));
+  vio = basalt::VioEstimatorFactory::getVioEstimator(config, calib, g, true,
+                                                     true);
   vio->initialize(t_init_ns, T_w_i_init, vel_w_i_init, gt_gyro_bias.front(),
                   gt_accel_bias.front());
 

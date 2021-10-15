@@ -27,6 +27,9 @@ Calibration (demonstrates how these tools can be used for dataset calibration):
 Calibration (describes B-spline trajectory representation used in camera-IMU calibration):
 * **Efficient Derivative Computation for Cumulative B-Splines on Lie Groups**, C. Sommer, V. Usenko, D. Schubert, N. Demmel, D. Cremers, In 2020 Conference on Computer Vision and Pattern Recognition (CVPR), [[DOI:10.1109/CVPR42600.2020.01116]](https://doi.org/10.1109/CVPR42600.2020.01116), [[arXiv:1911.08860]](https://arxiv.org/abs/1911.08860).
 
+Optimization (describes square-root optimization and marginalization used in VIO/VO):
+* **Square Root Marginalization for Sliding-Window Bundle Adjustment**, N. Demmel, D. Schubert, C. Sommer, D. Cremers, V. Usenko, In 2021 International Conference on Computer Vision (ICCV), [[arXiv:2109.02182]](https://arxiv.org/abs/2109.02182)
+
 
 ## Installation
 ### APT installation for Ubuntu 20.04 and 18.04 (Fast)
@@ -55,6 +58,7 @@ make -j8
 * [Visual-inertial odometry and mapping. (TUM-VI and Euroc datasets)](doc/VioMapping.md)
 * [Visual odometry (no IMU). (KITTI dataset)](doc/Vo.md)
 * [Simulation tools to test different components of the system.](doc/Simulation.md)
+* [Batch evaluation tutorial (ICCV'21 experiments)](doc/BatchEvaluation.md)
 
 ## Device support
 * [Tutorial on Camera-IMU and Motion capture calibration with Realsense T265.](doc/Realsense.md)
@@ -65,3 +69,6 @@ make -j8
 ## Licence
 The code is provided under a BSD 3-clause license. See the LICENSE file for details.
 Note also the different licenses of thirdparty submodules.
+
+Some improvements are ported back from the fork
+[granite](https://github.com/DLR-RM/granite) (MIT license).

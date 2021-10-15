@@ -173,7 +173,7 @@ int main(int argc, char** argv) {
   t265_device->image_data_queue = &opt_flow_ptr->input_queue;
 
   vio = basalt::VioEstimatorFactory::getVioEstimator(
-      vio_config, calib, basalt::constants::g, true);
+      vio_config, calib, basalt::constants::g, true, true);
   vio->initialize(Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero());
   t265_device->imu_data_queue = &vio->imu_data_queue;
 

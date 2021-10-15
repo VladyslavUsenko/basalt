@@ -61,9 +61,11 @@ using SparseLLT = Eigen::SimplicialLDLT<T>;
 
 namespace basalt {
 
-template <typename Scalar = double>
+template <typename Scalar_ = double>
 class DenseAccumulator {
  public:
+  using Scalar = Scalar_;
+
   typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1> VectorX;
   typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> MatrixX;
 
@@ -135,9 +137,11 @@ class DenseAccumulator {
   VectorX b;
 };
 
-template <typename Scalar = double>
+template <typename Scalar_ = double>
 class SparseHashAccumulator {
  public:
+  using Scalar = Scalar_;
+
   typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1> VectorX;
   typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> MatrixX;
   typedef Eigen::Triplet<Scalar> T;

@@ -39,6 +39,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream>
 #include <thread>
 
+#include <fmt/format.h>
+
 #include <sophus/se3.hpp>
 
 #include <tbb/concurrent_unordered_map.h>
@@ -61,7 +63,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <basalt/serialization/headers_serialization.h>
 
+#include <basalt/utils/system_utils.h>
 #include <basalt/utils/vis_utils.h>
+#include <basalt/utils/time_utils.hpp>
+
+using namespace fmt::literals;
 
 // GUI functions
 void draw_image_overlay(pangolin::View& v, size_t cam_id);
@@ -106,6 +112,7 @@ Button align_se3_btn("ui.align_se3", &alignButton);
 pangolin::Var<bool> euroc_fmt("ui.euroc_fmt", true, false, true);
 pangolin::Var<bool> tum_rgbd_fmt("ui.tum_rgbd_fmt", false, false, true);
 pangolin::Var<bool> kitti_fmt("ui.kitti_fmt", false, false, true);
+pangolin::Var<bool> save_groundtruth("ui.save_groundtruth", false, false, true);
 Button save_traj_btn("ui.save_traj", &saveTrajectoryButton);
 
 pangolin::Var<bool> follow("ui.follow", true, false, true);
@@ -136,6 +143,9 @@ tbb::concurrent_unordered_map<int64_t, int, std::hash<int64_t>> timestamp_to_id;
 std::mutex m;
 std::condition_variable cv;
 bool step_by_step = false;
+size_t max_frames = 0;
+
+std::atomic<bool> terminate = false;
 
 // VIO variables
 basalt::Calibration<double> calib;
@@ -150,6 +160,11 @@ void feed_images() {
   std::cout << "Started input_data thread " << std::endl;
 
   for (size_t i = 0; i < vio_dataset->get_image_timestamps().size(); i++) {
+    if (vio->finished || terminate || (max_frames > 0 && i >= max_frames)) {
+      // stop loop early if we set a limit on number of frames to process
+      break;
+    }
+
     if (step_by_step) {
       std::unique_lock<std::mutex> lk(m);
       cv.wait(lk);
@@ -173,6 +188,10 @@ void feed_images() {
 
 void feed_imu() {
   for (size_t i = 0; i < vio_dataset->get_gyro_data().size(); i++) {
+    if (vio->finished || terminate) {
+      break;
+    }
+
     basalt::ImuData<double>::Ptr data(new basalt::ImuData<double>);
     data->t_ns = vio_dataset->get_gyro_data()[i].timestamp_ns;
 
@@ -187,15 +206,16 @@ void feed_imu() {
 int main(int argc, char** argv) {
   bool show_gui = true;
   bool print_queue = false;
-  bool terminate = false;
   std::string cam_calib_path;
   std::string dataset_path;
   std::string dataset_type;
   std::string config_path;
   std::string result_path;
   std::string trajectory_fmt;
+  bool trajectory_groundtruth;
   int num_threads = 0;
   bool use_imu = true;
+  bool use_double = false;
 
   CLI::App app{"App description"};
 
@@ -221,7 +241,13 @@ int main(int argc, char** argv) {
   app.add_option("--step-by-step", step_by_step, "Path to config file.");
   app.add_option("--save-trajectory", trajectory_fmt,
                  "Save trajectory. Supported formats <tum, euroc, kitti>");
+  app.add_option("--save-groundtruth", trajectory_groundtruth,
+                 "In addition to trajectory, save also ground turth");
   app.add_option("--use-imu", use_imu, "Use IMU.");
+  app.add_option("--use-double", use_double, "Use double not float.");
+  app.add_option(
+      "--max-frames", max_frames,
+      "Limit number of frames to process from dataset (0 means unlimited)");
 
   try {
     app.parse(argc, argv);
@@ -276,7 +302,7 @@ int main(int argc, char** argv) {
   const int64_t start_t_ns = vio_dataset->get_image_timestamps().front();
   {
     vio = basalt::VioEstimatorFactory::getVioEstimator(
-        vio_config, calib, basalt::constants::g, use_imu);
+        vio_config, calib, basalt::constants::g, use_imu, use_double);
     vio->initialize(Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero());
 
     opt_flow_ptr->output_queue = &vio->vision_data_queue;
@@ -366,20 +392,28 @@ int main(int argc, char** argv) {
 
   std::shared_ptr<std::thread> t5;
 
+  auto print_queue_fn = [&]() {
+    std::cout << "opt_flow_ptr->input_queue "
+              << opt_flow_ptr->input_queue.size()
+              << " opt_flow_ptr->output_queue "
+              << opt_flow_ptr->output_queue->size() << " out_state_queue "
+              << out_state_queue.size() << " imu_data_queue "
+              << vio->imu_data_queue.size() << std::endl;
+  };
+
   if (print_queue) {
     t5.reset(new std::thread([&]() {
       while (!terminate) {
-        std::cout << "opt_flow_ptr->input_queue "
-                  << opt_flow_ptr->input_queue.size()
-                  << " opt_flow_ptr->output_queue "
-                  << opt_flow_ptr->output_queue->size() << " out_state_queue "
-                  << out_state_queue.size() << std::endl;
+        print_queue_fn();
         std::this_thread::sleep_for(std::chrono::seconds(1));
       }
     }));
   }
 
   auto time_start = std::chrono::high_resolution_clock::now();
+
+  // record if we close the GUI before VIO is finished.
+  bool aborted = false;
 
   if (show_gui) {
     pangolin::CreateWindowAndBind("Main", 1800, 1000);
@@ -533,19 +567,70 @@ int main(int argc, char** argv) {
         }
       }
     }
+
+    // If GUI closed but VIO not yet finished --> abort input queues, which in
+    // turn aborts processing
+    if (!vio->finished) {
+      std::cout << "GUI closed but odometry still running --> aborting.\n";
+      print_queue_fn();  // print queue size at time of aborting
+      terminate = true;
+      aborted = true;
+    }
   }
 
-  terminate = true;
+  // wait first for vio to complete processing
+  vio->maybe_join();
 
+  // input threads will abort when vio is finished, but might be stuck in full
+  // push to full queue, so drain queue now
+  vio->drain_input_queues();
+
+  // join input threads
   t1.join();
   t2.join();
-  if (t3.get()) t3->join();
+
+  // std::cout << "Data input finished, terminate auxiliary threads.";
+  terminate = true;
+
+  // join other threads
+  if (t3) t3->join();
   t4.join();
-  if (t5.get()) t5->join();
+  if (t5) t5->join();
+
+  // after joining all threads, print final queue sizes.
+  if (print_queue) {
+    std::cout << "Final queue sizes:" << std::endl;
+    print_queue_fn();
+  }
 
   auto time_end = std::chrono::high_resolution_clock::now();
+  const double duration_total =
+      std::chrono::duration<double>(time_end - time_start).count();
 
-  if (!trajectory_fmt.empty()) {
+  // TODO: remove this unconditional call (here for debugging);
+  const double ate_rmse =
+      basalt::alignSVD(vio_t_ns, vio_t_w_i, gt_t_ns, gt_t_w_i);
+  vio->debug_finalize();
+  std::cout << "Total runtime: {:.3f}s\n"_format(duration_total);
+
+  {
+    basalt::ExecutionStats stats;
+    stats.add("exec_time_s", duration_total);
+    stats.add("ate_rmse", ate_rmse);
+    stats.add("ate_num_kfs", vio_t_w_i.size());
+    stats.add("num_frames", vio_dataset->get_image_timestamps().size());
+
+    {
+      basalt::MemoryInfo mi;
+      if (get_memory_info(mi)) {
+        stats.add("resident_memory_peak", mi.resident_memory_peak);
+      }
+    }
+
+    stats.save_json("stats_vio.json");
+  }
+
+  if (!aborted && !trajectory_fmt.empty()) {
     std::cout << "Saving trajectory..." << std::endl;
 
     if (trajectory_fmt == "kitti") {
@@ -564,10 +649,12 @@ int main(int argc, char** argv) {
       kitti_fmt = false;
     }
 
+    save_groundtruth = trajectory_groundtruth;
+
     saveTrajectoryButton();
   }
 
-  if (!result_path.empty()) {
+  if (!aborted && !result_path.empty()) {
     double error = basalt::alignSVD(vio_t_ns, vio_t_w_i, gt_t_ns, gt_t_w_i);
 
     auto exec_time_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -682,8 +769,9 @@ void draw_scene(pangolin::View& view) {
 
   glColor3ubv(cam_color);
   if (!vio_t_w_i.empty()) {
-    Eigen::aligned_vector<Eigen::Vector3d> sub_gt(
-        vio_t_w_i.begin(), vio_t_w_i.begin() + show_frame);
+    size_t end = std::min(vio_t_w_i.size(), size_t(show_frame + 1));
+    Eigen::aligned_vector<Eigen::Vector3d> sub_gt(vio_t_w_i.begin(),
+                                                  vio_t_w_i.begin() + end);
     pangolin::glDrawLineStrip(sub_gt);
   }
 
@@ -806,21 +894,38 @@ void alignButton() { basalt::alignSVD(vio_t_ns, vio_t_w_i, gt_t_ns, gt_t_w_i); }
 
 void saveTrajectoryButton() {
   if (tum_rgbd_fmt) {
-    std::ofstream os("trajectory.txt");
+    {
+      std::ofstream os("trajectory.txt");
 
-    os << "# timestamp tx ty tz qx qy qz qw" << std::endl;
+      os << "# timestamp tx ty tz qx qy qz qw" << std::endl;
 
-    for (size_t i = 0; i < vio_t_ns.size(); i++) {
-      const Sophus::SE3d& pose = vio_T_w_i[i];
-      os << std::scientific << std::setprecision(18) << vio_t_ns[i] * 1e-9
-         << " " << pose.translation().x() << " " << pose.translation().y()
-         << " " << pose.translation().z() << " " << pose.unit_quaternion().x()
-         << " " << pose.unit_quaternion().y() << " "
-         << pose.unit_quaternion().z() << " " << pose.unit_quaternion().w()
-         << std::endl;
+      for (size_t i = 0; i < vio_t_ns.size(); i++) {
+        const Sophus::SE3d& pose = vio_T_w_i[i];
+        os << std::scientific << std::setprecision(18) << vio_t_ns[i] * 1e-9
+           << " " << pose.translation().x() << " " << pose.translation().y()
+           << " " << pose.translation().z() << " " << pose.unit_quaternion().x()
+           << " " << pose.unit_quaternion().y() << " "
+           << pose.unit_quaternion().z() << " " << pose.unit_quaternion().w()
+           << std::endl;
+      }
+
+      os.close();
     }
 
-    os.close();
+    if (save_groundtruth) {
+      std::ofstream os("groundtruth.txt");
+
+      os << "# timestamp tx ty tz qx qy qz qw" << std::endl;
+
+      for (size_t i = 0; i < gt_t_ns.size(); i++) {
+        const Eigen::Vector3d& pos = gt_t_w_i[i];
+        os << std::scientific << std::setprecision(18) << gt_t_ns[i] * 1e-9
+           << " " << pos.x() << " " << pos.y() << " " << pos.z() << " "
+           << "0 0 0 1" << std::endl;
+      }
+
+      os.close();
+    }
 
     std::cout
         << "Saved trajectory in TUM RGB-D Dataset format in trajectory.txt"

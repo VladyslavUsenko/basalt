@@ -1,0 +1,424 @@
+
+##############################################################################
+## Base config that ends up in basalt_config.json
+## These values are overwritten by the named config elements below.
+##############################################################################
+
+# config read by Basalt
+[value0]
+
+"config.optical_flow_type" = "frame_to_frame"
+"config.optical_flow_detection_grid_size" = 50
+"config.optical_flow_max_recovered_dist2" = 0.04
+"config.optical_flow_pattern" = 51
+"config.optical_flow_max_iterations" = 5
+"config.optical_flow_epipolar_error" = 0.005
+"config.optical_flow_levels" = 3
+"config.optical_flow_skip_frames" = 1
+
+"config.vio_linearization_type" = "ABS_QR"
+"config.vio_sqrt_marg" = true
+"config.vio_max_states" = 3
+"config.vio_max_kfs" = 7
+"config.vio_min_frames_after_kf" = 5
+"config.vio_new_kf_keypoints_thresh" = 0.7
+"config.vio_debug" = false
+"config.vio_extended_logging" = false
+"config.vio_obs_std_dev" = 0.5
+"config.vio_obs_huber_thresh" = 1.0
+"config.vio_min_triangulation_dist" = 0.05
+"config.vio_outlier_threshold" = 3.0
+"config.vio_filter_iteration" = 4
+"config.vio_max_iterations" = 7
+"config.vio_enforce_realtime" = false
+"config.vio_use_lm" = true
+"config.vio_lm_lambda_initial" = 1e-4
+"config.vio_lm_lambda_min" = 1e-7
+"config.vio_lm_lambda_max" = 1e2
+"config.vio_lm_landmark_damping_variant" = 1
+"config.vio_lm_pose_damping_variant" = 1
+"config.vio_scale_jacobian" = false
+"config.vio_init_pose_weight" = 1e8
+"config.vio_init_ba_weight" = 1e1
+"config.vio_init_bg_weight" = 1e2
+"config.vio_marg_lost_landmarks" = true
+"config.vio_kf_marg_feature_ratio" = 0.1
+
+"config.mapper_obs_std_dev" = 0.25
+"config.mapper_obs_huber_thresh" = 1.5
+"config.mapper_detection_num_points" = 800
+"config.mapper_num_frames_to_match" = 30
+"config.mapper_frames_to_match_threshold" = 0.04
+"config.mapper_min_matches" = 20
+"config.mapper_ransac_threshold" = 5e-5
+"config.mapper_min_track_length" = 5
+"config.mapper_max_hamming_distance" = 70
+"config.mapper_second_best_test_ratio" = 1.2
+"config.mapper_bow_num_bits" = 16
+"config.mapper_min_triangulation_dist" = 0.07
+"config.mapper_no_factor_weights" = false
+"config.mapper_use_factors" = true
+"config.mapper_use_lm" = true
+"config.mapper_lm_lambda_min" = 1e-32
+"config.mapper_lm_lambda_max" = 1e3
+
+# which executable to run
+[batch_run]
+executable = "basalt_vio"
+
+# environment variables set for the executable
+[batch_run.env]
+OPENBLAS_NUM_THREADS = 1
+OMP_NUM_THREADS = 1
+
+# command line arguments to the executable ("--" is prepended)
+[batch_run.args]
+"config-path" = "basalt_config.json"
+"show-gui" = "0"
+"step-by-step" = "false"
+#"max-frames" = "1000"
+"use-imu" = "false"
+"use-double" = "false"
+"num-threads" = "0"
+
+
+##############################################################################
+## Named config elements to overwrite the base config: batch run script options
+##############################################################################
+
+[_batch.config.vio]
+batch_run.args."use-imu" = "true"
+
+[_batch.config.vo]
+batch_run.args."use-imu" = "false"
+
+
+
+[_batch.config.double]
+batch_run.args."use-double" = "true"
+
+[_batch.config.float]
+batch_run.args."use-double" = "false"
+
+
+
+[_batch.config.threads0]
+batch_run.args."num-threads" = "0"
+
+[_batch.config.threads1]
+batch_run.args."num-threads" = "1"
+
+
+
+[_batch.config.savetum]
+batch_run.args."save-trajectory" = "tum"
+
+# saving gt produces quite large output, but is needed for trajectory plots
+[_batch.config.savetumgt]
+batch_run.args."save-trajectory" = "tum"
+batch_run.args."save-groundtruth" = "1"
+
+
+
+# run each experiment twice to make sure file system caches are hot
+[_batch.config.runtwice]
+batch_run.num_runs = 2
+
+
+
+##############################################################################
+## Named config elements to overwrite the base config: datasets
+##############################################################################
+
+# NOTE: Replace the absolute paths in "dataset-path" entries with the
+# path to your download of EuRoC, TUMVI, Kitti. The "cam-calib" paths
+# are relative and point to locations in the basalt repository. This
+# assumes a folder setup like:
+#
+# parent-folder/
+# ├─ basalt/
+# │  ├─ data/
+# │  │  ├─ euroc_ds_calib.json
+# │  │  ├─ ...
+# │  ├─ ...
+# ├─ experiments/
+# │  ├─ iccv_tutorial/
+# │  │  ├─ basalt_batch_config.toml
+# │  │  ├─ ...
+#
+# The calibration for Kitti is expected in basalt format (you can use the
+# basalt_convert_kitti_calib.py script)
+
+[_batch.config.eurocMH01]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/euroc/MH_01_easy"
+batch_run.args."cam-calib" = "../../../../../../basalt/data/euroc_ds_calib.json"
+batch_run.args."dataset-type" = "euroc"
+[_batch.config.eurocMH02]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/euroc/MH_02_easy"
+batch_run.args."cam-calib" = "../../../../../../basalt/data/euroc_ds_calib.json"
+batch_run.args."dataset-type" = "euroc"
+[_batch.config.eurocMH03]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/euroc/MH_03_medium"
+batch_run.args."cam-calib" = "../../../../../../basalt/data/euroc_ds_calib.json"
+batch_run.args."dataset-type" = "euroc"
+[_batch.config.eurocMH04]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/euroc/MH_04_difficult"
+batch_run.args."cam-calib" = "../../../../../../basalt/data/euroc_ds_calib.json"
+batch_run.args."dataset-type" = "euroc"
+[_batch.config.eurocMH05]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/euroc/MH_05_difficult"
+batch_run.args."cam-calib" = "../../../../../../basalt/data/euroc_ds_calib.json"
+batch_run.args."dataset-type" = "euroc"
+[_batch.config.eurocV101]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/euroc/V1_01_easy"
+batch_run.args."cam-calib" = "../../../../../../basalt/data/euroc_ds_calib.json"
+batch_run.args."dataset-type" = "euroc"
+[_batch.config.eurocV102]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/euroc/V1_02_medium"
+batch_run.args."cam-calib" = "../../../../../../basalt/data/euroc_ds_calib.json"
+batch_run.args."dataset-type" = "euroc"
+[_batch.config.eurocV103]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/euroc/V1_03_difficult"
+batch_run.args."cam-calib" = "../../../../../../basalt/data/euroc_ds_calib.json"
+batch_run.args."dataset-type" = "euroc"
+[_batch.config.eurocV201]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/euroc/V2_01_easy"
+batch_run.args."cam-calib" = "../../../../../../basalt/data/euroc_ds_calib.json"
+batch_run.args."dataset-type" = "euroc"
+[_batch.config.eurocV202]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/euroc/V2_02_medium"
+batch_run.args."cam-calib" = "../../../../../../basalt/data/euroc_ds_calib.json"
+batch_run.args."dataset-type" = "euroc"
+[_batch.config.eurocV203]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/euroc/V2_03_difficult"
+batch_run.args."cam-calib" = "../../../../../../basalt/data/euroc_ds_calib.json"
+batch_run.args."dataset-type" = "euroc"
+
+
+
+[_batch.config.tumvi-corridor1]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/tumvi/512_16/dataset-corridor1_512_16"
+batch_run.args."cam-calib" = "../../../../../../basalt/data/tumvi_512_eucm_calib.json"
+batch_run.args."dataset-type" = "euroc"
+[_batch.config.tumvi-corridor2]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/tumvi/512_16/dataset-corridor2_512_16"
+batch_run.args."cam-calib" = "../../../../../../basalt/data/tumvi_512_eucm_calib.json"
+batch_run.args."dataset-type" = "euroc"
+[_batch.config.tumvi-corridor3]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/tumvi/512_16/dataset-corridor3_512_16"
+batch_run.args."cam-calib" = "../../../../../../basalt/data/tumvi_512_eucm_calib.json"
+batch_run.args."dataset-type" = "euroc"
+[_batch.config.tumvi-corridor4]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/tumvi/512_16/dataset-corridor4_512_16"
+batch_run.args."cam-calib" = "../../../../../../basalt/data/tumvi_512_eucm_calib.json"
+batch_run.args."dataset-type" = "euroc"
+[_batch.config.tumvi-corridor5]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/tumvi/512_16/dataset-corridor5_512_16"
+batch_run.args."cam-calib" = "../../../../../../basalt/data/tumvi_512_eucm_calib.json"
+batch_run.args."dataset-type" = "euroc"
+[_batch.config.tumvi-magistrale1]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/tumvi/512_16/dataset-magistrale1_512_16"
+batch_run.args."cam-calib" = "../../../../../../basalt/data/tumvi_512_eucm_calib.json"
+batch_run.args."dataset-type" = "euroc"
+[_batch.config.tumvi-magistrale2]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/tumvi/512_16/dataset-magistrale2_512_16"
+batch_run.args."cam-calib" = "../../../../../../basalt/data/tumvi_512_eucm_calib.json"
+batch_run.args."dataset-type" = "euroc"
+[_batch.config.tumvi-magistrale3]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/tumvi/512_16/dataset-magistrale3_512_16"
+batch_run.args."cam-calib" = "../../../../../../basalt/data/tumvi_512_eucm_calib.json"
+batch_run.args."dataset-type" = "euroc"
+[_batch.config.tumvi-magistrale4]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/tumvi/512_16/dataset-magistrale4_512_16"
+batch_run.args."cam-calib" = "../../../../../../basalt/data/tumvi_512_eucm_calib.json"
+batch_run.args."dataset-type" = "euroc"
+[_batch.config.tumvi-magistrale5]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/tumvi/512_16/dataset-magistrale5_512_16"
+batch_run.args."cam-calib" = "../../../../../../basalt/data/tumvi_512_eucm_calib.json"
+batch_run.args."dataset-type" = "euroc"
+[_batch.config.tumvi-magistrale6]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/tumvi/512_16/dataset-magistrale6_512_16"
+batch_run.args."cam-calib" = "../../../../../../basalt/data/tumvi_512_eucm_calib.json"
+batch_run.args."dataset-type" = "euroc"
+[_batch.config.tumvi-room1]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/tumvi/512_16/dataset-room1_512_16"
+batch_run.args."cam-calib" = "../../../../../../basalt/data/tumvi_512_eucm_calib.json"
+batch_run.args."dataset-type" = "euroc"
+[_batch.config.tumvi-room2]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/tumvi/512_16/dataset-room2_512_16"
+batch_run.args."cam-calib" = "../../../../../../basalt/data/tumvi_512_eucm_calib.json"
+batch_run.args."dataset-type" = "euroc"
+[_batch.config.tumvi-room3]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/tumvi/512_16/dataset-room3_512_16"
+batch_run.args."cam-calib" = "../../../../../../basalt/data/tumvi_512_eucm_calib.json"
+batch_run.args."dataset-type" = "euroc"
+[_batch.config.tumvi-room4]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/tumvi/512_16/dataset-room4_512_16"
+batch_run.args."cam-calib" = "../../../../../../basalt/data/tumvi_512_eucm_calib.json"
+batch_run.args."dataset-type" = "euroc"
+[_batch.config.tumvi-room5]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/tumvi/512_16/dataset-room5_512_16"
+batch_run.args."cam-calib" = "../../../../../../basalt/data/tumvi_512_eucm_calib.json"
+batch_run.args."dataset-type" = "euroc"
+[_batch.config.tumvi-room6]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/tumvi/512_16/dataset-room6_512_16"
+batch_run.args."cam-calib" = "../../../../../../basalt/data/tumvi_512_eucm_calib.json"
+batch_run.args."dataset-type" = "euroc"
+[_batch.config.tumvi-slides1]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/tumvi/512_16/dataset-slides1_512_16"
+batch_run.args."cam-calib" = "../../../../../../basalt/data/tumvi_512_eucm_calib.json"
+batch_run.args."dataset-type" = "euroc"
+[_batch.config.tumvi-slides2]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/tumvi/512_16/dataset-slides2_512_16"
+batch_run.args."cam-calib" = "../../../../../../basalt/data/tumvi_512_eucm_calib.json"
+batch_run.args."dataset-type" = "euroc"
+[_batch.config.tumvi-slides3]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/tumvi/512_16/dataset-slides3_512_16"
+batch_run.args."cam-calib" = "../../../../../../basalt/data/tumvi_512_eucm_calib.json"
+batch_run.args."dataset-type" = "euroc"
+
+
+
+[_batch.config.kitti00]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/kitti_odom_grey/sequences/00"
+batch_run.args."cam-calib" = "/storage/local/ssd/demmeln/tsm-exclude/kitti_odom_grey/sequences/00/basalt_calib.json"
+batch_run.args."dataset-type" = "kitti"
+[_batch.config.kitti01]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/kitti_odom_grey/sequences/01"
+batch_run.args."cam-calib" = "/storage/local/ssd/demmeln/tsm-exclude/kitti_odom_grey/sequences/01/basalt_calib.json"
+batch_run.args."dataset-type" = "kitti"
+[_batch.config.kitti02]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/kitti_odom_grey/sequences/02"
+batch_run.args."cam-calib" = "/storage/local/ssd/demmeln/tsm-exclude/kitti_odom_grey/sequences/02/basalt_calib.json"
+batch_run.args."dataset-type" = "kitti"
+[_batch.config.kitti03]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/kitti_odom_grey/sequences/03"
+batch_run.args."cam-calib" = "/storage/local/ssd/demmeln/tsm-exclude/kitti_odom_grey/sequences/03/basalt_calib.json"
+batch_run.args."dataset-type" = "kitti"
+[_batch.config.kitti04]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/kitti_odom_grey/sequences/04"
+batch_run.args."cam-calib" = "/storage/local/ssd/demmeln/tsm-exclude/kitti_odom_grey/sequences/04/basalt_calib.json"
+batch_run.args."dataset-type" = "kitti"
+[_batch.config.kitti05]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/kitti_odom_grey/sequences/05"
+batch_run.args."cam-calib" = "/storage/local/ssd/demmeln/tsm-exclude/kitti_odom_grey/sequences/05/basalt_calib.json"
+batch_run.args."dataset-type" = "kitti"
+[_batch.config.kitti06]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/kitti_odom_grey/sequences/06"
+batch_run.args."cam-calib" = "/storage/local/ssd/demmeln/tsm-exclude/kitti_odom_grey/sequences/06/basalt_calib.json"
+batch_run.args."dataset-type" = "kitti"
+[_batch.config.kitti07]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/kitti_odom_grey/sequences/07"
+batch_run.args."cam-calib" = "/storage/local/ssd/demmeln/tsm-exclude/kitti_odom_grey/sequences/07/basalt_calib.json"
+batch_run.args."dataset-type" = "kitti"
+[_batch.config.kitti08]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/kitti_odom_grey/sequences/08"
+batch_run.args."cam-calib" = "/storage/local/ssd/demmeln/tsm-exclude/kitti_odom_grey/sequences/08/basalt_calib.json"
+batch_run.args."dataset-type" = "kitti"
+[_batch.config.kitti09]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/kitti_odom_grey/sequences/09"
+batch_run.args."cam-calib" = "/storage/local/ssd/demmeln/tsm-exclude/kitti_odom_grey/sequences/09/basalt_calib.json"
+batch_run.args."dataset-type" = "kitti"
+[_batch.config.kitti10]
+batch_run.args."dataset-path" = "/storage/local/ssd/demmeln/tsm-exclude/kitti_odom_grey/sequences/10"
+batch_run.args."cam-calib" = "/storage/local/ssd/demmeln/tsm-exclude/kitti_odom_grey/sequences/10/basalt_calib.json"
+batch_run.args."dataset-type" = "kitti"
+
+
+
+##############################################################################
+## Named config elements to overwrite the base config: basalt config
+##############################################################################
+
+[_batch.config.debug]
+value0."config.vio_debug" = true
+value0."config.vio_extended_logging" = true
+
+[_batch.config.nodebug]
+value0."config.vio_debug" = false
+value0."config.vio_extended_logging" = false
+
+
+
+[_batch.config.extlog]
+value0."config.vio_extended_logging" = true
+
+[_batch.config.noextlog]
+value0."config.vio_extended_logging" = false
+
+
+
+[_batch.config.eurocvo]
+value0."config.optical_flow_detection_grid_size" = 40
+value0."config.vio_min_frames_after_kf" = 1
+value0."config.vio_new_kf_keypoints_thresh" = 0.8
+value0."config.vio_kf_marg_feature_ratio" = 0.2
+
+[_batch.config.tumvivio]
+value0."config.optical_flow_detection_grid_size" =  40
+
+[_batch.config.kittivo]
+value0."config.optical_flow_detection_grid_size" = 30
+value0."config.optical_flow_epipolar_error" = 0.001
+value0."config.optical_flow_levels" = 4
+value0."config.vio_min_frames_after_kf" = 1
+
+
+
+[_batch.config.sq-sc-sc]
+value0."config.vio_sqrt_marg" = false
+value0."config.vio_linearization_type" = "ABS_SC"
+
+[_batch.config.sqrt-sc-sc]
+value0."config.vio_sqrt_marg" = true
+value0."config.vio_linearization_type" = "ABS_SC"
+
+[_batch.config.sqrt-nsllt-qr]
+value0."config.vio_sqrt_marg" = true
+value0."config.vio_linearization_type" = "ABS_QR"
+
+
+
+##############################################################################
+## Named alternatives, which generate a different experiment for each entry ("or" relation)
+##############################################################################
+
+[_batch.alternatives]
+all_euroc = ["eurocMH01", "eurocMH02", "eurocMH03", "eurocMH04", "eurocMH05", "eurocV101", "eurocV102", "eurocV103", "eurocV201", "eurocV202"]
+some_euroc = ["eurocMH01", "eurocMH02", "eurocV101", "eurocV103", "eurocV201", "eurocV202"]
+
+some_tumvi = ["tumvi-corridor1", "tumvi-magistrale1", "tumvi-room1", "tumvi-slides1"]
+more_tumvi = ["tumvi-corridor1", "tumvi-corridor2", "tumvi-magistrale1", "tumvi-magistrale2", "tumvi-room1", "tumvi-room2", "tumvi-slides1", "tumvi-slides2"]
+some_more_tumvi = ["tumvi-corridor1", "tumvi-corridor2", "tumvi-corridor3", "tumvi-corridor4", "tumvi-corridor5", "tumvi-magistrale1", "tumvi-magistrale2", "tumvi-magistrale3", "tumvi-magistrale4", "tumvi-magistrale5", "tumvi-magistrale6", "tumvi-room1", "tumvi-room2", "tumvi-room3", "tumvi-room4", "tumvi-room5", "tumvi-room6", "tumvi-slides1", "tumvi-slides2", "tumvi-slides3"]
+
+all_kitti = ["kitti00", "kitti01", "kitti02", "kitti03", "kitti04", "kitti05", "kitti06", "kitti07", "kitti08", "kitti09", "kitti10"]
+
+all_imu = ["vio", "vo"]
+all_double = ["double", "float"]
+
+all_meth = ["sq-sc-sc", "sqrt-sc-sc", "sqrt-nsllt-qr"]
+
+
+
+##############################################################################
+## Config combinations, which composing named configs and alternatives ("and" relation)
+##############################################################################
+
+[_batch.combinations]
+vio_euroc = ["vio",             "savetumgt", "extlog", "runtwice", "all_meth", "all_double", "all_euroc"]
+vio_tumvi = ["vio", "tumvivio", "savetumgt", "extlog", "runtwice", "all_meth", "all_double", "more_tumvi"]
+vo_kitti  = ["vo",  "kittivo",  "savetumgt", "extlog", "runtwice", "all_meth", "all_double", "all_kitti"]
+
+#vio_euroc = ["vio",             "runtwice", "all_meth", "all_double", "all_euroc"]
+#vio_tumvi = ["vio", "tumvivio", "runtwice", "all_meth", "all_double", "more_tumvi"]
+#vo_kitti  = ["vo",  "kittivo",  "runtwice", "all_meth", "all_double", "all_kitti"]
+
+
+
+##############################################################################
+## Revision is the primary subfolder name where generated configs are placed
+##############################################################################
+
+[_batch]
+revision = "01_iccv_all"
+#revision = "02_iccv_runtime"

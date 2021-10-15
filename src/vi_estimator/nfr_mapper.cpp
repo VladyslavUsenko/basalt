@@ -37,6 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <basalt/utils/keypoints.h>
 #include <basalt/utils/nfr.h>
 #include <basalt/utils/tracks.h>
+#include <basalt/vi_estimator/marg_helper.h>
 #include <basalt/vi_estimator/nfr_mapper.h>
 
 #include <basalt/hash_bow/hash_bow.h>
@@ -105,7 +106,7 @@ void NfrMapper::processMargData(MargData& m) {
             std::make_pair(aom_new.total_size, POSE_SIZE);
         aom_new.total_size += POSE_SIZE;
 
-        PoseStateWithLin p = m.frame_states.at(kv.first);
+        PoseStateWithLin<double> p(m.frame_states.at(kv.first));
         m.frame_poses[kv.first] = p;
         m.frame_states.erase(kv.first);
       } else {
@@ -126,7 +127,7 @@ void NfrMapper::processMargData(MargData& m) {
   if (!idx_to_marg.empty()) {
     Eigen::MatrixXd marg_H_new;
     Eigen::VectorXd marg_b_new;
-    BundleAdjustmentBase::marginalizeHelper(
+    MargHelper<Scalar>::marginalizeHelperSqToSq(
         m.abs_H, m.abs_b, idx_to_keep, idx_to_marg, marg_H_new, marg_b_new);
 
     //    std::cout << "new rank " << marg_H_new.fullPivLu().rank() << " size "
@@ -270,7 +271,7 @@ void NfrMapper::optimize(int num_iterations) {
 
     MapperLinearizeAbsReduce<SparseHashAccumulator<double>> lopt(aom,
                                                                  &frame_poses);
-    tbb::blocked_range<Eigen::aligned_vector<RelLinData>::iterator> range(
+    tbb::blocked_range<Eigen::aligned_vector<RelLinData>::const_iterator> range(
         rld_vec.begin(), rld_vec.end());
     tbb::blocked_range<Eigen::aligned_vector<RollPitchFactor>::const_iterator>
         range1(roll_pitch_factors.begin(), roll_pitch_factors.end());
@@ -327,7 +328,7 @@ void NfrMapper::optimize(int num_iterations) {
         auto update_points_func = [&](const tbb::blocked_range<size_t>& r) {
           for (size_t i = r.begin(); i != r.end(); ++i) {
             const auto& rld = rld_vec[i];
-            updatePoints(aom, rld, inc);
+            updatePoints(aom, rld, inc, lmdb);
           }
         };
         tbb::parallel_for(keys_range, update_points_func);
@@ -399,7 +400,7 @@ void NfrMapper::optimize(int num_iterations) {
       auto update_points_func = [&](const tbb::blocked_range<size_t>& r) {
         for (size_t i = r.begin(); i != r.end(); ++i) {
           const auto& rld = rld_vec[i];
-          updatePoints(aom, rld, inc);
+          updatePoints(aom, rld, inc, lmdb);
         }
       };
       tbb::parallel_for(keys_range, update_points_func);
@@ -734,15 +735,15 @@ void NfrMapper::setup_opt() {
       if (!pos_3d.array().isFinite().all() || pos_3d[3] <= 0 || pos_3d[3] > 2.0)
         continue;
 
-      KeypointPosition pos;
-      pos.kf_id = tcid_h;
-      pos.dir = StereographicParam<double>::project(pos_3d);
-      pos.id = pos_3d[3];
+      Keypoint<Scalar> pos;
+      pos.host_kf_id = tcid_h;
+      pos.direction = StereographicParam<double>::project(pos_3d);
+      pos.inv_dist = pos_3d[3];
 
       lmdb.addLandmark(kv.first, pos);
 
       for (const auto& obs_kv : kv.second) {
-        KeypointObservation ko;
+        KeypointObservation<Scalar> ko;
         ko.kpt_id = kv.first;
         ko.pos = feature_corners.at(obs_kv.first).corners[obs_kv.second];
 

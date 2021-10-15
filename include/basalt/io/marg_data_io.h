@@ -66,7 +66,9 @@ class MargDataLoader {
   MargDataLoader();
 
   void start(const std::string& path);
-  ~MargDataLoader() { processing_thread->join(); }
+  ~MargDataLoader() {
+    if (processing_thread) processing_thread->join();
+  }
 
   tbb::concurrent_bounded_queue<MargData::Ptr>* out_marg_queue;
 
