@@ -142,9 +142,19 @@ bionic-release-compile:
   <<: *prepare_docker_definition
   <<: *compile_test_package_definition
   image: vladyslavusenko/b_image_bionic:latest
-  only:
-    - master
+#  only:
+#    - master
   variables:
+    # compile w/ clang; GCC 7.5 has multiple issues: magic_enum is not
+    # supported, Eigen hast false positive maybe-uninitialized
+    # warnings, structured bindings give false positive
+    # "unused-variable" warnings. Using GCC 9 from the Ubuntu's
+    # toolchain testing PPA would make the built debian package depend
+    # on the updatd libstdc++. So we use clang instead, which works
+    # with the default libstdc++ on bionic and doesn't lead to
+    # additional runtime dependencies for the debian package.
+    CC: clang-12
+    CXX: clang++-12
     CXX_MARCH: 'haswell'
     DEB_DIR: deb_bionic
   artifacts:
@@ -182,45 +192,6 @@ focal-relwithdebinfo-compile:
     BUILD_TYPE: CiRelWithDebInfo
   only:
     - master
-
-# test bionic (lab machines are still on bionic); but we need to do it with GCC9, since GCC7 has issues with root_vo additions
-bionic-relwithdebinfo-compile:
-  <<: *prepare_docker_definition
-  <<: *compile_test_package_definition
-  image: vladyslavusenko/b_image_bionic:latest
-  ### Workaround to install GCC9 in this image, b/c root_vo doesn't compile with GCC7
-  stage: build
-  script:
-    - apt-get update
-    - apt-get install -y software-properties-common
-    - add-apt-repository -y ppa:ubuntu-toolchain-r/test
-    - apt-get update
-    - apt-get install -y g++-9
-    - mkdir build
-    - cd build
-    - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCXX_MARCH=${CXX_MARCH} -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-    - make -j3
-    - ctest
-    - make package
-    - cd ..
-    - mkdir $DEB_DIR
-    - mv build/*.deb $DEB_DIR/
-    - dpkg -i $DEB_DIR/*.deb
-    # smoke test to see if all executables at least start up
-    - basalt_calibrate --help
-    - basalt_calibrate_imu --help
-    - basalt_mapper --help
-    - basalt_mapper_sim --help
-    - basalt_mapper_sim_naive --help
-    - basalt_opt_flow --help
-    - basalt_vio --help
-    - basalt_vio_sim --help
-  variables:
-    BUILD_TYPE: CiRelWithDebInfo
-    CC: gcc-9
-    CXX: g++-9
-#  only:
-#    - master
 
 # elcapitan-relwithdebinfo-compile:
 #  <<: *compile_test_definition
