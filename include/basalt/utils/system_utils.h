@@ -35,6 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef BASALT_SYSTEM_UTILS_H
 #define BASALT_SYSTEM_UTILS_H
 
+#include <cstdint>
 #include <string>
 
 namespace basalt {
@@ -46,6 +47,13 @@ inline std::string ensure_trailing_slash(const std::string& path) {
     return path;
   }
 }
+
+struct MemoryInfo {
+  uint64_t resident_memory = 0;       //!< in bytes
+  uint64_t resident_memory_peak = 0;  //!< in bytes
+};
+
+bool get_memory_info(MemoryInfo& info);
 
 }  // namespace basalt
 

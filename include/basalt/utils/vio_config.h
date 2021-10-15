@@ -38,6 +38,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace basalt {
 
+enum class LinearizationType { ABS_QR, ABS_SC, REL_SC };
+
 struct VioConfig {
   VioConfig();
   void load(const std::string& filename);
@@ -52,14 +54,18 @@ struct VioConfig {
   float optical_flow_epipolar_error;
   int optical_flow_skip_frames;
 
+  LinearizationType vio_linearization_type;
+  bool vio_sqrt_marg;
+
   int vio_max_states;
   int vio_max_kfs;
   int vio_min_frames_after_kf;
   float vio_new_kf_keypoints_thresh;
   bool vio_debug;
+  bool vio_extended_logging;
 
-  double vio_outlier_threshold;
-  int vio_filter_iteration;
+  //  double vio_outlier_threshold;
+  //  int vio_filter_iteration;
   int vio_max_iterations;
 
   double vio_obs_std_dev;
@@ -69,12 +75,20 @@ struct VioConfig {
   bool vio_enforce_realtime;
 
   bool vio_use_lm;
+  double vio_lm_lambda_initial;
   double vio_lm_lambda_min;
   double vio_lm_lambda_max;
+  int vio_lm_landmark_damping_variant;
+  int vio_lm_pose_damping_variant;
+
+  bool vio_scale_jacobian;
 
   double vio_init_pose_weight;
   double vio_init_ba_weight;
   double vio_init_bg_weight;
+
+  bool vio_marg_lost_landmarks;
+  double vio_kf_marg_feature_ratio;
 
   double mapper_obs_std_dev;
   double mapper_obs_huber_thresh;
@@ -95,4 +109,5 @@ struct VioConfig {
   double mapper_lm_lambda_min;
   double mapper_lm_lambda_max;
 };
+
 }  // namespace basalt

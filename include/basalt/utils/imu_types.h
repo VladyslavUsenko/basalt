@@ -52,38 +52,53 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace basalt {
 
+template <class Scalar_>
+class IntegratedImuMeasurement;
+
+template <class Scalar_>
+struct PoseStateWithLin;
+
 namespace constants {
 static const Eigen::Vector3d g(0, 0, -9.81);
 static const Eigen::Vector3d g_dir(0, 0, -1);
 }  // namespace constants
 
-template <class Scalar>
-struct PoseStateWithLin;
-
 template <class Scalar_>
 struct PoseVelBiasStateWithLin {
   using Scalar = Scalar_;
+
   using VecN = typename PoseVelBiasState<Scalar>::VecN;
+  using Vec3 = Eigen::Matrix<Scalar, 3, 1>;
+  using SE3 = Sophus::SE3<Scalar>;
 
   PoseVelBiasStateWithLin() {
     linearized = false;
     delta.setZero();
   };
 
-  PoseVelBiasStateWithLin(int64_t t_ns, const Sophus::SE3d& T_w_i,
-                          const Eigen::Vector3d& vel_w_i,
-                          const Eigen::Vector3d& bias_gyro,
-                          const Eigen::Vector3d& bias_accel, bool linearized)
+  PoseVelBiasStateWithLin(int64_t t_ns, const SE3& T_w_i, const Vec3& vel_w_i,
+                          const Vec3& bias_gyro, const Vec3& bias_accel,
+                          bool linearized)
       : linearized(linearized),
         state_linearized(t_ns, T_w_i, vel_w_i, bias_gyro, bias_accel) {
     delta.setZero();
     state_current = state_linearized;
   }
 
-  PoseVelBiasStateWithLin(const PoseVelBiasState<Scalar>& other)
+  explicit PoseVelBiasStateWithLin(const PoseVelBiasState<Scalar>& other)
       : linearized(false), state_linearized(other) {
     delta.setZero();
     state_current = other;
+  }
+
+  template <class Scalar2>
+  PoseVelBiasStateWithLin<Scalar2> cast() const {
+    PoseVelBiasStateWithLin<Scalar2> a;
+    a.linearized = linearized;
+    a.delta = delta.template cast<Scalar2>();
+    a.state_linearized = state_linearized.template cast<Scalar2>();
+    a.state_current = state_current.template cast<Scalar2>();
+    return a;
   }
 
   void setLinFalse() {
@@ -123,8 +138,6 @@ struct PoseVelBiasStateWithLin {
   inline const VecN& getDelta() const { return delta; }
   inline int64_t getT_ns() const { return state_linearized.t_ns; }
 
-  friend struct PoseStateWithLin<Scalar>;
-
   inline void backup() {
     backup_delta = delta;
     backup_state_linearized = state_linearized;
@@ -146,6 +159,13 @@ struct PoseVelBiasStateWithLin {
   VecN backup_delta;
   PoseVelBiasState<Scalar> backup_state_linearized, backup_state_current;
 
+  // give access to private members for constructor of PoseStateWithLin
+  friend struct PoseStateWithLin<Scalar>;
+
+  // give access to private members for cast() implementation
+  template <class>
+  friend struct PoseVelBiasStateWithLin;
+
   friend class cereal::access;
 
   template <class Archive>
@@ -164,25 +184,25 @@ struct PoseVelBiasStateWithLin {
   }
 };
 
-template <typename Scalar_>
+template <class Scalar_>
 struct PoseStateWithLin {
   using Scalar = Scalar_;
   using VecN = typename PoseState<Scalar>::VecN;
-  using SE3 = typename PoseState<Scalar>::SE3;
+  using Vec3 = Eigen::Matrix<Scalar, 3, 1>;
+  using SE3 = Sophus::SE3<Scalar>;
 
   PoseStateWithLin() {
     linearized = false;
     delta.setZero();
   };
 
-  PoseStateWithLin(int64_t t_ns, const Sophus::SE3d& T_w_i,
-                   bool linearized = false)
+  PoseStateWithLin(int64_t t_ns, const SE3& T_w_i, bool linearized = false)
       : linearized(linearized), pose_linearized(t_ns, T_w_i) {
     delta.setZero();
     T_w_i_current = T_w_i;
   }
 
-  PoseStateWithLin(const PoseVelBiasStateWithLin<Scalar>& other)
+  explicit PoseStateWithLin(const PoseVelBiasStateWithLin<Scalar>& other)
       : linearized(other.linearized),
         delta(other.delta.template head<6>()),
         pose_linearized(other.state_linearized.t_ns,
@@ -191,13 +211,23 @@ struct PoseStateWithLin {
     PoseState<Scalar>::incPose(delta, T_w_i_current);
   }
 
+  template <class Scalar2>
+  PoseStateWithLin<Scalar2> cast() const {
+    PoseStateWithLin<Scalar2> a;
+    a.linearized = linearized;
+    a.delta = delta.template cast<Scalar2>();
+    a.pose_linearized = pose_linearized.template cast<Scalar2>();
+    a.T_w_i_current = T_w_i_current.template cast<Scalar2>();
+    return a;
+  }
+
   void setLinTrue() {
     linearized = true;
     BASALT_ASSERT(delta.isApproxToConstant(0));
     T_w_i_current = pose_linearized.T_w_i;
   }
 
-  inline const Sophus::SE3d& getPose() const {
+  inline const SE3& getPose() const {
     if (!linearized) {
       return pose_linearized.T_w_i;
     } else {
@@ -205,9 +235,7 @@ struct PoseStateWithLin {
     }
   }
 
-  inline const Sophus::SE3d& getPoseLin() const {
-    return pose_linearized.T_w_i;
-  }
+  inline const SE3& getPoseLin() const { return pose_linearized.T_w_i; }
 
   inline void applyInc(const VecN& inc) {
     if (!linearized) {
@@ -246,6 +274,10 @@ struct PoseStateWithLin {
   PoseState<Scalar> backup_pose_linearized;
   SE3 backup_T_w_i_current;
 
+  // give access to private members for cast() implementation
+  template <class>
+  friend struct PoseStateWithLin;
+
   friend class cereal::access;
 
   template <class Archive>
@@ -270,6 +302,28 @@ struct AbsOrderMap {
     }
     std::cout << std::endl;
   }
+};
+
+template <class Scalar_>
+struct ImuLinData {
+  using Scalar = Scalar_;
+
+  const Eigen::Matrix<Scalar, 3, 1>& g;
+  const Eigen::Matrix<Scalar, 3, 1>& gyro_bias_weight_sqrt;
+  const Eigen::Matrix<Scalar, 3, 1>& accel_bias_weight_sqrt;
+
+  std::map<int64_t, const IntegratedImuMeasurement<Scalar>*> imu_meas;
+};
+
+template <class Scalar_>
+struct MargLinData {
+  using Scalar = Scalar_;
+
+  bool is_sqrt = true;
+
+  AbsOrderMap order;
+  Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> H;
+  Eigen::Matrix<Scalar, Eigen::Dynamic, 1> b;
 };
 
 struct MargData {

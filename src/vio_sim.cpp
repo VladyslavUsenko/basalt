@@ -56,7 +56,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <basalt/spline/se3_spline.h>
 #include <basalt/utils/sim_utils.h>
 #include <basalt/utils/vis_utils.h>
-#include <basalt/vi_estimator/keypoint_vio.h>
+#include <basalt/vi_estimator/vio_estimator.h>
 
 #include <basalt/calibration/calibration.hpp>
 
@@ -155,6 +155,7 @@ pangolin::Var<bool> continue_btn("ui.continue", true, false, true);
 Button align_step_btn("ui.align_se3", &alignButton);
 
 bool use_imu = true;
+bool use_double = true;
 
 int main(int argc, char** argv) {
   srand(1);
@@ -885,7 +886,7 @@ void setup_vio(const std::string& config_path) {
   }
 
   vio = basalt::VioEstimatorFactory::getVioEstimator(
-      config, calib, basalt::constants::g, use_imu);
+      config, calib, basalt::constants::g, use_imu, use_double);
   vio->initialize(t_init_ns, T_w_i_init, vel_w_i_init, gt_gyro_bias.front(),
                   gt_accel_bias.front());
 

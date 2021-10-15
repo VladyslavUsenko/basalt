@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.10)
 
+add_library(nlohmann::json INTERFACE IMPORTED GLOBAL)
+set_property(TARGET nlohmann::json PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/json/)
+
+add_subdirectory(fmt EXCLUDE_FROM_ALL)
 add_subdirectory(ros EXCLUDE_FROM_ALL)
 add_subdirectory(apriltag EXCLUDE_FROM_ALL)
 
@@ -87,6 +91,11 @@ endif()
 # fix pangolin: GCC >= 9.0
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 9.0)
   target_compile_options(pangolin PRIVATE "-Wno-stringop-truncation;-Wno-deprecated-copy")
+endif()
+
+# fix pangolin: GCC >= 10.0
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 10.0)
+  target_compile_options(pangolin PRIVATE "-Wno-parentheses")
 endif()
 
 # check here the directories for the pangolin and opengv targets, and

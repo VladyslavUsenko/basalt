@@ -93,7 +93,32 @@ class VioEstimatorBase {
   virtual void initialize(const Eigen::Vector3d& bg,
                           const Eigen::Vector3d& ba) = 0;
 
-  virtual const Sophus::SE3d& getT_w_i_init() = 0;
+  virtual void maybe_join() = 0;
+
+  virtual inline void drain_input_queues() {
+    // Input threads should abort when vio is finished, but might be stuck in
+    // full push to full queue. So this can help to drain queues after joining
+    // the processing thread.
+    while (!imu_data_queue.empty()) {
+      ImuData<double>::Ptr d;
+      imu_data_queue.pop(d);
+    }
+    while (!vision_data_queue.empty()) {
+      OpticalFlowResult::Ptr d;
+      vision_data_queue.pop(d);
+    }
+  }
+
+  virtual inline void debug_finalize() {}
+
+  virtual Sophus::SE3d getT_w_i_init() = 0;
+
+  // Legacy functions. Should not be used in the new code.
+  virtual void setMaxStates(size_t val) = 0;
+  virtual void setMaxKfs(size_t val) = 0;
+
+  virtual void addIMUToQueue(const ImuData<double>::Ptr& data) = 0;
+  virtual void addVisionToQueue(const OpticalFlowResult::Ptr& data) = 0;
 };
 
 class VioEstimatorFactory {
@@ -101,7 +126,7 @@ class VioEstimatorFactory {
   static VioEstimatorBase::Ptr getVioEstimator(const VioConfig& config,
                                                const Calibration<double>& cam,
                                                const Eigen::Vector3d& g,
-                                               bool use_imu);
+                                               bool use_imu, bool use_double);
 };
 
 double alignSVD(const std::vector<int64_t>& filter_t_ns,

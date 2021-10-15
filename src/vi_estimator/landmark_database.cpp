@@ -33,208 +33,215 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <algorithm>
+
 #include <basalt/vi_estimator/landmark_database.h>
 
 namespace basalt {
 
-void LandmarkDatabase::addLandmark(int lm_id, const KeypointPosition &pos) {
-  kpts[lm_id] = pos;
-  host_to_kpts[pos.kf_id].emplace(lm_id);
+template <class Scalar_>
+void LandmarkDatabase<Scalar_>::addLandmark(KeypointId lm_id,
+                                            const Keypoint<Scalar> &pos) {
+  auto &kpt = kpts[lm_id];
+  kpt.direction = pos.direction;
+  kpt.inv_dist = pos.inv_dist;
+  kpt.host_kf_id = pos.host_kf_id;
 }
 
-void LandmarkDatabase::removeFrame(const FrameId &frame) {
-  for (auto it = obs.begin(); it != obs.end(); ++it) {
-    for (auto it2 = it->second.cbegin(); it2 != it->second.cend();) {
-      if (it2->first.frame_id == frame) {
-        for (const auto &v : it2->second) kpts_num_obs.at(v.kpt_id)--;
+template <class Scalar_>
+void LandmarkDatabase<Scalar_>::removeFrame(const FrameId &frame) {
+  for (auto it = kpts.begin(); it != kpts.end();) {
+    for (auto it2 = it->second.obs.begin(); it2 != it->second.obs.end();) {
+      if (it2->first.frame_id == frame)
+        it2 = removeLandmarkObservationHelper(it, it2);
+      else
+        it2++;
+    }
 
-        it2 = it->second.erase(it2);
-      } else {
-        ++it2;
-      }
+    if (it->second.obs.size() < min_num_obs) {
+      it = removeLandmarkHelper(it);
+    } else {
+      ++it;
     }
   }
 }
 
-void LandmarkDatabase::removeKeyframes(
+template <class Scalar_>
+void LandmarkDatabase<Scalar_>::removeKeyframes(
     const std::set<FrameId> &kfs_to_marg,
     const std::set<FrameId> &poses_to_marg,
     const std::set<FrameId> &states_to_marg_all) {
-  // remove points
-  for (auto it = kpts.cbegin(); it != kpts.cend();) {
-    if (kfs_to_marg.count(it->second.kf_id.frame_id) > 0) {
-      auto num_obs_it = kpts_num_obs.find(it->first);
-      num_observations -= num_obs_it->second;
-      kpts_num_obs.erase(num_obs_it);
-
-      it = kpts.erase(it);
+  for (auto it = kpts.begin(); it != kpts.end();) {
+    if (kfs_to_marg.count(it->second.host_kf_id.frame_id) > 0) {
+      it = removeLandmarkHelper(it);
     } else {
-      ++it;
-    }
-  }
+      for (auto it2 = it->second.obs.begin(); it2 != it->second.obs.end();) {
+        FrameId fid = it2->first.frame_id;
+        if (poses_to_marg.count(fid) > 0 || states_to_marg_all.count(fid) > 0 ||
+            kfs_to_marg.count(fid) > 0)
+          it2 = removeLandmarkObservationHelper(it, it2);
+        else
+          it2++;
+      }
 
-  for (auto it = obs.cbegin(); it != obs.cend();) {
-    if (kfs_to_marg.count(it->first.frame_id) > 0) {
-      it = obs.erase(it);
-    } else {
-      ++it;
-    }
-  }
-
-  for (auto it = obs.begin(); it != obs.end(); ++it) {
-    for (auto it2 = it->second.cbegin(); it2 != it->second.cend();) {
-      if (poses_to_marg.count(it2->first.frame_id) > 0 ||
-          states_to_marg_all.count(it2->first.frame_id) > 0 ||
-          kfs_to_marg.count(it->first.frame_id) > 0) {
-        for (const auto &v : it2->second) kpts_num_obs.at(v.kpt_id)--;
-
-        it2 = it->second.erase(it2);
+      if (it->second.obs.size() < min_num_obs) {
+        it = removeLandmarkHelper(it);
       } else {
-        ++it2;
+        ++it;
       }
     }
   }
-
-  for (auto it = host_to_kpts.cbegin(); it != host_to_kpts.cend();) {
-    if (kfs_to_marg.count(it->first.frame_id) > 0 ||
-        states_to_marg_all.count(it->first.frame_id) > 0 ||
-        poses_to_marg.count(it->first.frame_id) > 0) {
-      it = host_to_kpts.erase(it);
-    } else {
-      ++it;
-    }
-  }
 }
 
-std::vector<TimeCamId> LandmarkDatabase::getHostKfs() const {
+template <class Scalar_>
+std::vector<TimeCamId> LandmarkDatabase<Scalar_>::getHostKfs() const {
   std::vector<TimeCamId> res;
-  for (const auto &kv : obs) res.emplace_back(kv.first);
+
+  for (const auto &kv : observations) res.emplace_back(kv.first);
+
   return res;
 }
 
-std::vector<KeypointPosition> LandmarkDatabase::getLandmarksForHost(
-    const TimeCamId &tcid) const {
-  std::vector<KeypointPosition> res;
-  for (const auto &v : host_to_kpts.at(tcid)) res.emplace_back(kpts.at(v));
+template <class Scalar_>
+std::vector<const Keypoint<Scalar_> *>
+LandmarkDatabase<Scalar_>::getLandmarksForHost(const TimeCamId &tcid) const {
+  std::vector<const Keypoint<Scalar> *> res;
+
+  for (const auto &[k, obs] : observations.at(tcid))
+    for (const auto &v : obs) res.emplace_back(&kpts.at(v));
+
   return res;
 }
 
-void LandmarkDatabase::addObservation(const TimeCamId &tcid_target,
-                                      const KeypointObservation &o) {
+template <class Scalar_>
+void LandmarkDatabase<Scalar_>::addObservation(
+    const TimeCamId &tcid_target, const KeypointObservation<Scalar> &o) {
   auto it = kpts.find(o.kpt_id);
   BASALT_ASSERT(it != kpts.end());
 
-  auto &obs_vec = obs[it->second.kf_id][tcid_target];
+  it->second.obs[tcid_target] = o.pos;
 
-  // Check that the point observation is inserted only once
-  for (const auto &oo : obs_vec) {
-    BASALT_ASSERT(oo.kpt_id != o.kpt_id);
-  }
-
-  obs_vec.emplace_back(o);
-
-  num_observations++;
-  kpts_num_obs[o.kpt_id]++;
+  observations[it->second.host_kf_id][tcid_target].insert(it->first);
 }
 
-KeypointPosition &LandmarkDatabase::getLandmark(int lm_id) {
+template <class Scalar_>
+Keypoint<Scalar_> &LandmarkDatabase<Scalar_>::getLandmark(KeypointId lm_id) {
   return kpts.at(lm_id);
 }
 
-const KeypointPosition &LandmarkDatabase::getLandmark(int lm_id) const {
+template <class Scalar_>
+const Keypoint<Scalar_> &LandmarkDatabase<Scalar_>::getLandmark(
+    KeypointId lm_id) const {
   return kpts.at(lm_id);
 }
 
-const Eigen::aligned_map<
-    TimeCamId,
-    Eigen::aligned_map<TimeCamId, Eigen::aligned_vector<KeypointObservation> > >
-    &LandmarkDatabase::getObservations() const {
-  return obs;
+template <class Scalar_>
+const std::unordered_map<TimeCamId, std::map<TimeCamId, std::set<KeypointId>>>
+    &LandmarkDatabase<Scalar_>::getObservations() const {
+  return observations;
 }
 
-bool LandmarkDatabase::landmarkExists(int lm_id) const {
+template <class Scalar_>
+const Eigen::aligned_unordered_map<KeypointId, Keypoint<Scalar_>>
+    &LandmarkDatabase<Scalar_>::getLandmarks() const {
+  return kpts;
+}
+
+template <class Scalar_>
+bool LandmarkDatabase<Scalar_>::landmarkExists(int lm_id) const {
   return kpts.count(lm_id) > 0;
 }
 
-size_t LandmarkDatabase::numLandmarks() const { return kpts.size(); }
-
-int LandmarkDatabase::numObservations() const { return num_observations; }
-
-int LandmarkDatabase::numObservations(int lm_id) const {
-  return kpts_num_obs.at(lm_id);
+template <class Scalar_>
+size_t LandmarkDatabase<Scalar_>::numLandmarks() const {
+  return kpts.size();
 }
 
-void LandmarkDatabase::removeLandmark(int lm_id) {
+template <class Scalar_>
+int LandmarkDatabase<Scalar_>::numObservations() const {
+  int num_observations = 0;
+
+  for (const auto &[_, val_map] : observations) {
+    for (const auto &[_, val] : val_map) {
+      num_observations += val.size();
+    }
+  }
+
+  return num_observations;
+}
+
+template <class Scalar_>
+int LandmarkDatabase<Scalar_>::numObservations(KeypointId lm_id) const {
+  return kpts.at(lm_id).obs.size();
+}
+
+template <class Scalar_>
+typename LandmarkDatabase<Scalar_>::MapIter
+LandmarkDatabase<Scalar_>::removeLandmarkHelper(
+    LandmarkDatabase<Scalar>::MapIter it) {
+  auto host_it = observations.find(it->second.host_kf_id);
+
+  for (const auto &[k, v] : it->second.obs) {
+    auto target_it = host_it->second.find(k);
+    target_it->second.erase(it->first);
+
+    if (target_it->second.empty()) host_it->second.erase(target_it);
+  }
+
+  if (host_it->second.empty()) observations.erase(host_it);
+
+  return kpts.erase(it);
+}
+
+template <class Scalar_>
+typename Keypoint<Scalar_>::MapIter
+LandmarkDatabase<Scalar_>::removeLandmarkObservationHelper(
+    LandmarkDatabase<Scalar>::MapIter it,
+    typename Keypoint<Scalar>::MapIter it2) {
+  auto host_it = observations.find(it->second.host_kf_id);
+  auto target_it = host_it->second.find(it2->first);
+  target_it->second.erase(it->first);
+
+  if (target_it->second.empty()) host_it->second.erase(target_it);
+  if (host_it->second.empty()) observations.erase(host_it);
+
+  return it->second.obs.erase(it2);
+}
+
+template <class Scalar_>
+void LandmarkDatabase<Scalar_>::removeLandmark(KeypointId lm_id) {
+  auto it = kpts.find(lm_id);
+  if (it != kpts.end()) removeLandmarkHelper(it);
+}
+
+template <class Scalar_>
+void LandmarkDatabase<Scalar_>::removeObservations(
+    KeypointId lm_id, const std::set<TimeCamId> &obs) {
   auto it = kpts.find(lm_id);
   BASALT_ASSERT(it != kpts.end());
 
-  host_to_kpts.at(it->second.kf_id).erase(lm_id);
-
-  std::set<TimeCamId> to_remove;
-
-  for (auto &kv : obs.at(it->second.kf_id)) {
-    int idx = -1;
-    for (size_t i = 0; i < kv.second.size(); ++i) {
-      if (kv.second[i].kpt_id == lm_id) {
-        idx = i;
-        break;
-      }
-    }
-
-    if (idx >= 0) {
-      BASALT_ASSERT(kv.second.size() > 0);
-
-      std::swap(kv.second[idx], kv.second[kv.second.size() - 1]);
-      kv.second.resize(kv.second.size() - 1);
-
-      num_observations--;
-      kpts_num_obs.at(lm_id)--;
-
-      if (kv.second.size() == 0) to_remove.insert(kv.first);
-    }
+  for (auto it2 = it->second.obs.begin(); it2 != it->second.obs.end();) {
+    if (obs.count(it2->first) > 0) {
+      it2 = removeLandmarkObservationHelper(it, it2);
+    } else
+      it2++;
   }
 
-  for (const auto &v : to_remove) {
-    obs.at(it->second.kf_id).erase(v);
-  }
-
-  BASALT_ASSERT_STREAM(kpts_num_obs.at(lm_id) == 0, kpts_num_obs.at(lm_id));
-  kpts_num_obs.erase(lm_id);
-  kpts.erase(lm_id);
-}
-
-void LandmarkDatabase::removeObservations(int lm_id,
-                                          const std::set<TimeCamId> &outliers) {
-  auto it = kpts.find(lm_id);
-  BASALT_ASSERT(it != kpts.end());
-
-  std::set<TimeCamId> to_remove;
-
-  for (auto &kv : obs.at(it->second.kf_id)) {
-    if (outliers.count(kv.first) > 0) {
-      int idx = -1;
-      for (size_t i = 0; i < kv.second.size(); i++) {
-        if (kv.second[i].kpt_id == lm_id) {
-          idx = i;
-          break;
-        }
-      }
-      BASALT_ASSERT(idx >= 0);
-      BASALT_ASSERT(kv.second.size() > 0);
-
-      std::swap(kv.second[idx], kv.second[kv.second.size() - 1]);
-      kv.second.resize(kv.second.size() - 1);
-
-      num_observations--;
-      kpts_num_obs.at(lm_id)--;
-
-      if (kv.second.size() == 0) to_remove.insert(kv.first);
-    }
-  }
-
-  for (const auto &v : to_remove) {
-    obs.at(it->second.kf_id).erase(v);
+  if (it->second.obs.size() < min_num_obs) {
+    removeLandmarkHelper(it);
   }
 }
+
+// //////////////////////////////////////////////////////////////////
+// instatiate templates
+
+// Note: double specialization is unconditional, b/c NfrMapper depends on it.
+//#ifdef BASALT_INSTANTIATIONS_DOUBLE
+template class LandmarkDatabase<double>;
+//#endif
+
+#ifdef BASALT_INSTANTIATIONS_FLOAT
+template class LandmarkDatabase<float>;
+#endif
 
 }  // namespace basalt

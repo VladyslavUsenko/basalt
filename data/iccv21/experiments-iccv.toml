@@ -1,0 +1,593 @@
+[options]
+base_path = "$config_dir"
+output_path = "./tables/experiments-iccv"
+cache_dir = "./tables/cache"
+show_values_failed_runs = false
+screenread = true
+#overwrite_cache = true
+
+
+###################
+## abbreviate some sequence names for more compact tables / legends
+[seq_displayname_mapping]
+"tumvi-corridor1" = "tumvi-corr1"
+"tumvi-corridor2" = "tumvi-corr2"
+"tumvi-magistrale1" = "tumvi-mag1"
+"tumvi-magistrale2" = "tumvi-mag2"
+
+
+###################
+## define method names in table headers / legends globally
+[[substitutions]]
+DISPLAY_NAME_SQRTVIO64 = "$\\sqrt{VIO}$-64"
+DISPLAY_NAME_SQRTVIO32 = "$\\sqrt{VIO}$-32"
+DISPLAY_NAME_SQRTVO64 = "$\\sqrt{VO}$-64"
+DISPLAY_NAME_SQRTVO32 = "$\\sqrt{VO}$-32"
+DISPLAY_NAME_SQVIO64 = "$VIO$-64"
+DISPLAY_NAME_SQVIO32 = "$VIO$-32"
+DISPLAY_NAME_SQVO64 = "$VO$-64"
+DISPLAY_NAME_SQVO32 = "$VO$-32"
+
+
+###################
+## where to find experimental runs
+[[substitutions]]
+
+EXP_PATTERN_VIO = "01_iccv_all/*-*/vio_*/"
+EXP_PATTERN_VO = "01_iccv_all/*-*/vo_*/"
+
+#EXP_PATTERN_VIO = "02_iccv_runtime/*-*/vio_*/"
+#EXP_PATTERN_VO = "02_iccv_runtime/*-*/vo_*/"
+
+
+###################
+## which kind of plots to show
+[[substitutions]]
+SHOW_TRAJECTORY_PLOTS = true
+SHOW_EIGENVALUE_PLOTS = true
+SHOW_NULLSPACE_PLOTS = true
+
+
+###################
+## define which sequences to show in plots
+[[substitutions]]
+SEQUENCES_EUROC = [
+    "eurocMH01",
+    "eurocMH02",
+    "eurocMH03",
+    "eurocMH04",
+    "eurocMH05",
+    "eurocV101",
+    "eurocV102",
+    "eurocV103",
+    "eurocV201",
+    "eurocV202",
+]
+SEQUENCES_TUMVI = [
+    "tumvi-corridor1",
+    "tumvi-corridor2",
+    "tumvi-magistrale1",
+    "tumvi-magistrale2",
+    "tumvi-room1",
+    "tumvi-room2",
+    "tumvi-slides1",
+    "tumvi-slides2",
+]
+SEQUENCES_KITTI = [
+    "kitti00",
+    "kitti02",
+    "kitti03",
+    "kitti04",
+    "kitti05",
+    "kitti06",
+    "kitti07",
+    "kitti08",
+    "kitti09",
+    "kitti10",
+]
+
+
+###################
+## VIO experiments
+[[experiments]]
+name = "vio_sqrt-nsllt-qr-64"
+display_name = "${DISPLAY_NAME_SQRTVIO64}${}^{\\textrm{NS}}_{\\textrm{QR}}$"
+pattern = "${EXP_PATTERN_VIO}/*_sqrt-nsllt-qr_double_*"
+[[experiments]]
+name = "vio_sqrt-nsllt-qr-32"
+display_name = "${DISPLAY_NAME_SQRTVIO32}${}^{\\textrm{NS}}_{\\textrm{QR}}$"
+pattern = "${EXP_PATTERN_VIO}/*_sqrt-nsllt-qr_float_*"
+[[experiments]]
+name = "vio_sqrt-sc-sc-64"
+display_name = "${DISPLAY_NAME_SQRTVIO64}${}^{\\textrm{SC}}_{\\textrm{SC}}$"
+pattern = "${EXP_PATTERN_VIO}/*_sqrt-sc-sc_double_*"
+[[experiments]]
+name = "vio_sqrt-sc-sc-32"
+display_name = "${DISPLAY_NAME_SQRTVIO32}${}^{\\textrm{SC}}_{\\textrm{SC}}$"
+pattern = "${EXP_PATTERN_VIO}/*_sqrt-sc-sc_float_*"
+[[experiments]]
+name = "vio_sq-sc-sc-64"
+display_name = "${DISPLAY_NAME_SQVIO64}${}^{\\textrm{SC}}_{\\textrm{SC}}$"
+pattern = "${EXP_PATTERN_VIO}/*_sq-sc-sc_double_*"
+[[experiments]]
+name = "vio_sq-sc-sc-32"
+display_name = "${DISPLAY_NAME_SQVIO32}${}^{\\textrm{SC}}_{\\textrm{SC}}$"
+pattern = "${EXP_PATTERN_VIO}/*_sq-sc-sc_float_*"
+
+###################
+## VIO experiments -- aliases with shorter display names for plots
+[[experiments]]
+name = "vio_sqrt-64"
+display_name = "${DISPLAY_NAME_SQRTVIO64}"
+extend = "vio_sqrt-nsllt-qr-64"
+[[experiments]]
+name = "vio_sqrt-32"
+display_name = "${DISPLAY_NAME_SQRTVIO32}"
+extend = "vio_sqrt-nsllt-qr-32"
+[[experiments]]
+name = "vio_sq-64"
+display_name = "${DISPLAY_NAME_SQVIO64}"
+extend = "vio_sq-sc-sc-64"
+[[experiments]]
+name = "vio_sq-32"
+display_name = "${DISPLAY_NAME_SQVIO32}"
+extend = "vio_sq-sc-sc-32"
+
+
+
+###################
+## VO experiments
+[[experiments]]
+name = "vo_sqrt-nsllt-qr-64"
+display_name = "${DISPLAY_NAME_SQRTVO64}${}^{\\textrm{NS}}_{\\textrm{QR}}$"
+pattern = "${EXP_PATTERN_VO}/*_sqrt-nsllt-qr_double_*"
+[[experiments]]
+name = "vo_sqrt-nsllt-qr-32"
+display_name = "${DISPLAY_NAME_SQRTVO32}${}^{\\textrm{NS}}_{\\textrm{QR}}$"
+pattern = "${EXP_PATTERN_VO}/*_sqrt-nsllt-qr_float_*"
+[[experiments]]
+name = "vo_sqrt-sc-sc-64"
+display_name = "${DISPLAY_NAME_SQRTVO64}${}^{\\textrm{SC}}_{\\textrm{SC}}$"
+pattern = "${EXP_PATTERN_VO}/*_sqrt-sc-sc_double_*"
+[[experiments]]
+name = "vo_sqrt-sc-sc-32"
+display_name = "${DISPLAY_NAME_SQRTVO32}${}^{\\textrm{SC}}_{\\textrm{SC}}$"
+pattern = "${EXP_PATTERN_VO}/*_sqrt-sc-sc_float_*"
+[[experiments]]
+name = "vo_sq-sc-sc-64"
+display_name = "${DISPLAY_NAME_SQVO64}${}^{\\textrm{SC}}_{\\textrm{SC}}$"
+pattern = "${EXP_PATTERN_VO}/*_sq-sc-sc_double_*"
+[[experiments]]
+name = "vo_sq-sc-sc-32"
+display_name = "${DISPLAY_NAME_SQVO32}${}^{\\textrm{SC}}_{\\textrm{SC}}$"
+pattern = "${EXP_PATTERN_VO}/*_sq-sc-sc_float_*"
+
+###################
+## VIO experiments -- aliases with shorter display names for plots
+[[experiments]]
+name = "vo_sqrt-64"
+display_name = "${DISPLAY_NAME_SQRTVO64}"
+extend = "vo_sqrt-nsllt-qr-64"
+[[experiments]]
+name = "vo_sqrt-32"
+display_name = "${DISPLAY_NAME_SQRTVO32}"
+extend = "vo_sqrt-nsllt-qr-32"
+[[experiments]]
+name = "vo_sq-64"
+display_name = "${DISPLAY_NAME_SQVO64}"
+extend = "vo_sq-sc-sc-64"
+[[experiments]]
+name = "vo_sq-32"
+display_name = "${DISPLAY_NAME_SQVO32}"
+extend = "vo_sq-sc-sc-32"
+
+
+
+################################################################################
+################################################################################
+[[results]]
+class = "section"
+name = "Accuracy VIO & VO"
+show = true
+
+###################
+## accuracy results table for all VIO sequences
+[[results]]
+class = "results_table"
+name = "vio ate"
+show = true
+export_latex = "vio_ate"
+metrics_legend = false
+rotate_header = true
+escape_latex_header = false
+vertical_bars = false
+color_failed = ""
+filter_regex = "euroc|tumvi.*1|tumvi.*2"
+experiments = [
+    "vio_sqrt-nsllt-qr-64",
+    "vio_sqrt-nsllt-qr-32",
+    "vio_sq-sc-sc-64",
+    "vio_sq-sc-sc-32",
+]
+metrics = [
+    "ate_rmse",
+]
+
+###################
+## accuracy results table for all VO sequences
+[[results]]
+class = "results_table"
+name = "vo ate"
+show = true
+export_latex = "vo_ate"
+metrics_legend = false
+rotate_header = true
+escape_latex_header = false
+vertical_bars = false
+color_failed = ""
+#filter_regex = "kitti00|kitti0[2-9]|kitti10"
+#filter_regex = "kitti"
+override_as_failed = ["kitti01"]
+experiments = [
+    "vo_sqrt-nsllt-qr-64",
+    "vo_sqrt-nsllt-qr-32",
+    "vo_sq-sc-sc-64",
+    "vo_sq-sc-sc-32",
+]
+metrics = [
+    {name = "ate_rmse", failed_threshold = 100, decimals = 2},
+]
+
+
+
+################################################################################
+################################################################################
+[[results]]
+class = "section"
+name = "Runtime VIO & VO"
+show = true
+
+###################
+## runtime results table for all VIO sequences
+[[results]]
+class = "results_table"
+name = "vio time optimize / marginalize"
+show = true
+export_latex = "vio_runtime"
+metrics_legend = false
+rotate_header = true
+escape_latex_header = false
+vertical_bars = false
+color_failed = ""
+multirow = false
+filter_regex = "euroc|tumvi.*1|tumvi.*2"
+experiments = [
+    "vio_sqrt-nsllt-qr-64",
+    "vio_sqrt-nsllt-qr-32",
+    "vio_sq-sc-sc-64",
+    "vio_sq-sc-sc-32",
+]
+metrics = [
+    {name = "time_opt", decimals = 1},
+    {name = "time_marg", decimals = 1},
+]
+
+###################
+## runtime results table for all VO sequences
+[[results]]
+class = "results_table"
+name = "vo time optimize / marginalize"
+show = true
+export_latex = "vo_runtime"
+metrics_legend = false
+rotate_header = true
+escape_latex_header = false
+vertical_bars = false
+color_failed = ""
+multirow = false
+#filter_regex = "kitti00|kitti0[2-9]|kitti10"
+#filter_regex = "kitti"
+override_as_failed = ["kitti01"]
+experiments = [
+    "vo_sqrt-nsllt-qr-64",
+    "vo_sqrt-nsllt-qr-32",
+    "vo_sq-sc-sc-64",
+    "vo_sq-sc-sc-32",
+]
+metrics = [
+    "time_opt",
+    "time_marg",
+]
+
+
+
+################################################################################
+################################################################################
+[[results]]
+class = "section"
+name = "Ablation VIO & VO"
+show = true
+
+###################
+## ablation study table for VIO summarized over all EuRoC sequences
+[[results]]
+class = "summarize_sequences_table"
+name = "summary euroc ablation"
+export_latex = "vio_euroc_ablation"
+escape_latex_header = false
+filter_regex = "euroc"
+experiments =  [
+    "vio_sqrt-nsllt-qr-64",
+    "vio_sqrt-nsllt-qr-32",
+    "vio_sqrt-sc-sc-64",
+    "vio_sqrt-sc-sc-32",
+]
+metrics = [
+    {name = "ate_rmse", display_name = "ATE [m]", geometric_mean = false,  decimals = 3},
+    {name = "time_exec_realtimefactor", display_name = "real-time", geometric_mean = true, format_string = "{:.1f}x"},
+    {name = "time_exec", display_name = "t total [s]", geometric_mean = false, decimals = 1},
+    {name = "time_opt", display_name = "t opt [s]", geometric_mean = false, decimals = 1},
+    {name = "time_marg", display_name = "t marg [s]", geometric_mean = false,  decimals = 1},
+#    {name = "time_marg", display_name = "t marg (frac. of meas)", relative_to_metric = "time_measure", geometric_mean = true,  format_string = "{:.2f}"},
+#    {name = "time_opt", display_name = "t opt (frac. of meas)", relative_to_metric = "time_measure", geometric_mean = true, format_string = "{:.2f}"},
+#    {name = "time_marg", display_name = "t marg (frac. of total)", relative_to_metric = "time_exec", geometric_mean = true,  format_string = "{:.2f}"},
+#    {name = "time_opt", display_name = "t opt (frac. of total)", relative_to_metric = "time_exec", geometric_mean = true, format_string = "{:.2f}"},
+    {name = "avg_num_it", display_name = "avg #it", geometric_mean = false, decimals = 1},
+    {name = "avg_num_it_failed", display_name = "avg #it-failed", geometric_mean = false, decimals = 1},
+]
+
+###################
+## ablation study table for VO summarized over all Kitti sequences (w/o kitti01)
+[[results]]
+class = "summarize_sequences_table"
+name = "summary kitti (w/o kitti01) ablation"
+show = true
+export_latex = "vo_kitti_ablation"
+escape_latex_header = false
+filter_regex = "kitti00|kitti0[2-9]|kitti10"
+experiments =  [
+    "vo_sqrt-nsllt-qr-64",
+    "vo_sqrt-nsllt-qr-32",
+    "vo_sqrt-sc-sc-64",
+    "vo_sqrt-sc-sc-32",
+]
+metrics = [
+    {name = "ate_rmse", display_name = "ATE [m]", geometric_mean = false,  decimals = 3},
+    {name = "time_exec_realtimefactor", display_name = "real-time", geometric_mean = true, format_string = "{:.1f}x"},
+    {name = "time_exec", display_name = "t total [s]", geometric_mean = false, decimals = 1},
+    {name = "time_opt", display_name = "t opt [s]", geometric_mean = false, decimals = 1},
+    {name = "time_marg", display_name = "t marg [s]", geometric_mean = false,  decimals = 1},    
+    {name = "avg_num_it", display_name = "avg #it", geometric_mean = false, decimals = 1},
+    {name = "avg_num_it_failed", display_name = "avg #it-failed", geometric_mean = false, decimals = 1},
+]
+
+
+
+################################################################################
+################################################################################
+[[results]]
+class = "section"
+name = "Trajectories EuRoC"
+show = "<SHOW_TRAJECTORY_PLOTS>"
+
+###################
+## template for trajectory plots for a set of sequences
+[[templates]]
+_name = "TRAJECTORY"
+_arguments = ["SEQUENCE", "EXPERIMENTS", "AXES"]
+class = "plot"
+name = "trajectory"
+type = "trajectory"
+figsize = [4.0,2.5]
+trajectory_axes = "<AXES>"
+sequence = "<SEQUENCE>"
+experiments = "<EXPERIMENTS>"
+
+###################
+## instantiate trajectory plot template for EuRoC
+[[results]]
+  [results._template]
+  _name = "TRAJECTORY"
+  AXES = "xy"
+  SEQUENCE = {_argument = "product", _value = "<SEQUENCES_EUROC>"}
+  EXPERIMENTS = [
+    "vio_sqrt-32",
+    "vio_sq-32",
+  ]
+
+
+
+################################################################################
+################################################################################
+[[results]]
+class = "section"
+name = "Eigenvalues EuRoC"
+show = "<SHOW_EIGENVALUE_PLOTS>"
+
+###################
+## template for eigenvalue plots for a set of sequences
+[[templates]]
+_name = "EIGENVALUES"
+_arguments = ["SEQUENCE", "EXPERIMENTS"]
+class = "plot"
+type = "eigenvalues"
+name = "vio"
+#legend_loc = "upper left"
+#ylim.top = 1e6
+#ylim.bottom = -1e6
+sequence = "<SEQUENCE>"
+experiments = "<EXPERIMENTS>"
+
+###################
+## instantiate eigenvalue plot template for EuRoC
+[[results]]
+  [results._template]
+  _name = "EIGENVALUES"
+  SEQUENCE = {_argument = "product", _value = "<SEQUENCES_EUROC>"}
+  EXPERIMENTS = [
+    "vio_sqrt-64",
+    "vio_sqrt-32",
+    "vio_sq-64",
+    "vio_sq-32",
+  ]
+
+
+
+################################################################################
+################################################################################
+[[results]]
+class = "section"
+name = "Nullspace EuRoC"
+show = "<SHOW_NULLSPACE_PLOTS>"
+
+###################
+## template for nullspace plots for a set of sequences
+[[templates]]
+_name = "NULLSPACE"
+_arguments = ["SEQUENCE", "EXPERIMENTS"]
+class = "plot"
+type = "nullspace"
+name = "vio"
+#legend_loc = "lower right"
+sequence = "<SEQUENCE>"
+experiments = "<EXPERIMENTS>"
+
+###################
+## instantiate nullspace plot template for EuRoC
+[[results]]
+  [results._template]
+  _name = "NULLSPACE"
+  SEQUENCE = {_argument = "product", _value = "<SEQUENCES_EUROC>"}
+  EXPERIMENTS = [
+    "vio_sqrt-64",
+    "vio_sqrt-32",
+    "vio_sq-64",
+    "vio_sq-32",
+  ]
+
+
+################################################################################
+################################################################################
+[[results]]
+class = "section"
+name = "Trajectories TUMVI"
+show = "<SHOW_TRAJECTORY_PLOTS>"
+
+###################
+## instantiate trajectory plot template for TUMVI
+[[results]]
+  [results._template]
+  _name = "TRAJECTORY"
+  AXES = "xy"
+  SEQUENCE = {_argument = "product", _value = "<SEQUENCES_TUMVI>"}
+  EXPERIMENTS = [
+      "vio_sqrt-32",
+      "vio_sq-32",
+  ]
+
+
+################################################################################
+################################################################################
+[[results]]
+class = "section"
+name = "Eigenvalues TUMVI"
+show = "<SHOW_EIGENVALUE_PLOTS>"
+
+###################
+## instantiate eigenvalue plot template for TUMVI
+[[results]]
+  [results._template]
+  _name = "EIGENVALUES"
+  SEQUENCE = {_argument = "product", _value = "<SEQUENCES_TUMVI>"}
+  EXPERIMENTS = [
+    "vio_sqrt-64",
+    "vio_sqrt-32",
+    "vio_sq-64",
+    "vio_sq-32",
+  ]
+
+
+################################################################################
+################################################################################
+[[results]]
+class = "section"
+name = "Nullspace TUMVI"
+show = "<SHOW_NULLSPACE_PLOTS>"
+
+###################
+## instantiate nullspace plot template for TUMVI
+[[results]]
+  [results._template]
+  _name = "NULLSPACE"
+  SEQUENCE = {_argument = "product", _value = "<SEQUENCES_TUMVI>"}
+  EXPERIMENTS = [
+    "vio_sqrt-64",
+    "vio_sqrt-32",
+    "vio_sq-64",
+    "vio_sq-32",
+  ]
+
+
+################################################################################
+################################################################################
+[[results]]
+class = "section"
+name = "Trajectories Kitti"
+show = "<SHOW_TRAJECTORY_PLOTS>"
+
+###################
+## instantiate trajectory plot template for Kitti
+[[results]]
+  [results._template]
+  _name = "TRAJECTORY"
+  AXES = "xz"
+  SEQUENCE = {_argument = "product", _value = "<SEQUENCES_KITTI>"}
+  EXPERIMENTS = [
+      "vo_sqrt-32",
+      "vo_sq-32",
+  ]
+
+
+################################################################################
+################################################################################
+[[results]]
+class = "section"
+name = "Eigenvalues Kitti"
+show = "<SHOW_EIGENVALUE_PLOTS>"
+
+###################
+## instantiate eigenvalue plot template for Kitti
+[[results]]
+  [results._template]
+  _name = "EIGENVALUES"
+  SEQUENCE = {_argument = "product", _value = "<SEQUENCES_KITTI>"}
+  EXPERIMENTS = [
+    "vo_sqrt-64",
+    "vo_sqrt-32",
+    "vo_sq-64",
+    "vo_sq-32",
+  ]
+
+
+################################################################################
+################################################################################
+[[results]]
+class = "section"
+name = "Nullspace Kitti"
+show = "<SHOW_NULLSPACE_PLOTS>"
+
+###################
+## instantiate nullspace plot template for Kitti
+[[results]]
+  [results._template]
+  _name = "NULLSPACE"
+  SEQUENCE = {_argument = "product", _value = "<SEQUENCES_KITTI>"}
+  EXPERIMENTS = [
+    "vo_sqrt-64",
+    "vo_sqrt-32",
+    "vo_sq-64",
+    "vo_sq-32",
+  ]
+
+
+

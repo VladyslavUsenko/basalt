@@ -41,7 +41,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sophus/se3.hpp>
 
 #include <basalt/utils/common_types.h>
-#include <basalt/vi_estimator/ba_base.h>
+#include <basalt/utils/nfr.h>
+#include <basalt/vi_estimator/sc_ba_base.h>
 #include <basalt/vi_estimator/vio_estimator.h>
 
 #include <tbb/concurrent_unordered_map.h>
@@ -54,24 +55,27 @@ namespace basalt {
 template <size_t N>
 class HashBow;
 
-class NfrMapper : public BundleAdjustmentBase {
+class NfrMapper : public ScBundleAdjustmentBase<double> {
  public:
+  using Scalar = double;
+
   using Ptr = std::shared_ptr<NfrMapper>;
 
   template <class AccumT>
   struct MapperLinearizeAbsReduce
-      : public BundleAdjustmentBase::LinearizeAbsReduce<AccumT> {
+      : public ScBundleAdjustmentBase<Scalar>::LinearizeAbsReduce<AccumT> {
     using RollPitchFactorConstIter =
         Eigen::aligned_vector<RollPitchFactor>::const_iterator;
     using RelPoseFactorConstIter =
         Eigen::aligned_vector<RelPoseFactor>::const_iterator;
-    using RelLinDataIter = Eigen::aligned_vector<RelLinData>::iterator;
+    using RelLinDataConstIter =
+        Eigen::aligned_vector<RelLinData>::const_iterator;
 
     MapperLinearizeAbsReduce(
         AbsOrderMap& aom,
-        const Eigen::aligned_map<int64_t, PoseStateWithLin<double>>*
+        const Eigen::aligned_map<int64_t, PoseStateWithLin<Scalar>>*
             frame_poses)
-        : BundleAdjustmentBase::LinearizeAbsReduce<AccumT>(aom),
+        : ScBundleAdjustmentBase<Scalar>::LinearizeAbsReduce<AccumT>(aom),
           frame_poses(frame_poses) {
       this->accum.reset(aom.total_size);
       roll_pitch_error = 0;
@@ -79,7 +83,7 @@ class NfrMapper : public BundleAdjustmentBase {
     }
 
     MapperLinearizeAbsReduce(const MapperLinearizeAbsReduce& other, tbb::split)
-        : BundleAdjustmentBase::LinearizeAbsReduce<AccumT>(other.aom),
+        : ScBundleAdjustmentBase<Scalar>::LinearizeAbsReduce<AccumT>(other.aom),
           frame_poses(other.frame_poses) {
       this->accum.reset(this->aom.total_size);
       roll_pitch_error = 0;
@@ -92,10 +96,8 @@ class NfrMapper : public BundleAdjustmentBase {
       rel_error += rhs.rel_error;
     }
 
-    void operator()(const tbb::blocked_range<RelLinDataIter>& range) {
-      for (RelLinData& rld : range) {
-        rld.invert_keypoint_hessians();
-
+    void operator()(const tbb::blocked_range<RelLinDataConstIter>& range) {
+      for (const RelLinData& rld : range) {
         Eigen::MatrixXd rel_H;
         Eigen::VectorXd rel_b;
         linearizeRel(rld, rel_H, rel_b);
@@ -155,7 +157,7 @@ class NfrMapper : public BundleAdjustmentBase {
     double roll_pitch_error;
     double rel_error;
 
-    const Eigen::aligned_map<int64_t, PoseStateWithLin<double>>* frame_poses;
+    const Eigen::aligned_map<int64_t, PoseStateWithLin<Scalar>>* frame_poses;
   };
 
   NfrMapper(const basalt::Calibration<double>& calib, const VioConfig& config);
@@ -168,7 +170,7 @@ class NfrMapper : public BundleAdjustmentBase {
 
   void optimize(int num_iterations = 10);
 
-  Eigen::aligned_map<int64_t, PoseStateWithLin<double>>& getFramePoses();
+  Eigen::aligned_map<int64_t, PoseStateWithLin<Scalar>>& getFramePoses();
 
   void computeRelPose(double& rel_error);
 

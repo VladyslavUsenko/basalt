@@ -123,7 +123,7 @@ stages:
     - ./run_evaluations_tumvi.sh
 
 
-.eval_euroc_template: &eval_kitti_definition
+.eval_kitti_template: &eval_kitti_definition
   stage: eval
   parallel: 10
   tags: [docker, dataset-eval]
@@ -145,7 +145,7 @@ bionic-release-compile:
   only:
     - master
   variables:
-    CXX_MARCH: 'sandybridge'
+    CXX_MARCH: 'haswell'
     DEB_DIR: deb_bionic
   artifacts:
     paths:
@@ -157,7 +157,7 @@ focal-release-compile:
   <<: *compile_test_package_definition
   image: vladyslavusenko/b_image_focal:latest
   variables:
-    CXX_MARCH: 'sandybridge'
+    CXX_MARCH: 'haswell'
     DEB_DIR: deb_focal
   artifacts:
     paths:
@@ -168,6 +168,7 @@ focal-release-compile:
 focal-debug-compile:
   <<: *prepare_docker_definition
   <<: *compile_test_package_definition
+  image: vladyslavusenko/b_image_focal:latest
   only:
     - master
   variables:
@@ -176,10 +177,50 @@ focal-debug-compile:
 focal-relwithdebinfo-compile:
   <<: *prepare_docker_definition
   <<: *compile_test_package_definition
+  image: vladyslavusenko/b_image_focal:latest
   variables:
     BUILD_TYPE: CiRelWithDebInfo
   only:
     - master
+
+# test bionic (lab machines are still on bionic); but we need to do it with GCC9, since GCC7 has issues with root_vo additions
+bionic-relwithdebinfo-compile:
+  <<: *prepare_docker_definition
+  <<: *compile_test_package_definition
+  image: vladyslavusenko/b_image_bionic:latest
+  ### Workaround to install GCC9 in this image, b/c root_vo doesn't compile with GCC7
+  stage: build
+  script:
+    - apt-get update
+    - apt-get install -y software-properties-common
+    - add-apt-repository -y ppa:ubuntu-toolchain-r/test
+    - apt-get update
+    - apt-get install -y g++-9
+    - mkdir build
+    - cd build
+    - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCXX_MARCH=${CXX_MARCH} -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+    - make -j3
+    - ctest
+    - make package
+    - cd ..
+    - mkdir $DEB_DIR
+    - mv build/*.deb $DEB_DIR/
+    - dpkg -i $DEB_DIR/*.deb
+    # smoke test to see if all executables at least start up
+    - basalt_calibrate --help
+    - basalt_calibrate_imu --help
+    - basalt_mapper --help
+    - basalt_mapper_sim --help
+    - basalt_mapper_sim_naive --help
+    - basalt_opt_flow --help
+    - basalt_vio --help
+    - basalt_vio_sim --help
+  variables:
+    BUILD_TYPE: CiRelWithDebInfo
+    CC: gcc-9
+    CXX: g++-9
+#  only:
+#    - master
 
 # elcapitan-relwithdebinfo-compile:
 #  <<: *compile_test_definition
@@ -201,7 +242,7 @@ catalina-relwithdebinfo-compile:
   <<: *compile_test_definition
   tags: [macos, "10.15"]
   only:
-    - master
+#    - master
   variables:
     BUILD_TYPE: CiRelWithDebInfo
 

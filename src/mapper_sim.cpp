@@ -60,7 +60,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <basalt/utils/nfr.h>
 #include <basalt/utils/sim_utils.h>
 #include <basalt/utils/vis_utils.h>
-#include <basalt/vi_estimator/keypoint_vio.h>
+#include <basalt/vi_estimator/marg_helper.h>
 #include <basalt/vi_estimator/nfr_mapper.h>
 #include <basalt/calibration/calibration.hpp>
 
@@ -360,7 +360,7 @@ void processMargData(basalt::MargData& m) {
             std::make_pair(aom_new.total_size, POSE_SIZE);
         aom_new.total_size += POSE_SIZE;
 
-        basalt::PoseStateWithLin p = m.frame_states.at(kv.first);
+        basalt::PoseStateWithLin<double> p(m.frame_states.at(kv.first));
         m.frame_poses[kv.first] = p;
         m.frame_states.erase(kv.first);
       } else {
@@ -379,7 +379,7 @@ void processMargData(basalt::MargData& m) {
 
   Eigen::MatrixXd marg_H_new;
   Eigen::VectorXd marg_b_new;
-  basalt::KeypointVioEstimator::marginalizeHelper(
+  basalt::MargHelper<double>::marginalizeHelperSqToSq(
       m.abs_H, m.abs_b, idx_to_keep, idx_to_marg, marg_H_new, marg_b_new);
 
   std::cout << "new rank " << marg_H_new.fullPivLu().rank() << " size "
