@@ -69,3 +69,6 @@ make -j8
 ## Licence
 The code is provided under a BSD 3-clause license. See the LICENSE file for details.
 Note also the different licenses of thirdparty submodules.
+
+Some improvements are ported back from the fork
+[granite](https://github.com/DLR-RM/granite) (MIT license).

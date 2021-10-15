@@ -33,6 +33,9 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+// Original source for multi-scale implementation:
+// https://github.com/DLR-RM/granite (MIT license)
+
 #pragma once
 
 #include <thread>
