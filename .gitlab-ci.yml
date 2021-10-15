@@ -230,13 +230,13 @@ bionic-relwithdebinfo-compile:
 #  variables:
 #    BUILD_TYPE: CiRelWithDebInfo
 
-mojave-relwithdebinfo-compile:
-  <<: *compile_test_definition
-  tags: [macos, "10.14"]
-  only:
-    - master
-  variables:
-    BUILD_TYPE: CiRelWithDebInfo
+# mojave-relwithdebinfo-compile:
+#  <<: *compile_test_definition
+#  tags: [macos, "10.14"]
+#  only:
+#    - master
+#  variables:
+#    BUILD_TYPE: CiRelWithDebInfo
 
 catalina-relwithdebinfo-compile:
   <<: *compile_test_definition
