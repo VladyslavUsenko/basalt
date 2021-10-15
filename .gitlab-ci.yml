@@ -389,7 +389,7 @@ docker-build-focal:
   only:
     - master
   script:
-    - apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y gnupg2 rsync linux-modules-extra-$(uname -r)
+    - apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y gnupg2 rsync linux-generic
     - apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0AD9A3000D97B6C9
     - echo "deb [arch=amd64] http://packages.usenko.eu/ubuntu $REPO_NAME $REPO_NAME/main" > /etc/apt/sources.list.d/basalt.list
     - apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y basalt
