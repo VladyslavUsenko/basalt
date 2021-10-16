@@ -20,6 +20,7 @@ brew install \
      glew \
      eigen \
      ccache \
-     lz4
+     lz4 \
+     fmt
 
 brew install llvm
