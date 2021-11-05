@@ -87,6 +87,11 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION
   target_compile_options(pangolin PRIVATE "-Wno-deprecated-copy")
 endif()
 
+# fix pangolin: clang >= 13.0
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 13.0.0)
+  target_compile_options(pangolin PRIVATE "-Wno-unused-but-set-variable;-Wno-null-pointer-subtraction")
+endif()
+
 # fix pangolin: GCC >= 9.0
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 9.0)
   target_compile_options(pangolin PRIVATE "-Wno-stringop-truncation;-Wno-deprecated-copy")
