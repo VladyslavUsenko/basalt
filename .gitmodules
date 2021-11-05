@@ -12,7 +12,8 @@
 	url = https://github.com/ros/ros_comm.git
 [submodule "thirdparty/roscpp_core"]
 	path = thirdparty/ros/roscpp_core
-	url = https://github.com/ros/roscpp_core.git
+#	url = https://github.com/ros/roscpp_core.git
+	url = https://github.com/NikolausDemmel/roscpp_core.git
 [submodule "thirdparty/console_bridge"]
 	path = thirdparty/ros/console_bridge
 	url = https://github.com/ros/console_bridge.git
