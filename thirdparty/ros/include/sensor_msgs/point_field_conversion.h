@@ -120,6 +120,8 @@ namespace sensor_msgs{
         case sensor_msgs::PointField::FLOAT64:
           return readPointCloud2BufferValue<sensor_msgs::PointField::FLOAT64, T>(data_ptr);
       }
+      // This should never be reached, but return statement added to avoid compiler warning. (#84)
+      return T();
     }
 
   /*!

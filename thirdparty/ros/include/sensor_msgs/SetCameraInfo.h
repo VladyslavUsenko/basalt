@@ -57,8 +57,8 @@ struct DataType< ::sensor_msgs::SetCameraInfo > {
 };
 
 
-// service_traits::MD5Sum< ::sensor_msgs::SetCameraInfoRequest> should match 
-// service_traits::MD5Sum< ::sensor_msgs::SetCameraInfo > 
+// service_traits::MD5Sum< ::sensor_msgs::SetCameraInfoRequest> should match
+// service_traits::MD5Sum< ::sensor_msgs::SetCameraInfo >
 template<>
 struct MD5Sum< ::sensor_msgs::SetCameraInfoRequest>
 {
@@ -72,8 +72,8 @@ struct MD5Sum< ::sensor_msgs::SetCameraInfoRequest>
   }
 };
 
-// service_traits::DataType< ::sensor_msgs::SetCameraInfoRequest> should match 
-// service_traits::DataType< ::sensor_msgs::SetCameraInfo > 
+// service_traits::DataType< ::sensor_msgs::SetCameraInfoRequest> should match
+// service_traits::DataType< ::sensor_msgs::SetCameraInfo >
 template<>
 struct DataType< ::sensor_msgs::SetCameraInfoRequest>
 {
@@ -87,8 +87,8 @@ struct DataType< ::sensor_msgs::SetCameraInfoRequest>
   }
 };
 
-// service_traits::MD5Sum< ::sensor_msgs::SetCameraInfoResponse> should match 
-// service_traits::MD5Sum< ::sensor_msgs::SetCameraInfo > 
+// service_traits::MD5Sum< ::sensor_msgs::SetCameraInfoResponse> should match
+// service_traits::MD5Sum< ::sensor_msgs::SetCameraInfo >
 template<>
 struct MD5Sum< ::sensor_msgs::SetCameraInfoResponse>
 {
@@ -102,8 +102,8 @@ struct MD5Sum< ::sensor_msgs::SetCameraInfoResponse>
   }
 };
 
-// service_traits::DataType< ::sensor_msgs::SetCameraInfoResponse> should match 
-// service_traits::DataType< ::sensor_msgs::SetCameraInfo > 
+// service_traits::DataType< ::sensor_msgs::SetCameraInfoResponse> should match
+// service_traits::DataType< ::sensor_msgs::SetCameraInfo >
 template<>
 struct DataType< ::sensor_msgs::SetCameraInfoResponse>
 {

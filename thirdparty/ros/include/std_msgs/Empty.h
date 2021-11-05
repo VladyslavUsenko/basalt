@@ -8,7 +8,6 @@
 
 #include <string>
 #include <vector>
-#include <map>
 
 #include <ros/types.h>
 #include <ros/serialization.h>
@@ -58,6 +57,7 @@ ros::message_operations::Printer< ::std_msgs::Empty_<ContainerAllocator> >::stre
 return s;
 }
 
+
 } // namespace std_msgs
 
 namespace ros
@@ -67,23 +67,7 @@ namespace message_traits
 
 
 
-// BOOLTRAITS {'IsFixedSize': True, 'IsMessage': True, 'HasHeader': False}
-// {'std_msgs': ['/tmp/binarydeb/ros-kinetic-std-msgs-0.5.11/msg']}
 
-// !!!!!!!!!!! ['__class__', '__delattr__', '__dict__', '__doc__', '__eq__', '__format__', '__getattribute__', '__hash__', '__init__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', '_parsed_fields', 'constants', 'fields', 'full_name', 'has_header', 'header_present', 'names', 'package', 'parsed_fields', 'short_name', 'text', 'types']
-
-
-
-
-template <class ContainerAllocator>
-struct IsFixedSize< ::std_msgs::Empty_<ContainerAllocator> >
-  : TrueType
-  { };
-
-template <class ContainerAllocator>
-struct IsFixedSize< ::std_msgs::Empty_<ContainerAllocator> const>
-  : TrueType
-  { };
 
 template <class ContainerAllocator>
 struct IsMessage< ::std_msgs::Empty_<ContainerAllocator> >
@@ -92,6 +76,16 @@ struct IsMessage< ::std_msgs::Empty_<ContainerAllocator> >
 
 template <class ContainerAllocator>
 struct IsMessage< ::std_msgs::Empty_<ContainerAllocator> const>
+  : TrueType
+  { };
+
+template <class ContainerAllocator>
+struct IsFixedSize< ::std_msgs::Empty_<ContainerAllocator> >
+  : TrueType
+  { };
+
+template <class ContainerAllocator>
+struct IsFixedSize< ::std_msgs::Empty_<ContainerAllocator> const>
   : TrueType
   { };
 
@@ -135,8 +129,8 @@ struct Definition< ::std_msgs::Empty_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "\n\
-";
+    return "\n"
+;
   }
 
   static const char* value(const ::std_msgs::Empty_<ContainerAllocator>&) { return value(); }
