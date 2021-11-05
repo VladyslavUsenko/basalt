@@ -81,8 +81,8 @@ VignetteEstimator::VignetteEstimator(
 
 void VignetteEstimator::compute_error(
     std::map<TimeCamId, std::vector<double>> *reprojected_vignette_error) {
-  double error = 0;
-  double mean_residual = 0;
+  //  double error = 0;
+  //  double mean_residual = 0;
   double max_residual = 0;
   int num_residuals = 0;
 
@@ -110,8 +110,8 @@ void VignetteEstimator::compute_error(
         double e =
             irradiance[i] * vign_param[tcid.cam_id].evaluate(loc)[0] - val;
         ve[i] = e;
-        error += e * e;
-        mean_residual += std::abs(e);
+        //        error += e * e;
+        //        mean_residual += std::abs(e);
         max_residual = std::max(max_residual, std::abs(e));
         if (max_residual == std::abs(e)) {
           tcid_max = tcid;
