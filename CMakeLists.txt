@@ -263,6 +263,7 @@ include_directories(${OpenCV_INCLUDE_DIR})
 message(STATUS "Found OpenCV headers in: ${OpenCV_INCLUDE_DIR}")
 message(STATUS "Found OpenCV_LIBS: ${OpenCV_LIBS}")
 
+find_package(fmt REQUIRED)
 
 add_subdirectory(thirdparty)
 
