@@ -69,7 +69,12 @@ endif()
 
 # fix pangolin: macOS >= 10.14 Mojave
 if(APPLE AND CMAKE_SYSTEM_VERSION VERSION_GREATER_EQUAL 18.0.0)
-  target_compile_options(pangolin PRIVATE "-Wno-deprecated-declarations" "-Wno-deprecated-copy")
+  target_compile_options(pangolin PRIVATE "-Wno-deprecated-declarations")
+
+  if(CMAKE_CXX_COMPILER_ID "AppleClang" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 12.0.0)
+    target_compile_options(pangolin PRIVATE "-Wno-deprecated-copy")
+  endif()
+
 endif()
 
 # fix pangolin: clang
