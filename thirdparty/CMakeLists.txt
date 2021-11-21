@@ -71,7 +71,7 @@ endif()
 if(APPLE AND CMAKE_SYSTEM_VERSION VERSION_GREATER_EQUAL 18.0.0)
   target_compile_options(pangolin PRIVATE "-Wno-deprecated-declarations")
 
-  if(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 13.0.0)
+  if((CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang") AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 13.0.0)
     target_compile_options(pangolin PRIVATE "-Wno-deprecated-copy")
   endif()
 
