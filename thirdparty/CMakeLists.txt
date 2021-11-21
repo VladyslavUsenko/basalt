@@ -50,7 +50,7 @@ set_target_properties(opengv PROPERTIES
 # fix opengv: compile options (CMAKE_CXX_FLAGS is overwritten by Opengv)
 target_compile_options(opengv PRIVATE
   -Wno-unused-private-field
-  -march=${CXX_MARCH}
+  ${BASALT_MARCH_FLAGS}
   ${BASALT_PASSED_CXX_FLAGS})
 
 # TODO: enable once mpark issue is fixed upstream pangolin
@@ -69,7 +69,7 @@ endif()
 
 # fix pangolin: macOS >= 10.14 Mojave
 if(APPLE AND CMAKE_SYSTEM_VERSION VERSION_GREATER_EQUAL 18.0.0)
-  target_compile_options(pangolin PRIVATE "-Wno-deprecated-declarations")
+  target_compile_options(pangolin PRIVATE "-Wno-deprecated-declarations" "-Wno-deprecated-copy")
 endif()
 
 # fix pangolin: clang
