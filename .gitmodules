@@ -20,9 +20,6 @@
 [submodule "thirdparty/basalt-headers"]
 	path = thirdparty/basalt-headers
 	url = https://gitlab.com/VladyslavUsenko/basalt-headers.git
-[submodule "thirdparty/fmt"]
-	path = thirdparty/fmt
-	url = https://github.com/fmtlib/fmt.git
 [submodule "thirdparty/magic_enum"]
 	path = thirdparty/magic_enum
 	url = https://github.com/Neargye/magic_enum.git
