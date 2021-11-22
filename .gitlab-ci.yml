@@ -193,6 +193,64 @@ focal-relwithdebinfo-compile:
   only:
     - master
 
+focal-gcc10-relwithdebinfo-compile:
+  <<: *prepare_docker_definition
+  image: vladyslavusenko/b_image_focal:latest
+  variables:
+    BUILD_TYPE: CiRelWithDebInfo
+    CC: gcc-10
+    CXX: g++-10
+  only:
+#    - master
+  stage: build
+  script:
+    - add-apt-repository ppa:ubuntu-toolchain-r/ppa -y
+    - apt-get update
+    - apt-get install -y g++-10
+    - mkdir build
+    - cd build
+    - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCXX_MARCH=${CXX_MARCH} -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+    - make -j3
+    - ctest
+    # smoke test to see if all executables at least start up
+    - ./basalt_calibrate --help
+    - ./basalt_calibrate_imu --help
+    - ./basalt_mapper --help
+    - ./basalt_mapper_sim --help
+    - ./basalt_mapper_sim_naive --help
+    - ./basalt_opt_flow --help
+    - ./basalt_vio --help
+    - ./basalt_vio_sim --help
+
+focal-gcc11-relwithdebinfo-compile:
+  <<: *prepare_docker_definition
+  image: vladyslavusenko/b_image_focal:latest
+  variables:
+    BUILD_TYPE: CiRelWithDebInfo
+    CC: gcc-11
+    CXX: g++-11
+  only:
+#    - master
+  stage: build
+  script:
+    - add-apt-repository ppa:ubuntu-toolchain-r/test -y
+    - apt-get update
+    - apt-get install -y g++-11
+    - mkdir build
+    - cd build
+    - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCXX_MARCH=${CXX_MARCH} -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+    - make -j3
+    - ctest
+    # smoke test to see if all executables at least start up
+    - ./basalt_calibrate --help
+    - ./basalt_calibrate_imu --help
+    - ./basalt_mapper --help
+    - ./basalt_mapper_sim --help
+    - ./basalt_mapper_sim_naive --help
+    - ./basalt_opt_flow --help
+    - ./basalt_vio --help
+    - ./basalt_vio_sim --help
+
 catalina-relwithdebinfo-compile:
   <<: *compile_test_definition
   tags: [macos, "10.15"]
