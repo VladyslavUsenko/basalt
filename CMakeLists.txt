@@ -1,6 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
-
-include("thirdparty/basalt-headers/cmake_modules/PreProjectWorkarounds.cmake")
+cmake_minimum_required(VERSION 3.10...3.18)
 
 project(basalt)
 
@@ -251,37 +249,40 @@ set(CMAKE_CXX_FLAGS "${BASALT_CXX_FLAGS} ${BASALT_MARCH_FLAGS} ${BASALT_PASSED_C
 
 set(EIGEN_INCLUDE_DIR_HINTS ${EIGEN_ROOT})
 find_package(Eigen3 3.4.0 EXACT REQUIRED MODULE)
-include_directories(${EIGEN3_INCLUDE_DIR})
 message(STATUS "Found Eigen headers in: ${EIGEN3_INCLUDE_DIR}")
 if(NOT EIGEN3_INCLUDE_DIR MATCHES "^${EIGEN_ROOT}")
   message(WARNING "Found Eigen headers are outside of specified EIGEN_ROOT '${EIGEN_ROOT}'")
 endif()
 
 find_package(TBB REQUIRED)
-include_directories(${TBB_INCLUDE_DIR})
 message(STATUS "Found TBB ${TBB_VERSION_MAJOR}.${TBB_VERSION_MINOR} (interface version ${TBB_INTERFACE_VERSION}) headers in: ${TBB_INCLUDE_DIRS}")
 if (TBB_INTERFACE_VERSION LESS 11004)
   # enable global_control header for earlier TBB versions (Ubuntu 16.04, 18.04)
   add_definitions(-DTBB_PREVIEW_GLOBAL_CONTROL)
 endif()
 
-find_package(OpenCV REQUIRED core imgproc calib3d highgui)
-include_directories(${OpenCV_INCLUDE_DIR})
-message(STATUS "Found OpenCV headers in: ${OpenCV_INCLUDE_DIR}")
+# NOTE: not specifying version, since 2, 3 or 4 is fine
+find_package(OpenCV REQUIRED COMPONENTS core imgproc calib3d highgui)
+message(STATUS "Found OpenCV ${OpenCV_VERSION} headers in: ${OpenCV_INCLUDE_DIRS}")
 message(STATUS "Found OpenCV_LIBS: ${OpenCV_LIBS}")
 
+# Add our own custom scoped opencv target since none is provided by OpenCV itself
+add_library(basalt::opencv INTERFACE IMPORTED)
+set_property(TARGET basalt::opencv PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${OpenCV_INCLUDE_DIRS})
+set_property(TARGET basalt::opencv PROPERTY INTERFACE_LINK_LIBRARIES ${OpenCV_LIBS})
+
 find_package(fmt REQUIRED)
+message(STATUS "Found {fmt} ${fmt_VERSION} in: ${fmt_DIR}")
 
 add_subdirectory(thirdparty)
 
+# custom scoped cli11 target
+add_library(basalt::cli11 INTERFACE IMPORTED)
+set_property(TARGET basalt::cli11 PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/CLI11/include)
 
-include_directories(thirdparty/basalt-headers/thirdparty/Sophus)
-include_directories(thirdparty/basalt-headers/thirdparty/cereal/include)
-include_directories(thirdparty/basalt-headers/include)
-include_directories(thirdparty/CLI11/include)
-include_directories(thirdparty/magic_enum/include)
-
-include_directories(include)
+# custom scoped magic_enum target
+add_library(basalt::magic_enum INTERFACE IMPORTED)
+set_property(TARGET basalt::magic_enum PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/magic_enum/include)
 
 
 add_library(basalt SHARED
@@ -312,54 +313,55 @@ add_library(basalt SHARED
 
 
 target_link_libraries(basalt
-  PUBLIC ${TBB_LIBRARIES} ${STD_CXX_FS} ${OpenCV_LIBS} fmt::fmt
-  PRIVATE rosbag apriltag opengv nlohmann::json)
+  PUBLIC ${STD_CXX_FS} basalt::opencv basalt::basalt-headers TBB::tbb
+  PRIVATE basalt::magic_enum rosbag apriltag opengv nlohmann::json fmt::fmt)
+target_include_directories(basalt PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_compile_definitions(basalt PUBLIC ${BASALT_COMPILE_DEFINITIONS})
 #target_compile_definitions(basalt PUBLIC BASALT_DISABLE_ASSERTS)
 
 
 add_executable(basalt_calibrate src/calibrate.cpp src/calibration/cam_calib.cpp)
-target_link_libraries(basalt_calibrate basalt pangolin)
+target_link_libraries(basalt_calibrate basalt pangolin basalt::cli11)
 
 add_executable(basalt_calibrate_imu src/calibrate_imu.cpp src/calibration/cam_imu_calib.cpp)
-target_link_libraries(basalt_calibrate_imu basalt pangolin)
+target_link_libraries(basalt_calibrate_imu basalt pangolin basalt::cli11)
 
 
 add_executable(basalt_vio_sim src/vio_sim.cpp)
-target_link_libraries(basalt_vio_sim basalt pangolin)
+target_link_libraries(basalt_vio_sim basalt pangolin basalt::cli11)
 
 add_executable(basalt_mapper_sim src/mapper_sim.cpp)
-target_link_libraries(basalt_mapper_sim basalt pangolin)
+target_link_libraries(basalt_mapper_sim basalt pangolin basalt::cli11)
 
 # mapper sim native doesn't use template free interface
 if(BASALT_INSTANTIATIONS_DOUBLE)
   add_executable(basalt_mapper_sim_naive src/mapper_sim_naive.cpp)
-  target_link_libraries(basalt_mapper_sim_naive basalt pangolin)
+  target_link_libraries(basalt_mapper_sim_naive basalt pangolin basalt::cli11)
 endif()
 
 add_executable(basalt_mapper src/mapper.cpp)
-target_link_libraries(basalt_mapper basalt pangolin)
+target_link_libraries(basalt_mapper basalt pangolin basalt::cli11)
 
 
 add_executable(basalt_opt_flow src/opt_flow.cpp)
-target_link_libraries(basalt_opt_flow basalt pangolin)
+target_link_libraries(basalt_opt_flow basalt pangolin basalt::cli11)
 
 add_executable(basalt_vio src/vio.cpp)
-target_link_libraries(basalt_vio basalt pangolin)
+target_link_libraries(basalt_vio basalt pangolin basalt::cli11)
 
 add_executable(basalt_time_alignment src/time_alignment.cpp)
-target_link_libraries(basalt_time_alignment basalt pangolin)
+target_link_libraries(basalt_time_alignment basalt pangolin basalt::cli11)
 
 add_executable(basalt_kitti_eval src/kitti_eval.cpp)
-target_link_libraries(basalt_kitti_eval)
+target_link_libraries(basalt_kitti_eval basalt::basalt-headers basalt::cli11)
 
 find_package(realsense2 QUIET)
 if(realsense2_FOUND)
   add_executable(basalt_rs_t265_record src/rs_t265_record.cpp src/device/rs_t265.cpp)
-  target_link_libraries(basalt_rs_t265_record basalt realsense2::realsense2 ${OpenCV_LIBS} pangolin)
+  target_link_libraries(basalt_rs_t265_record basalt realsense2::realsense2 pangolin basalt::cli11)
 
   add_executable(basalt_rs_t265_vio src/rs_t265_vio.cpp src/device/rs_t265.cpp)
-  target_link_libraries(basalt_rs_t265_vio basalt realsense2::realsense2 pangolin)
+  target_link_libraries(basalt_rs_t265_vio basalt realsense2::realsense2 pangolin basalt::cli11)
 endif()
 
 
