@@ -193,22 +193,6 @@ focal-relwithdebinfo-compile:
   only:
     - master
 
-# elcapitan-relwithdebinfo-compile:
-#  <<: *compile_test_definition
-#  tags: [macos, "10.11"]
-#  only:
-#    - master
-#  variables:
-#    BUILD_TYPE: CiRelWithDebInfo
-
-# mojave-relwithdebinfo-compile:
-#  <<: *compile_test_definition
-#  tags: [macos, "10.14"]
-#  only:
-#    - master
-#  variables:
-#    BUILD_TYPE: CiRelWithDebInfo
-
 catalina-relwithdebinfo-compile:
   <<: *compile_test_definition
   tags: [macos, "10.15"]
@@ -226,6 +210,15 @@ catalina-brewclang-relwithdebinfo-compile:
     BUILD_TYPE: CiRelWithDebInfo
     CC: /usr/local/opt/llvm/bin/clang
     CXX: /usr/local/opt/llvm/bin/clang++
+
+bigsur-relwithdebinfo-compile:
+  <<: *compile_test_definition
+  tags: [macos, "11"]
+  only:
+#    - master
+  variables:
+    BUILD_TYPE: CiRelWithDebInfo
+
 
 # check if clang-format would make any changes
 clang-format:
