@@ -65,7 +65,7 @@ struct OpticalFlowPatch {
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  OpticalFlowPatch() { mean = 0; }
+  OpticalFlowPatch() = default;
 
   OpticalFlowPatch(const Image<const uint16_t> &img, const Vector2 &pos) {
     setFromImage(img, pos);
@@ -127,6 +127,16 @@ struct OpticalFlowPatch {
     H_se2.ldlt().solveInPlace(H_se2_inv);
 
     H_se2_inv_J_se2_T = H_se2_inv * J_se2.transpose();
+
+    // NOTE: while it's very unlikely we get a source patch with all black
+    // pixels, since points are usually selected at corners, it doesn't cost
+    // much to be safe here.
+
+    // all-black patch cannot be normalized; will result in mean of "zero" and
+    // H_se2_inv_J_se2_T will contain "NaN" and data will contain "inf"
+    valid = mean > std::numeric_limits<Scalar>::epsilon() &&
+            H_se2_inv_J_se2_T.array().isFinite().all() &&
+            data.array().isFinite().all();
   }
 
   inline bool residual(const Image<const uint16_t> &img,
@@ -146,6 +156,12 @@ struct OpticalFlowPatch {
       }
     }
 
+    // all-black patch cannot be normalized
+    if (sum < std::numeric_limits<Scalar>::epsilon()) {
+      residual.setZero();
+      return false;
+    }
+
     int num_residuals = 0;
 
     for (int i = 0; i < PATTERN_SIZE; i++) {
@@ -162,14 +178,16 @@ struct OpticalFlowPatch {
     return num_residuals > PATTERN_SIZE / 2;
   }
 
-  Vector2 pos;
-  VectorP data;  // negative if the point is not valid
+  Vector2 pos = Vector2::Zero();
+  VectorP data = VectorP::Zero();  // negative if the point is not valid
 
   // MatrixP3 J_se2;  // total jacobian with respect to se2 warp
   // Matrix3 H_se2_inv;
-  Matrix3P H_se2_inv_J_se2_T;
+  Matrix3P H_se2_inv_J_se2_T = Matrix3P::Zero();
 
-  Scalar mean;
+  Scalar mean = 0;
+
+  bool valid = false;
 };
 
 template <typename Scalar, typename Pattern>
