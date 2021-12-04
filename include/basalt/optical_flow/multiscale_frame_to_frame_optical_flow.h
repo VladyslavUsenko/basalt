@@ -122,7 +122,7 @@ class MultiscaleFrameToFrameOpticalFlow : public OpticalFlowBase {
       transforms->pyramid_levels.resize(calib.intrinsics.size());
       transforms->t_ns = t_ns;
 
-      pyramid.reset(new std::vector<basalt::ManagedImagePyr<u_int16_t>>);
+      pyramid.reset(new std::vector<basalt::ManagedImagePyr<uint16_t>>);
       pyramid->resize(calib.intrinsics.size());
 
       tbb::parallel_for(tbb::blocked_range<size_t>(0, calib.intrinsics.size()),
@@ -143,7 +143,7 @@ class MultiscaleFrameToFrameOpticalFlow : public OpticalFlowBase {
 
       old_pyramid = pyramid;
 
-      pyramid.reset(new std::vector<basalt::ManagedImagePyr<u_int16_t>>);
+      pyramid.reset(new std::vector<basalt::ManagedImagePyr<uint16_t>>);
       pyramid->resize(calib.intrinsics.size());
       tbb::parallel_for(tbb::blocked_range<size_t>(0, calib.intrinsics.size()),
                         [&](const tbb::blocked_range<size_t>& r) {
@@ -191,8 +191,8 @@ class MultiscaleFrameToFrameOpticalFlow : public OpticalFlowBase {
   }
 
   void trackPoints(
-      const basalt::ManagedImagePyr<u_int16_t>& pyr_1,
-      const basalt::ManagedImagePyr<u_int16_t>& pyr_2,
+      const basalt::ManagedImagePyr<uint16_t>& pyr_1,
+      const basalt::ManagedImagePyr<uint16_t>& pyr_2,
       const Eigen::aligned_map<KeypointId, Eigen::AffineCompact2f>&
           transform_map_1,
       const std::map<KeypointId, size_t>& pyramid_levels_1,
@@ -282,8 +282,11 @@ class MultiscaleFrameToFrameOpticalFlow : public OpticalFlowBase {
 
       PatchT p(old_pyr.lvl(level), old_transform.translation() / scale);
 
-      // Perform tracking on current level
-      patch_valid = trackPointAtLevel(pyr.lvl(level), p, transform_tmp);
+      patch_valid &= p.valid;
+      if (patch_valid) {
+        // Perform tracking on current level
+        patch_valid &= trackPointAtLevel(pyr.lvl(level), p, transform_tmp);
+      }
 
       if (level == static_cast<ssize_t>(pyramid_level) + 1 && !patch_valid) {
         return false;
@@ -301,7 +304,7 @@ class MultiscaleFrameToFrameOpticalFlow : public OpticalFlowBase {
     return patch_valid;
   }
 
-  inline bool trackPointAtLevel(const Image<const u_int16_t>& img_2,
+  inline bool trackPointAtLevel(const Image<const uint16_t>& img_2,
                                 const PatchT& dp,
                                 Eigen::AffineCompact2f& transform) const {
     bool patch_valid = true;
@@ -315,18 +318,24 @@ class MultiscaleFrameToFrameOpticalFlow : public OpticalFlowBase {
           transform.linear().matrix() * PatchT::pattern2;
       transformed_pat.colwise() += transform.translation();
 
-      bool valid = dp.residual(img_2, transformed_pat, res);
+      patch_valid &= dp.residual(img_2, transformed_pat, res);
 
-      if (valid) {
-        Vector3 inc = -dp.H_se2_inv_J_se2_T * res;
-        transform *= SE2::exp(inc).matrix();
+      if (patch_valid) {
+        const Vector3 inc = -dp.H_se2_inv_J_se2_T * res;
 
-        const int filter_margin = 2;
+        // avoid NaN in increment (leads to SE2::exp crashing)
+        patch_valid &= inc.array().isFinite().all();
 
-        if (!img_2.InBounds(transform.translation(), filter_margin))
-          patch_valid = false;
-      } else {
-        patch_valid = false;
+        // avoid very large increment
+        patch_valid &= inc.template lpNorm<Eigen::Infinity>() < 1e6;
+
+        if (patch_valid) {
+          transform *= SE2::exp(inc).matrix();
+
+          const int filter_margin = 2;
+
+          patch_valid &= img_2.InBounds(transform.translation(), filter_margin);
+        }
       }
     }
 
@@ -444,7 +453,7 @@ class MultiscaleFrameToFrameOpticalFlow : public OpticalFlowBase {
   basalt::Calibration<Scalar> calib;
 
   OpticalFlowResult::Ptr transforms;
-  std::shared_ptr<std::vector<basalt::ManagedImagePyr<u_int16_t>>> old_pyramid,
+  std::shared_ptr<std::vector<basalt::ManagedImagePyr<uint16_t>>> old_pyramid,
       pyramid;
 
   // map from stereo pair -> essential matrix
