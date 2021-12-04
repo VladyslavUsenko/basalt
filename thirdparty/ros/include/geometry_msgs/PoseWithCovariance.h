@@ -8,7 +8,7 @@
 
 #include <string>
 #include <vector>
-#include <map>
+#include <memory>
 
 #include <ros/types.h>
 #include <ros/serialization.h>
@@ -69,6 +69,21 @@ ros::message_operations::Printer< ::geometry_msgs::PoseWithCovariance_<Container
 return s;
 }
 
+
+template<typename ContainerAllocator1, typename ContainerAllocator2>
+bool operator==(const ::geometry_msgs::PoseWithCovariance_<ContainerAllocator1> & lhs, const ::geometry_msgs::PoseWithCovariance_<ContainerAllocator2> & rhs)
+{
+  return lhs.pose == rhs.pose &&
+    lhs.covariance == rhs.covariance;
+}
+
+template<typename ContainerAllocator1, typename ContainerAllocator2>
+bool operator!=(const ::geometry_msgs::PoseWithCovariance_<ContainerAllocator1> & lhs, const ::geometry_msgs::PoseWithCovariance_<ContainerAllocator2> & rhs)
+{
+  return !(lhs == rhs);
+}
+
+
 } // namespace geometry_msgs
 
 namespace ros
@@ -78,23 +93,7 @@ namespace message_traits
 
 
 
-// BOOLTRAITS {'IsFixedSize': True, 'IsMessage': True, 'HasHeader': False}
-// {'std_msgs': ['/opt/ros/kinetic/share/std_msgs/cmake/../msg'], 'geometry_msgs': ['/tmp/binarydeb/ros-kinetic-geometry-msgs-1.12.5/msg']}
 
-// !!!!!!!!!!! ['__class__', '__delattr__', '__dict__', '__doc__', '__eq__', '__format__', '__getattribute__', '__hash__', '__init__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', '_parsed_fields', 'constants', 'fields', 'full_name', 'has_header', 'header_present', 'names', 'package', 'parsed_fields', 'short_name', 'text', 'types']
-
-
-
-
-template <class ContainerAllocator>
-struct IsFixedSize< ::geometry_msgs::PoseWithCovariance_<ContainerAllocator> >
-  : TrueType
-  { };
-
-template <class ContainerAllocator>
-struct IsFixedSize< ::geometry_msgs::PoseWithCovariance_<ContainerAllocator> const>
-  : TrueType
-  { };
 
 template <class ContainerAllocator>
 struct IsMessage< ::geometry_msgs::PoseWithCovariance_<ContainerAllocator> >
@@ -103,6 +102,16 @@ struct IsMessage< ::geometry_msgs::PoseWithCovariance_<ContainerAllocator> >
 
 template <class ContainerAllocator>
 struct IsMessage< ::geometry_msgs::PoseWithCovariance_<ContainerAllocator> const>
+  : TrueType
+  { };
+
+template <class ContainerAllocator>
+struct IsFixedSize< ::geometry_msgs::PoseWithCovariance_<ContainerAllocator> >
+  : TrueType
+  { };
+
+template <class ContainerAllocator>
+struct IsFixedSize< ::geometry_msgs::PoseWithCovariance_<ContainerAllocator> const>
   : TrueType
   { };
 
@@ -146,38 +155,38 @@ struct Definition< ::geometry_msgs::PoseWithCovariance_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "# This represents a pose in free space with uncertainty.\n\
-\n\
-Pose pose\n\
-\n\
-# Row-major representation of the 6x6 covariance matrix\n\
-# The orientation parameters use a fixed-axis representation.\n\
-# In order, the parameters are:\n\
-# (x, y, z, rotation about X axis, rotation about Y axis, rotation about Z axis)\n\
-float64[36] covariance\n\
-\n\
-================================================================================\n\
-MSG: geometry_msgs/Pose\n\
-# A representation of pose in free space, composed of position and orientation. \n\
-Point position\n\
-Quaternion orientation\n\
-\n\
-================================================================================\n\
-MSG: geometry_msgs/Point\n\
-# This contains the position of a point in free space\n\
-float64 x\n\
-float64 y\n\
-float64 z\n\
-\n\
-================================================================================\n\
-MSG: geometry_msgs/Quaternion\n\
-# This represents an orientation in free space in quaternion form.\n\
-\n\
-float64 x\n\
-float64 y\n\
-float64 z\n\
-float64 w\n\
-";
+    return "# This represents a pose in free space with uncertainty.\n"
+"\n"
+"Pose pose\n"
+"\n"
+"# Row-major representation of the 6x6 covariance matrix\n"
+"# The orientation parameters use a fixed-axis representation.\n"
+"# In order, the parameters are:\n"
+"# (x, y, z, rotation about X axis, rotation about Y axis, rotation about Z axis)\n"
+"float64[36] covariance\n"
+"\n"
+"================================================================================\n"
+"MSG: geometry_msgs/Pose\n"
+"# A representation of pose in free space, composed of position and orientation. \n"
+"Point position\n"
+"Quaternion orientation\n"
+"\n"
+"================================================================================\n"
+"MSG: geometry_msgs/Point\n"
+"# This contains the position of a point in free space\n"
+"float64 x\n"
+"float64 y\n"
+"float64 z\n"
+"\n"
+"================================================================================\n"
+"MSG: geometry_msgs/Quaternion\n"
+"# This represents an orientation in free space in quaternion form.\n"
+"\n"
+"float64 x\n"
+"float64 y\n"
+"float64 z\n"
+"float64 w\n"
+;
   }
 
   static const char* value(const ::geometry_msgs::PoseWithCovariance_<ContainerAllocator>&) { return value(); }

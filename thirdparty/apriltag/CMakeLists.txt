@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.2...3.18)
 
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
@@ -20,6 +20,6 @@ include_directories(../basalt-headers/thirdparty/Sophus)
 add_library(apriltag STATIC ${APRILTAG_SRCS} src/apriltag.cpp)
 
 target_include_directories(apriltag PUBLIC include)
-target_link_libraries(apriltag PUBLIC ${OpenCV_LIBS})
+target_link_libraries(apriltag PUBLIC basalt::opencv Sophus::Sophus)
 
 

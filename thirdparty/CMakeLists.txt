@@ -1,8 +1,9 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.10...3.18)
 
 add_library(nlohmann::json INTERFACE IMPORTED GLOBAL)
 set_property(TARGET nlohmann::json PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/json/)
 
+add_subdirectory(basalt-headers EXCLUDE_FROM_ALL)
 add_subdirectory(ros EXCLUDE_FROM_ALL)
 add_subdirectory(apriltag EXCLUDE_FROM_ALL)
 

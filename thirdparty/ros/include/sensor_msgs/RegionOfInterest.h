@@ -8,7 +8,7 @@
 
 #include <string>
 #include <vector>
-#include <map>
+#include <memory>
 
 #include <ros/types.h>
 #include <ros/serialization.h>
@@ -81,6 +81,24 @@ ros::message_operations::Printer< ::sensor_msgs::RegionOfInterest_<ContainerAllo
 return s;
 }
 
+
+template<typename ContainerAllocator1, typename ContainerAllocator2>
+bool operator==(const ::sensor_msgs::RegionOfInterest_<ContainerAllocator1> & lhs, const ::sensor_msgs::RegionOfInterest_<ContainerAllocator2> & rhs)
+{
+  return lhs.x_offset == rhs.x_offset &&
+    lhs.y_offset == rhs.y_offset &&
+    lhs.height == rhs.height &&
+    lhs.width == rhs.width &&
+    lhs.do_rectify == rhs.do_rectify;
+}
+
+template<typename ContainerAllocator1, typename ContainerAllocator2>
+bool operator!=(const ::sensor_msgs::RegionOfInterest_<ContainerAllocator1> & lhs, const ::sensor_msgs::RegionOfInterest_<ContainerAllocator2> & rhs)
+{
+  return !(lhs == rhs);
+}
+
+
 } // namespace sensor_msgs
 
 namespace ros
@@ -90,23 +108,7 @@ namespace message_traits
 
 
 
-// BOOLTRAITS {'IsFixedSize': True, 'IsMessage': True, 'HasHeader': False}
-// {'std_msgs': ['/opt/ros/kinetic/share/std_msgs/cmake/../msg'], 'geometry_msgs': ['/opt/ros/kinetic/share/geometry_msgs/cmake/../msg'], 'sensor_msgs': ['/tmp/binarydeb/ros-kinetic-sensor-msgs-1.12.5/msg']}
 
-// !!!!!!!!!!! ['__class__', '__delattr__', '__dict__', '__doc__', '__eq__', '__format__', '__getattribute__', '__hash__', '__init__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', '_parsed_fields', 'constants', 'fields', 'full_name', 'has_header', 'header_present', 'names', 'package', 'parsed_fields', 'short_name', 'text', 'types']
-
-
-
-
-template <class ContainerAllocator>
-struct IsFixedSize< ::sensor_msgs::RegionOfInterest_<ContainerAllocator> >
-  : TrueType
-  { };
-
-template <class ContainerAllocator>
-struct IsFixedSize< ::sensor_msgs::RegionOfInterest_<ContainerAllocator> const>
-  : TrueType
-  { };
 
 template <class ContainerAllocator>
 struct IsMessage< ::sensor_msgs::RegionOfInterest_<ContainerAllocator> >
@@ -115,6 +117,16 @@ struct IsMessage< ::sensor_msgs::RegionOfInterest_<ContainerAllocator> >
 
 template <class ContainerAllocator>
 struct IsMessage< ::sensor_msgs::RegionOfInterest_<ContainerAllocator> const>
+  : TrueType
+  { };
+
+template <class ContainerAllocator>
+struct IsFixedSize< ::sensor_msgs::RegionOfInterest_<ContainerAllocator> >
+  : TrueType
+  { };
+
+template <class ContainerAllocator>
+struct IsFixedSize< ::sensor_msgs::RegionOfInterest_<ContainerAllocator> const>
   : TrueType
   { };
 
@@ -158,26 +170,26 @@ struct Definition< ::sensor_msgs::RegionOfInterest_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "# This message is used to specify a region of interest within an image.\n\
-#\n\
-# When used to specify the ROI setting of the camera when the image was\n\
-# taken, the height and width fields should either match the height and\n\
-# width fields for the associated image; or height = width = 0\n\
-# indicates that the full resolution image was captured.\n\
-\n\
-uint32 x_offset  # Leftmost pixel of the ROI\n\
-                 # (0 if the ROI includes the left edge of the image)\n\
-uint32 y_offset  # Topmost pixel of the ROI\n\
-                 # (0 if the ROI includes the top edge of the image)\n\
-uint32 height    # Height of ROI\n\
-uint32 width     # Width of ROI\n\
-\n\
-# True if a distinct rectified ROI should be calculated from the \"raw\"\n\
-# ROI in this message. Typically this should be False if the full image\n\
-# is captured (ROI not used), and True if a subwindow is captured (ROI\n\
-# used).\n\
-bool do_rectify\n\
-";
+    return "# This message is used to specify a region of interest within an image.\n"
+"#\n"
+"# When used to specify the ROI setting of the camera when the image was\n"
+"# taken, the height and width fields should either match the height and\n"
+"# width fields for the associated image; or height = width = 0\n"
+"# indicates that the full resolution image was captured.\n"
+"\n"
+"uint32 x_offset  # Leftmost pixel of the ROI\n"
+"                 # (0 if the ROI includes the left edge of the image)\n"
+"uint32 y_offset  # Topmost pixel of the ROI\n"
+"                 # (0 if the ROI includes the top edge of the image)\n"
+"uint32 height    # Height of ROI\n"
+"uint32 width     # Width of ROI\n"
+"\n"
+"# True if a distinct rectified ROI should be calculated from the \"raw\"\n"
+"# ROI in this message. Typically this should be False if the full image\n"
+"# is captured (ROI not used), and True if a subwindow is captured (ROI\n"
+"# used).\n"
+"bool do_rectify\n"
+;
   }
 
   static const char* value(const ::sensor_msgs::RegionOfInterest_<ContainerAllocator>&) { return value(); }

@@ -44,6 +44,7 @@ namespace sensor_msgs
   {
     const std::string PLUMB_BOB = "plumb_bob";
     const std::string RATIONAL_POLYNOMIAL = "rational_polynomial";
+    const std::string EQUIDISTANT = "equidistant";
   }
 }
 

@@ -8,7 +8,7 @@
 
 #include <string>
 #include <vector>
-#include <map>
+#include <memory>
 
 #include <ros/types.h>
 #include <ros/serialization.h>
@@ -72,6 +72,20 @@ struct NavSatFix_
 
 
 
+// reducing the odds to have name collisions with Windows.h 
+#if defined(_WIN32) && defined(COVARIANCE_TYPE_UNKNOWN)
+  #undef COVARIANCE_TYPE_UNKNOWN
+#endif
+#if defined(_WIN32) && defined(COVARIANCE_TYPE_APPROXIMATED)
+  #undef COVARIANCE_TYPE_APPROXIMATED
+#endif
+#if defined(_WIN32) && defined(COVARIANCE_TYPE_DIAGONAL_KNOWN)
+  #undef COVARIANCE_TYPE_DIAGONAL_KNOWN
+#endif
+#if defined(_WIN32) && defined(COVARIANCE_TYPE_KNOWN)
+  #undef COVARIANCE_TYPE_KNOWN
+#endif
+
   enum {
     COVARIANCE_TYPE_UNKNOWN = 0u,
     COVARIANCE_TYPE_APPROXIMATED = 1u,
@@ -109,6 +123,26 @@ ros::message_operations::Printer< ::sensor_msgs::NavSatFix_<ContainerAllocator> 
 return s;
 }
 
+
+template<typename ContainerAllocator1, typename ContainerAllocator2>
+bool operator==(const ::sensor_msgs::NavSatFix_<ContainerAllocator1> & lhs, const ::sensor_msgs::NavSatFix_<ContainerAllocator2> & rhs)
+{
+  return lhs.header == rhs.header &&
+    lhs.status == rhs.status &&
+    lhs.latitude == rhs.latitude &&
+    lhs.longitude == rhs.longitude &&
+    lhs.altitude == rhs.altitude &&
+    lhs.position_covariance == rhs.position_covariance &&
+    lhs.position_covariance_type == rhs.position_covariance_type;
+}
+
+template<typename ContainerAllocator1, typename ContainerAllocator2>
+bool operator!=(const ::sensor_msgs::NavSatFix_<ContainerAllocator1> & lhs, const ::sensor_msgs::NavSatFix_<ContainerAllocator2> & rhs)
+{
+  return !(lhs == rhs);
+}
+
+
 } // namespace sensor_msgs
 
 namespace ros
@@ -118,23 +152,7 @@ namespace message_traits
 
 
 
-// BOOLTRAITS {'IsFixedSize': False, 'IsMessage': True, 'HasHeader': True}
-// {'std_msgs': ['/opt/ros/kinetic/share/std_msgs/cmake/../msg'], 'geometry_msgs': ['/opt/ros/kinetic/share/geometry_msgs/cmake/../msg'], 'sensor_msgs': ['/tmp/binarydeb/ros-kinetic-sensor-msgs-1.12.5/msg']}
 
-// !!!!!!!!!!! ['__class__', '__delattr__', '__dict__', '__doc__', '__eq__', '__format__', '__getattribute__', '__hash__', '__init__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', '_parsed_fields', 'constants', 'fields', 'full_name', 'has_header', 'header_present', 'names', 'package', 'parsed_fields', 'short_name', 'text', 'types']
-
-
-
-
-template <class ContainerAllocator>
-struct IsFixedSize< ::sensor_msgs::NavSatFix_<ContainerAllocator> >
-  : FalseType
-  { };
-
-template <class ContainerAllocator>
-struct IsFixedSize< ::sensor_msgs::NavSatFix_<ContainerAllocator> const>
-  : FalseType
-  { };
 
 template <class ContainerAllocator>
 struct IsMessage< ::sensor_msgs::NavSatFix_<ContainerAllocator> >
@@ -144,6 +162,16 @@ struct IsMessage< ::sensor_msgs::NavSatFix_<ContainerAllocator> >
 template <class ContainerAllocator>
 struct IsMessage< ::sensor_msgs::NavSatFix_<ContainerAllocator> const>
   : TrueType
+  { };
+
+template <class ContainerAllocator>
+struct IsFixedSize< ::sensor_msgs::NavSatFix_<ContainerAllocator> >
+  : FalseType
+  { };
+
+template <class ContainerAllocator>
+struct IsFixedSize< ::sensor_msgs::NavSatFix_<ContainerAllocator> const>
+  : FalseType
   { };
 
 template <class ContainerAllocator>
@@ -186,96 +214,94 @@ struct Definition< ::sensor_msgs::NavSatFix_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "# Navigation Satellite fix for any Global Navigation Satellite System\n\
-#\n\
-# Specified using the WGS 84 reference ellipsoid\n\
-\n\
-# header.stamp specifies the ROS time for this measurement (the\n\
-#        corresponding satellite time may be reported using the\n\
-#        sensor_msgs/TimeReference message).\n\
-#\n\
-# header.frame_id is the frame of reference reported by the satellite\n\
-#        receiver, usually the location of the antenna.  This is a\n\
-#        Euclidean frame relative to the vehicle, not a reference\n\
-#        ellipsoid.\n\
-Header header\n\
-\n\
-# satellite fix status information\n\
-NavSatStatus status\n\
-\n\
-# Latitude [degrees]. Positive is north of equator; negative is south.\n\
-float64 latitude\n\
-\n\
-# Longitude [degrees]. Positive is east of prime meridian; negative is west.\n\
-float64 longitude\n\
-\n\
-# Altitude [m]. Positive is above the WGS 84 ellipsoid\n\
-# (quiet NaN if no altitude is available).\n\
-float64 altitude\n\
-\n\
-# Position covariance [m^2] defined relative to a tangential plane\n\
-# through the reported position. The components are East, North, and\n\
-# Up (ENU), in row-major order.\n\
-#\n\
-# Beware: this coordinate system exhibits singularities at the poles.\n\
-\n\
-float64[9] position_covariance\n\
-\n\
-# If the covariance of the fix is known, fill it in completely. If the\n\
-# GPS receiver provides the variance of each measurement, put them\n\
-# along the diagonal. If only Dilution of Precision is available,\n\
-# estimate an approximate covariance from that.\n\
-\n\
-uint8 COVARIANCE_TYPE_UNKNOWN = 0\n\
-uint8 COVARIANCE_TYPE_APPROXIMATED = 1\n\
-uint8 COVARIANCE_TYPE_DIAGONAL_KNOWN = 2\n\
-uint8 COVARIANCE_TYPE_KNOWN = 3\n\
-\n\
-uint8 position_covariance_type\n\
-\n\
-================================================================================\n\
-MSG: std_msgs/Header\n\
-# Standard metadata for higher-level stamped data types.\n\
-# This is generally used to communicate timestamped data \n\
-# in a particular coordinate frame.\n\
-# \n\
-# sequence ID: consecutively increasing ID \n\
-uint32 seq\n\
-#Two-integer timestamp that is expressed as:\n\
-# * stamp.sec: seconds (stamp_secs) since epoch (in Python the variable is called 'secs')\n\
-# * stamp.nsec: nanoseconds since stamp_secs (in Python the variable is called 'nsecs')\n\
-# time-handling sugar is provided by the client library\n\
-time stamp\n\
-#Frame this data is associated with\n\
-# 0: no frame\n\
-# 1: global frame\n\
-string frame_id\n\
-\n\
-================================================================================\n\
-MSG: sensor_msgs/NavSatStatus\n\
-# Navigation Satellite fix status for any Global Navigation Satellite System\n\
-\n\
-# Whether to output an augmented fix is determined by both the fix\n\
-# type and the last time differential corrections were received.  A\n\
-# fix is valid when status >= STATUS_FIX.\n\
-\n\
-int8 STATUS_NO_FIX =  -1        # unable to fix position\n\
-int8 STATUS_FIX =      0        # unaugmented fix\n\
-int8 STATUS_SBAS_FIX = 1        # with satellite-based augmentation\n\
-int8 STATUS_GBAS_FIX = 2        # with ground-based augmentation\n\
-\n\
-int8 status\n\
-\n\
-# Bits defining which Global Navigation Satellite System signals were\n\
-# used by the receiver.\n\
-\n\
-uint16 SERVICE_GPS =     1\n\
-uint16 SERVICE_GLONASS = 2\n\
-uint16 SERVICE_COMPASS = 4      # includes BeiDou.\n\
-uint16 SERVICE_GALILEO = 8\n\
-\n\
-uint16 service\n\
-";
+    return "# Navigation Satellite fix for any Global Navigation Satellite System\n"
+"#\n"
+"# Specified using the WGS 84 reference ellipsoid\n"
+"\n"
+"# header.stamp specifies the ROS time for this measurement (the\n"
+"#        corresponding satellite time may be reported using the\n"
+"#        sensor_msgs/TimeReference message).\n"
+"#\n"
+"# header.frame_id is the frame of reference reported by the satellite\n"
+"#        receiver, usually the location of the antenna.  This is a\n"
+"#        Euclidean frame relative to the vehicle, not a reference\n"
+"#        ellipsoid.\n"
+"Header header\n"
+"\n"
+"# satellite fix status information\n"
+"NavSatStatus status\n"
+"\n"
+"# Latitude [degrees]. Positive is north of equator; negative is south.\n"
+"float64 latitude\n"
+"\n"
+"# Longitude [degrees]. Positive is east of prime meridian; negative is west.\n"
+"float64 longitude\n"
+"\n"
+"# Altitude [m]. Positive is above the WGS 84 ellipsoid\n"
+"# (quiet NaN if no altitude is available).\n"
+"float64 altitude\n"
+"\n"
+"# Position covariance [m^2] defined relative to a tangential plane\n"
+"# through the reported position. The components are East, North, and\n"
+"# Up (ENU), in row-major order.\n"
+"#\n"
+"# Beware: this coordinate system exhibits singularities at the poles.\n"
+"\n"
+"float64[9] position_covariance\n"
+"\n"
+"# If the covariance of the fix is known, fill it in completely. If the\n"
+"# GPS receiver provides the variance of each measurement, put them\n"
+"# along the diagonal. If only Dilution of Precision is available,\n"
+"# estimate an approximate covariance from that.\n"
+"\n"
+"uint8 COVARIANCE_TYPE_UNKNOWN = 0\n"
+"uint8 COVARIANCE_TYPE_APPROXIMATED = 1\n"
+"uint8 COVARIANCE_TYPE_DIAGONAL_KNOWN = 2\n"
+"uint8 COVARIANCE_TYPE_KNOWN = 3\n"
+"\n"
+"uint8 position_covariance_type\n"
+"\n"
+"================================================================================\n"
+"MSG: std_msgs/Header\n"
+"# Standard metadata for higher-level stamped data types.\n"
+"# This is generally used to communicate timestamped data \n"
+"# in a particular coordinate frame.\n"
+"# \n"
+"# sequence ID: consecutively increasing ID \n"
+"uint32 seq\n"
+"#Two-integer timestamp that is expressed as:\n"
+"# * stamp.sec: seconds (stamp_secs) since epoch (in Python the variable is called 'secs')\n"
+"# * stamp.nsec: nanoseconds since stamp_secs (in Python the variable is called 'nsecs')\n"
+"# time-handling sugar is provided by the client library\n"
+"time stamp\n"
+"#Frame this data is associated with\n"
+"string frame_id\n"
+"\n"
+"================================================================================\n"
+"MSG: sensor_msgs/NavSatStatus\n"
+"# Navigation Satellite fix status for any Global Navigation Satellite System\n"
+"\n"
+"# Whether to output an augmented fix is determined by both the fix\n"
+"# type and the last time differential corrections were received.  A\n"
+"# fix is valid when status >= STATUS_FIX.\n"
+"\n"
+"int8 STATUS_NO_FIX =  -1        # unable to fix position\n"
+"int8 STATUS_FIX =      0        # unaugmented fix\n"
+"int8 STATUS_SBAS_FIX = 1        # with satellite-based augmentation\n"
+"int8 STATUS_GBAS_FIX = 2        # with ground-based augmentation\n"
+"\n"
+"int8 status\n"
+"\n"
+"# Bits defining which Global Navigation Satellite System signals were\n"
+"# used by the receiver.\n"
+"\n"
+"uint16 SERVICE_GPS =     1\n"
+"uint16 SERVICE_GLONASS = 2\n"
+"uint16 SERVICE_COMPASS = 4      # includes BeiDou.\n"
+"uint16 SERVICE_GALILEO = 8\n"
+"\n"
+"uint16 service\n"
+;
   }
 
   static const char* value(const ::sensor_msgs::NavSatFix_<ContainerAllocator>&) { return value(); }

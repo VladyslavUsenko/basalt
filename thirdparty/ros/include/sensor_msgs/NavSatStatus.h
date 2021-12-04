@@ -8,7 +8,7 @@
 
 #include <string>
 #include <vector>
-#include <map>
+#include <memory>
 
 #include <ros/types.h>
 #include <ros/serialization.h>
@@ -42,6 +42,32 @@ struct NavSatStatus_
   _service_type service;
 
 
+
+// reducing the odds to have name collisions with Windows.h 
+#if defined(_WIN32) && defined(STATUS_NO_FIX)
+  #undef STATUS_NO_FIX
+#endif
+#if defined(_WIN32) && defined(STATUS_FIX)
+  #undef STATUS_FIX
+#endif
+#if defined(_WIN32) && defined(STATUS_SBAS_FIX)
+  #undef STATUS_SBAS_FIX
+#endif
+#if defined(_WIN32) && defined(STATUS_GBAS_FIX)
+  #undef STATUS_GBAS_FIX
+#endif
+#if defined(_WIN32) && defined(SERVICE_GPS)
+  #undef SERVICE_GPS
+#endif
+#if defined(_WIN32) && defined(SERVICE_GLONASS)
+  #undef SERVICE_GLONASS
+#endif
+#if defined(_WIN32) && defined(SERVICE_COMPASS)
+  #undef SERVICE_COMPASS
+#endif
+#if defined(_WIN32) && defined(SERVICE_GALILEO)
+  #undef SERVICE_GALILEO
+#endif
 
   enum {
     STATUS_NO_FIX = -1,
@@ -92,6 +118,21 @@ ros::message_operations::Printer< ::sensor_msgs::NavSatStatus_<ContainerAllocato
 return s;
 }
 
+
+template<typename ContainerAllocator1, typename ContainerAllocator2>
+bool operator==(const ::sensor_msgs::NavSatStatus_<ContainerAllocator1> & lhs, const ::sensor_msgs::NavSatStatus_<ContainerAllocator2> & rhs)
+{
+  return lhs.status == rhs.status &&
+    lhs.service == rhs.service;
+}
+
+template<typename ContainerAllocator1, typename ContainerAllocator2>
+bool operator!=(const ::sensor_msgs::NavSatStatus_<ContainerAllocator1> & lhs, const ::sensor_msgs::NavSatStatus_<ContainerAllocator2> & rhs)
+{
+  return !(lhs == rhs);
+}
+
+
 } // namespace sensor_msgs
 
 namespace ros
@@ -101,23 +142,7 @@ namespace message_traits
 
 
 
-// BOOLTRAITS {'IsFixedSize': True, 'IsMessage': True, 'HasHeader': False}
-// {'std_msgs': ['/opt/ros/kinetic/share/std_msgs/cmake/../msg'], 'geometry_msgs': ['/opt/ros/kinetic/share/geometry_msgs/cmake/../msg'], 'sensor_msgs': ['/tmp/binarydeb/ros-kinetic-sensor-msgs-1.12.5/msg']}
 
-// !!!!!!!!!!! ['__class__', '__delattr__', '__dict__', '__doc__', '__eq__', '__format__', '__getattribute__', '__hash__', '__init__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', '_parsed_fields', 'constants', 'fields', 'full_name', 'has_header', 'header_present', 'names', 'package', 'parsed_fields', 'short_name', 'text', 'types']
-
-
-
-
-template <class ContainerAllocator>
-struct IsFixedSize< ::sensor_msgs::NavSatStatus_<ContainerAllocator> >
-  : TrueType
-  { };
-
-template <class ContainerAllocator>
-struct IsFixedSize< ::sensor_msgs::NavSatStatus_<ContainerAllocator> const>
-  : TrueType
-  { };
 
 template <class ContainerAllocator>
 struct IsMessage< ::sensor_msgs::NavSatStatus_<ContainerAllocator> >
@@ -126,6 +151,16 @@ struct IsMessage< ::sensor_msgs::NavSatStatus_<ContainerAllocator> >
 
 template <class ContainerAllocator>
 struct IsMessage< ::sensor_msgs::NavSatStatus_<ContainerAllocator> const>
+  : TrueType
+  { };
+
+template <class ContainerAllocator>
+struct IsFixedSize< ::sensor_msgs::NavSatStatus_<ContainerAllocator> >
+  : TrueType
+  { };
+
+template <class ContainerAllocator>
+struct IsFixedSize< ::sensor_msgs::NavSatStatus_<ContainerAllocator> const>
   : TrueType
   { };
 
@@ -169,29 +204,29 @@ struct Definition< ::sensor_msgs::NavSatStatus_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "# Navigation Satellite fix status for any Global Navigation Satellite System\n\
-\n\
-# Whether to output an augmented fix is determined by both the fix\n\
-# type and the last time differential corrections were received.  A\n\
-# fix is valid when status >= STATUS_FIX.\n\
-\n\
-int8 STATUS_NO_FIX =  -1        # unable to fix position\n\
-int8 STATUS_FIX =      0        # unaugmented fix\n\
-int8 STATUS_SBAS_FIX = 1        # with satellite-based augmentation\n\
-int8 STATUS_GBAS_FIX = 2        # with ground-based augmentation\n\
-\n\
-int8 status\n\
-\n\
-# Bits defining which Global Navigation Satellite System signals were\n\
-# used by the receiver.\n\
-\n\
-uint16 SERVICE_GPS =     1\n\
-uint16 SERVICE_GLONASS = 2\n\
-uint16 SERVICE_COMPASS = 4      # includes BeiDou.\n\
-uint16 SERVICE_GALILEO = 8\n\
-\n\
-uint16 service\n\
-";
+    return "# Navigation Satellite fix status for any Global Navigation Satellite System\n"
+"\n"
+"# Whether to output an augmented fix is determined by both the fix\n"
+"# type and the last time differential corrections were received.  A\n"
+"# fix is valid when status >= STATUS_FIX.\n"
+"\n"
+"int8 STATUS_NO_FIX =  -1        # unable to fix position\n"
+"int8 STATUS_FIX =      0        # unaugmented fix\n"
+"int8 STATUS_SBAS_FIX = 1        # with satellite-based augmentation\n"
+"int8 STATUS_GBAS_FIX = 2        # with ground-based augmentation\n"
+"\n"
+"int8 status\n"
+"\n"
+"# Bits defining which Global Navigation Satellite System signals were\n"
+"# used by the receiver.\n"
+"\n"
+"uint16 SERVICE_GPS =     1\n"
+"uint16 SERVICE_GLONASS = 2\n"
+"uint16 SERVICE_COMPASS = 4      # includes BeiDou.\n"
+"uint16 SERVICE_GALILEO = 8\n"
+"\n"
+"uint16 service\n"
+;
   }
 
   static const char* value(const ::sensor_msgs::NavSatStatus_<ContainerAllocator>&) { return value(); }

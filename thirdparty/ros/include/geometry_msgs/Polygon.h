@@ -8,7 +8,7 @@
 
 #include <string>
 #include <vector>
-#include <map>
+#include <memory>
 
 #include <ros/types.h>
 #include <ros/serialization.h>
@@ -34,7 +34,7 @@ struct Polygon_
 
 
 
-   typedef std::vector< ::geometry_msgs::Point32_<ContainerAllocator> , typename ContainerAllocator::template rebind< ::geometry_msgs::Point32_<ContainerAllocator> >::other >  _points_type;
+   typedef std::vector< ::geometry_msgs::Point32_<ContainerAllocator> , typename std::allocator_traits<ContainerAllocator>::template rebind_alloc< ::geometry_msgs::Point32_<ContainerAllocator> >> _points_type;
   _points_type points;
 
 
@@ -62,6 +62,20 @@ ros::message_operations::Printer< ::geometry_msgs::Polygon_<ContainerAllocator> 
 return s;
 }
 
+
+template<typename ContainerAllocator1, typename ContainerAllocator2>
+bool operator==(const ::geometry_msgs::Polygon_<ContainerAllocator1> & lhs, const ::geometry_msgs::Polygon_<ContainerAllocator2> & rhs)
+{
+  return lhs.points == rhs.points;
+}
+
+template<typename ContainerAllocator1, typename ContainerAllocator2>
+bool operator!=(const ::geometry_msgs::Polygon_<ContainerAllocator1> & lhs, const ::geometry_msgs::Polygon_<ContainerAllocator2> & rhs)
+{
+  return !(lhs == rhs);
+}
+
+
 } // namespace geometry_msgs
 
 namespace ros
@@ -71,23 +85,7 @@ namespace message_traits
 
 
 
-// BOOLTRAITS {'IsFixedSize': False, 'IsMessage': True, 'HasHeader': False}
-// {'std_msgs': ['/opt/ros/kinetic/share/std_msgs/cmake/../msg'], 'geometry_msgs': ['/tmp/binarydeb/ros-kinetic-geometry-msgs-1.12.5/msg']}
 
-// !!!!!!!!!!! ['__class__', '__delattr__', '__dict__', '__doc__', '__eq__', '__format__', '__getattribute__', '__hash__', '__init__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', '_parsed_fields', 'constants', 'fields', 'full_name', 'has_header', 'header_present', 'names', 'package', 'parsed_fields', 'short_name', 'text', 'types']
-
-
-
-
-template <class ContainerAllocator>
-struct IsFixedSize< ::geometry_msgs::Polygon_<ContainerAllocator> >
-  : FalseType
-  { };
-
-template <class ContainerAllocator>
-struct IsFixedSize< ::geometry_msgs::Polygon_<ContainerAllocator> const>
-  : FalseType
-  { };
 
 template <class ContainerAllocator>
 struct IsMessage< ::geometry_msgs::Polygon_<ContainerAllocator> >
@@ -97,6 +95,16 @@ struct IsMessage< ::geometry_msgs::Polygon_<ContainerAllocator> >
 template <class ContainerAllocator>
 struct IsMessage< ::geometry_msgs::Polygon_<ContainerAllocator> const>
   : TrueType
+  { };
+
+template <class ContainerAllocator>
+struct IsFixedSize< ::geometry_msgs::Polygon_<ContainerAllocator> >
+  : FalseType
+  { };
+
+template <class ContainerAllocator>
+struct IsFixedSize< ::geometry_msgs::Polygon_<ContainerAllocator> const>
+  : FalseType
   { };
 
 template <class ContainerAllocator>
@@ -139,23 +147,23 @@ struct Definition< ::geometry_msgs::Polygon_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "#A specification of a polygon where the first and last points are assumed to be connected\n\
-Point32[] points\n\
-\n\
-================================================================================\n\
-MSG: geometry_msgs/Point32\n\
-# This contains the position of a point in free space(with 32 bits of precision).\n\
-# It is recommeded to use Point wherever possible instead of Point32.  \n\
-# \n\
-# This recommendation is to promote interoperability.  \n\
-#\n\
-# This message is designed to take up less space when sending\n\
-# lots of points at once, as in the case of a PointCloud.  \n\
-\n\
-float32 x\n\
-float32 y\n\
-float32 z\n\
-";
+    return "#A specification of a polygon where the first and last points are assumed to be connected\n"
+"Point32[] points\n"
+"\n"
+"================================================================================\n"
+"MSG: geometry_msgs/Point32\n"
+"# This contains the position of a point in free space(with 32 bits of precision).\n"
+"# It is recommeded to use Point wherever possible instead of Point32.  \n"
+"# \n"
+"# This recommendation is to promote interoperability.  \n"
+"#\n"
+"# This message is designed to take up less space when sending\n"
+"# lots of points at once, as in the case of a PointCloud.  \n"
+"\n"
+"float32 x\n"
+"float32 y\n"
+"float32 z\n"
+;
   }
 
   static const char* value(const ::geometry_msgs::Polygon_<ContainerAllocator>&) { return value(); }
