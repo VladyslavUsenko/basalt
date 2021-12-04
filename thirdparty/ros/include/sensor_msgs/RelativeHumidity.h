@@ -8,7 +8,7 @@
 
 #include <string>
 #include <vector>
-#include <map>
+#include <memory>
 
 #include <ros/types.h>
 #include <ros/serialization.h>
@@ -72,6 +72,22 @@ ros::message_operations::Printer< ::sensor_msgs::RelativeHumidity_<ContainerAllo
 return s;
 }
 
+
+template<typename ContainerAllocator1, typename ContainerAllocator2>
+bool operator==(const ::sensor_msgs::RelativeHumidity_<ContainerAllocator1> & lhs, const ::sensor_msgs::RelativeHumidity_<ContainerAllocator2> & rhs)
+{
+  return lhs.header == rhs.header &&
+    lhs.relative_humidity == rhs.relative_humidity &&
+    lhs.variance == rhs.variance;
+}
+
+template<typename ContainerAllocator1, typename ContainerAllocator2>
+bool operator!=(const ::sensor_msgs::RelativeHumidity_<ContainerAllocator1> & lhs, const ::sensor_msgs::RelativeHumidity_<ContainerAllocator2> & rhs)
+{
+  return !(lhs == rhs);
+}
+
+
 } // namespace sensor_msgs
 
 namespace ros
@@ -81,23 +97,7 @@ namespace message_traits
 
 
 
-// BOOLTRAITS {'IsFixedSize': False, 'IsMessage': True, 'HasHeader': True}
-// {'std_msgs': ['/opt/ros/kinetic/share/std_msgs/cmake/../msg'], 'geometry_msgs': ['/opt/ros/kinetic/share/geometry_msgs/cmake/../msg'], 'sensor_msgs': ['/tmp/binarydeb/ros-kinetic-sensor-msgs-1.12.5/msg']}
 
-// !!!!!!!!!!! ['__class__', '__delattr__', '__dict__', '__doc__', '__eq__', '__format__', '__getattribute__', '__hash__', '__init__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', '_parsed_fields', 'constants', 'fields', 'full_name', 'has_header', 'header_present', 'names', 'package', 'parsed_fields', 'short_name', 'text', 'types']
-
-
-
-
-template <class ContainerAllocator>
-struct IsFixedSize< ::sensor_msgs::RelativeHumidity_<ContainerAllocator> >
-  : FalseType
-  { };
-
-template <class ContainerAllocator>
-struct IsFixedSize< ::sensor_msgs::RelativeHumidity_<ContainerAllocator> const>
-  : FalseType
-  { };
 
 template <class ContainerAllocator>
 struct IsMessage< ::sensor_msgs::RelativeHumidity_<ContainerAllocator> >
@@ -107,6 +107,16 @@ struct IsMessage< ::sensor_msgs::RelativeHumidity_<ContainerAllocator> >
 template <class ContainerAllocator>
 struct IsMessage< ::sensor_msgs::RelativeHumidity_<ContainerAllocator> const>
   : TrueType
+  { };
+
+template <class ContainerAllocator>
+struct IsFixedSize< ::sensor_msgs::RelativeHumidity_<ContainerAllocator> >
+  : FalseType
+  { };
+
+template <class ContainerAllocator>
+struct IsFixedSize< ::sensor_msgs::RelativeHumidity_<ContainerAllocator> const>
+  : FalseType
   { };
 
 template <class ContainerAllocator>
@@ -149,36 +159,34 @@ struct Definition< ::sensor_msgs::RelativeHumidity_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return " # Single reading from a relative humidity sensor.  Defines the ratio of partial\n\
- # pressure of water vapor to the saturated vapor pressure at a temperature.\n\
-\n\
- Header header             # timestamp of the measurement\n\
-                           # frame_id is the location of the humidity sensor\n\
-\n\
- float64 relative_humidity # Expression of the relative humidity\n\
-                           # from 0.0 to 1.0.\n\
-                           # 0.0 is no partial pressure of water vapor\n\
-                           # 1.0 represents partial pressure of saturation\n\
-\n\
- float64 variance          # 0 is interpreted as variance unknown\n\
-================================================================================\n\
-MSG: std_msgs/Header\n\
-# Standard metadata for higher-level stamped data types.\n\
-# This is generally used to communicate timestamped data \n\
-# in a particular coordinate frame.\n\
-# \n\
-# sequence ID: consecutively increasing ID \n\
-uint32 seq\n\
-#Two-integer timestamp that is expressed as:\n\
-# * stamp.sec: seconds (stamp_secs) since epoch (in Python the variable is called 'secs')\n\
-# * stamp.nsec: nanoseconds since stamp_secs (in Python the variable is called 'nsecs')\n\
-# time-handling sugar is provided by the client library\n\
-time stamp\n\
-#Frame this data is associated with\n\
-# 0: no frame\n\
-# 1: global frame\n\
-string frame_id\n\
-";
+    return " # Single reading from a relative humidity sensor.  Defines the ratio of partial\n"
+" # pressure of water vapor to the saturated vapor pressure at a temperature.\n"
+"\n"
+" Header header             # timestamp of the measurement\n"
+"                           # frame_id is the location of the humidity sensor\n"
+"\n"
+" float64 relative_humidity # Expression of the relative humidity\n"
+"                           # from 0.0 to 1.0.\n"
+"                           # 0.0 is no partial pressure of water vapor\n"
+"                           # 1.0 represents partial pressure of saturation\n"
+"\n"
+" float64 variance          # 0 is interpreted as variance unknown\n"
+"================================================================================\n"
+"MSG: std_msgs/Header\n"
+"# Standard metadata for higher-level stamped data types.\n"
+"# This is generally used to communicate timestamped data \n"
+"# in a particular coordinate frame.\n"
+"# \n"
+"# sequence ID: consecutively increasing ID \n"
+"uint32 seq\n"
+"#Two-integer timestamp that is expressed as:\n"
+"# * stamp.sec: seconds (stamp_secs) since epoch (in Python the variable is called 'secs')\n"
+"# * stamp.nsec: nanoseconds since stamp_secs (in Python the variable is called 'nsecs')\n"
+"# time-handling sugar is provided by the client library\n"
+"time stamp\n"
+"#Frame this data is associated with\n"
+"string frame_id\n"
+;
   }
 
   static const char* value(const ::sensor_msgs::RelativeHumidity_<ContainerAllocator>&) { return value(); }

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.10...3.18)
 
 # Note: add_subdirectory(googletest ...) is called in basalt-headers
 

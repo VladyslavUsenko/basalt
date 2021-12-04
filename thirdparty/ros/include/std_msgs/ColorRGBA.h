@@ -8,7 +8,7 @@
 
 #include <string>
 #include <vector>
-#include <map>
+#include <memory>
 
 #include <ros/types.h>
 #include <ros/serialization.h>
@@ -76,6 +76,23 @@ ros::message_operations::Printer< ::std_msgs::ColorRGBA_<ContainerAllocator> >::
 return s;
 }
 
+
+template<typename ContainerAllocator1, typename ContainerAllocator2>
+bool operator==(const ::std_msgs::ColorRGBA_<ContainerAllocator1> & lhs, const ::std_msgs::ColorRGBA_<ContainerAllocator2> & rhs)
+{
+  return lhs.r == rhs.r &&
+    lhs.g == rhs.g &&
+    lhs.b == rhs.b &&
+    lhs.a == rhs.a;
+}
+
+template<typename ContainerAllocator1, typename ContainerAllocator2>
+bool operator!=(const ::std_msgs::ColorRGBA_<ContainerAllocator1> & lhs, const ::std_msgs::ColorRGBA_<ContainerAllocator2> & rhs)
+{
+  return !(lhs == rhs);
+}
+
+
 } // namespace std_msgs
 
 namespace ros
@@ -85,23 +102,7 @@ namespace message_traits
 
 
 
-// BOOLTRAITS {'IsFixedSize': True, 'IsMessage': True, 'HasHeader': False}
-// {'std_msgs': ['/tmp/binarydeb/ros-kinetic-std-msgs-0.5.11/msg']}
 
-// !!!!!!!!!!! ['__class__', '__delattr__', '__dict__', '__doc__', '__eq__', '__format__', '__getattribute__', '__hash__', '__init__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', '_parsed_fields', 'constants', 'fields', 'full_name', 'has_header', 'header_present', 'names', 'package', 'parsed_fields', 'short_name', 'text', 'types']
-
-
-
-
-template <class ContainerAllocator>
-struct IsFixedSize< ::std_msgs::ColorRGBA_<ContainerAllocator> >
-  : TrueType
-  { };
-
-template <class ContainerAllocator>
-struct IsFixedSize< ::std_msgs::ColorRGBA_<ContainerAllocator> const>
-  : TrueType
-  { };
 
 template <class ContainerAllocator>
 struct IsMessage< ::std_msgs::ColorRGBA_<ContainerAllocator> >
@@ -110,6 +111,16 @@ struct IsMessage< ::std_msgs::ColorRGBA_<ContainerAllocator> >
 
 template <class ContainerAllocator>
 struct IsMessage< ::std_msgs::ColorRGBA_<ContainerAllocator> const>
+  : TrueType
+  { };
+
+template <class ContainerAllocator>
+struct IsFixedSize< ::std_msgs::ColorRGBA_<ContainerAllocator> >
+  : TrueType
+  { };
+
+template <class ContainerAllocator>
+struct IsFixedSize< ::std_msgs::ColorRGBA_<ContainerAllocator> const>
   : TrueType
   { };
 
@@ -153,11 +164,11 @@ struct Definition< ::std_msgs::ColorRGBA_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "float32 r\n\
-float32 g\n\
-float32 b\n\
-float32 a\n\
-";
+    return "float32 r\n"
+"float32 g\n"
+"float32 b\n"
+"float32 a\n"
+;
   }
 
   static const char* value(const ::std_msgs::ColorRGBA_<ContainerAllocator>&) { return value(); }

@@ -8,7 +8,7 @@
 
 #include <string>
 #include <vector>
-#include <map>
+#include <memory>
 
 #include <ros/types.h>
 #include <ros/serialization.h>
@@ -105,6 +105,26 @@ ros::message_operations::Printer< ::sensor_msgs::Imu_<ContainerAllocator> >::str
 return s;
 }
 
+
+template<typename ContainerAllocator1, typename ContainerAllocator2>
+bool operator==(const ::sensor_msgs::Imu_<ContainerAllocator1> & lhs, const ::sensor_msgs::Imu_<ContainerAllocator2> & rhs)
+{
+  return lhs.header == rhs.header &&
+    lhs.orientation == rhs.orientation &&
+    lhs.orientation_covariance == rhs.orientation_covariance &&
+    lhs.angular_velocity == rhs.angular_velocity &&
+    lhs.angular_velocity_covariance == rhs.angular_velocity_covariance &&
+    lhs.linear_acceleration == rhs.linear_acceleration &&
+    lhs.linear_acceleration_covariance == rhs.linear_acceleration_covariance;
+}
+
+template<typename ContainerAllocator1, typename ContainerAllocator2>
+bool operator!=(const ::sensor_msgs::Imu_<ContainerAllocator1> & lhs, const ::sensor_msgs::Imu_<ContainerAllocator2> & rhs)
+{
+  return !(lhs == rhs);
+}
+
+
 } // namespace sensor_msgs
 
 namespace ros
@@ -114,23 +134,7 @@ namespace message_traits
 
 
 
-// BOOLTRAITS {'IsFixedSize': False, 'IsMessage': True, 'HasHeader': True}
-// {'std_msgs': ['/opt/ros/kinetic/share/std_msgs/cmake/../msg'], 'geometry_msgs': ['/opt/ros/kinetic/share/geometry_msgs/cmake/../msg'], 'sensor_msgs': ['/tmp/binarydeb/ros-kinetic-sensor-msgs-1.12.5/msg']}
 
-// !!!!!!!!!!! ['__class__', '__delattr__', '__dict__', '__doc__', '__eq__', '__format__', '__getattribute__', '__hash__', '__init__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', '_parsed_fields', 'constants', 'fields', 'full_name', 'has_header', 'header_present', 'names', 'package', 'parsed_fields', 'short_name', 'text', 'types']
-
-
-
-
-template <class ContainerAllocator>
-struct IsFixedSize< ::sensor_msgs::Imu_<ContainerAllocator> >
-  : FalseType
-  { };
-
-template <class ContainerAllocator>
-struct IsFixedSize< ::sensor_msgs::Imu_<ContainerAllocator> const>
-  : FalseType
-  { };
 
 template <class ContainerAllocator>
 struct IsMessage< ::sensor_msgs::Imu_<ContainerAllocator> >
@@ -140,6 +144,16 @@ struct IsMessage< ::sensor_msgs::Imu_<ContainerAllocator> >
 template <class ContainerAllocator>
 struct IsMessage< ::sensor_msgs::Imu_<ContainerAllocator> const>
   : TrueType
+  { };
+
+template <class ContainerAllocator>
+struct IsFixedSize< ::sensor_msgs::Imu_<ContainerAllocator> >
+  : FalseType
+  { };
+
+template <class ContainerAllocator>
+struct IsFixedSize< ::sensor_msgs::Imu_<ContainerAllocator> const>
+  : FalseType
   { };
 
 template <class ContainerAllocator>
@@ -182,71 +196,69 @@ struct Definition< ::sensor_msgs::Imu_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "# This is a message to hold data from an IMU (Inertial Measurement Unit)\n\
-#\n\
-# Accelerations should be in m/s^2 (not in g's), and rotational velocity should be in rad/sec\n\
-#\n\
-# If the covariance of the measurement is known, it should be filled in (if all you know is the \n\
-# variance of each measurement, e.g. from the datasheet, just put those along the diagonal)\n\
-# A covariance matrix of all zeros will be interpreted as \"covariance unknown\", and to use the\n\
-# data a covariance will have to be assumed or gotten from some other source\n\
-#\n\
-# If you have no estimate for one of the data elements (e.g. your IMU doesn't produce an orientation \n\
-# estimate), please set element 0 of the associated covariance matrix to -1\n\
-# If you are interpreting this message, please check for a value of -1 in the first element of each \n\
-# covariance matrix, and disregard the associated estimate.\n\
-\n\
-Header header\n\
-\n\
-geometry_msgs/Quaternion orientation\n\
-float64[9] orientation_covariance # Row major about x, y, z axes\n\
-\n\
-geometry_msgs/Vector3 angular_velocity\n\
-float64[9] angular_velocity_covariance # Row major about x, y, z axes\n\
-\n\
-geometry_msgs/Vector3 linear_acceleration\n\
-float64[9] linear_acceleration_covariance # Row major x, y z \n\
-\n\
-================================================================================\n\
-MSG: std_msgs/Header\n\
-# Standard metadata for higher-level stamped data types.\n\
-# This is generally used to communicate timestamped data \n\
-# in a particular coordinate frame.\n\
-# \n\
-# sequence ID: consecutively increasing ID \n\
-uint32 seq\n\
-#Two-integer timestamp that is expressed as:\n\
-# * stamp.sec: seconds (stamp_secs) since epoch (in Python the variable is called 'secs')\n\
-# * stamp.nsec: nanoseconds since stamp_secs (in Python the variable is called 'nsecs')\n\
-# time-handling sugar is provided by the client library\n\
-time stamp\n\
-#Frame this data is associated with\n\
-# 0: no frame\n\
-# 1: global frame\n\
-string frame_id\n\
-\n\
-================================================================================\n\
-MSG: geometry_msgs/Quaternion\n\
-# This represents an orientation in free space in quaternion form.\n\
-\n\
-float64 x\n\
-float64 y\n\
-float64 z\n\
-float64 w\n\
-\n\
-================================================================================\n\
-MSG: geometry_msgs/Vector3\n\
-# This represents a vector in free space. \n\
-# It is only meant to represent a direction. Therefore, it does not\n\
-# make sense to apply a translation to it (e.g., when applying a \n\
-# generic rigid transformation to a Vector3, tf2 will only apply the\n\
-# rotation). If you want your data to be translatable too, use the\n\
-# geometry_msgs/Point message instead.\n\
-\n\
-float64 x\n\
-float64 y\n\
-float64 z\n\
-";
+    return "# This is a message to hold data from an IMU (Inertial Measurement Unit)\n"
+"#\n"
+"# Accelerations should be in m/s^2 (not in g's), and rotational velocity should be in rad/sec\n"
+"#\n"
+"# If the covariance of the measurement is known, it should be filled in (if all you know is the \n"
+"# variance of each measurement, e.g. from the datasheet, just put those along the diagonal)\n"
+"# A covariance matrix of all zeros will be interpreted as \"covariance unknown\", and to use the\n"
+"# data a covariance will have to be assumed or gotten from some other source\n"
+"#\n"
+"# If you have no estimate for one of the data elements (e.g. your IMU doesn't produce an orientation \n"
+"# estimate), please set element 0 of the associated covariance matrix to -1\n"
+"# If you are interpreting this message, please check for a value of -1 in the first element of each \n"
+"# covariance matrix, and disregard the associated estimate.\n"
+"\n"
+"Header header\n"
+"\n"
+"geometry_msgs/Quaternion orientation\n"
+"float64[9] orientation_covariance # Row major about x, y, z axes\n"
+"\n"
+"geometry_msgs/Vector3 angular_velocity\n"
+"float64[9] angular_velocity_covariance # Row major about x, y, z axes\n"
+"\n"
+"geometry_msgs/Vector3 linear_acceleration\n"
+"float64[9] linear_acceleration_covariance # Row major x, y z \n"
+"\n"
+"================================================================================\n"
+"MSG: std_msgs/Header\n"
+"# Standard metadata for higher-level stamped data types.\n"
+"# This is generally used to communicate timestamped data \n"
+"# in a particular coordinate frame.\n"
+"# \n"
+"# sequence ID: consecutively increasing ID \n"
+"uint32 seq\n"
+"#Two-integer timestamp that is expressed as:\n"
+"# * stamp.sec: seconds (stamp_secs) since epoch (in Python the variable is called 'secs')\n"
+"# * stamp.nsec: nanoseconds since stamp_secs (in Python the variable is called 'nsecs')\n"
+"# time-handling sugar is provided by the client library\n"
+"time stamp\n"
+"#Frame this data is associated with\n"
+"string frame_id\n"
+"\n"
+"================================================================================\n"
+"MSG: geometry_msgs/Quaternion\n"
+"# This represents an orientation in free space in quaternion form.\n"
+"\n"
+"float64 x\n"
+"float64 y\n"
+"float64 z\n"
+"float64 w\n"
+"\n"
+"================================================================================\n"
+"MSG: geometry_msgs/Vector3\n"
+"# This represents a vector in free space. \n"
+"# It is only meant to represent a direction. Therefore, it does not\n"
+"# make sense to apply a translation to it (e.g., when applying a \n"
+"# generic rigid transformation to a Vector3, tf2 will only apply the\n"
+"# rotation). If you want your data to be translatable too, use the\n"
+"# geometry_msgs/Point message instead.\n"
+"\n"
+"float64 x\n"
+"float64 y\n"
+"float64 z\n"
+;
   }
 
   static const char* value(const ::sensor_msgs::Imu_<ContainerAllocator>&) { return value(); }

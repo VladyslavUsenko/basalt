@@ -8,7 +8,7 @@
 
 #include <string>
 #include <vector>
-#include <map>
+#include <memory>
 
 #include <ros/types.h>
 #include <ros/serialization.h>
@@ -39,7 +39,7 @@ struct PointField_
 
 
 
-   typedef std::basic_string<char, std::char_traits<char>, typename ContainerAllocator::template rebind<char>::other >  _name_type;
+   typedef std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>> _name_type;
   _name_type name;
 
    typedef uint32_t _offset_type;
@@ -52,6 +52,32 @@ struct PointField_
   _count_type count;
 
 
+
+// reducing the odds to have name collisions with Windows.h 
+#if defined(_WIN32) && defined(INT8)
+  #undef INT8
+#endif
+#if defined(_WIN32) && defined(UINT8)
+  #undef UINT8
+#endif
+#if defined(_WIN32) && defined(INT16)
+  #undef INT16
+#endif
+#if defined(_WIN32) && defined(UINT16)
+  #undef UINT16
+#endif
+#if defined(_WIN32) && defined(INT32)
+  #undef INT32
+#endif
+#if defined(_WIN32) && defined(UINT32)
+  #undef UINT32
+#endif
+#if defined(_WIN32) && defined(FLOAT32)
+  #undef FLOAT32
+#endif
+#if defined(_WIN32) && defined(FLOAT64)
+  #undef FLOAT64
+#endif
 
   enum {
     INT8 = 1u,
@@ -102,6 +128,23 @@ ros::message_operations::Printer< ::sensor_msgs::PointField_<ContainerAllocator>
 return s;
 }
 
+
+template<typename ContainerAllocator1, typename ContainerAllocator2>
+bool operator==(const ::sensor_msgs::PointField_<ContainerAllocator1> & lhs, const ::sensor_msgs::PointField_<ContainerAllocator2> & rhs)
+{
+  return lhs.name == rhs.name &&
+    lhs.offset == rhs.offset &&
+    lhs.datatype == rhs.datatype &&
+    lhs.count == rhs.count;
+}
+
+template<typename ContainerAllocator1, typename ContainerAllocator2>
+bool operator!=(const ::sensor_msgs::PointField_<ContainerAllocator1> & lhs, const ::sensor_msgs::PointField_<ContainerAllocator2> & rhs)
+{
+  return !(lhs == rhs);
+}
+
+
 } // namespace sensor_msgs
 
 namespace ros
@@ -111,23 +154,7 @@ namespace message_traits
 
 
 
-// BOOLTRAITS {'IsFixedSize': False, 'IsMessage': True, 'HasHeader': False}
-// {'std_msgs': ['/opt/ros/kinetic/share/std_msgs/cmake/../msg'], 'geometry_msgs': ['/opt/ros/kinetic/share/geometry_msgs/cmake/../msg'], 'sensor_msgs': ['/tmp/binarydeb/ros-kinetic-sensor-msgs-1.12.5/msg']}
 
-// !!!!!!!!!!! ['__class__', '__delattr__', '__dict__', '__doc__', '__eq__', '__format__', '__getattribute__', '__hash__', '__init__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', '_parsed_fields', 'constants', 'fields', 'full_name', 'has_header', 'header_present', 'names', 'package', 'parsed_fields', 'short_name', 'text', 'types']
-
-
-
-
-template <class ContainerAllocator>
-struct IsFixedSize< ::sensor_msgs::PointField_<ContainerAllocator> >
-  : FalseType
-  { };
-
-template <class ContainerAllocator>
-struct IsFixedSize< ::sensor_msgs::PointField_<ContainerAllocator> const>
-  : FalseType
-  { };
 
 template <class ContainerAllocator>
 struct IsMessage< ::sensor_msgs::PointField_<ContainerAllocator> >
@@ -137,6 +164,16 @@ struct IsMessage< ::sensor_msgs::PointField_<ContainerAllocator> >
 template <class ContainerAllocator>
 struct IsMessage< ::sensor_msgs::PointField_<ContainerAllocator> const>
   : TrueType
+  { };
+
+template <class ContainerAllocator>
+struct IsFixedSize< ::sensor_msgs::PointField_<ContainerAllocator> >
+  : FalseType
+  { };
+
+template <class ContainerAllocator>
+struct IsFixedSize< ::sensor_msgs::PointField_<ContainerAllocator> const>
+  : FalseType
   { };
 
 template <class ContainerAllocator>
@@ -179,22 +216,22 @@ struct Definition< ::sensor_msgs::PointField_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "# This message holds the description of one point entry in the\n\
-# PointCloud2 message format.\n\
-uint8 INT8    = 1\n\
-uint8 UINT8   = 2\n\
-uint8 INT16   = 3\n\
-uint8 UINT16  = 4\n\
-uint8 INT32   = 5\n\
-uint8 UINT32  = 6\n\
-uint8 FLOAT32 = 7\n\
-uint8 FLOAT64 = 8\n\
-\n\
-string name      # Name of field\n\
-uint32 offset    # Offset from start of point struct\n\
-uint8  datatype  # Datatype enumeration, see above\n\
-uint32 count     # How many elements in the field\n\
-";
+    return "# This message holds the description of one point entry in the\n"
+"# PointCloud2 message format.\n"
+"uint8 INT8    = 1\n"
+"uint8 UINT8   = 2\n"
+"uint8 INT16   = 3\n"
+"uint8 UINT16  = 4\n"
+"uint8 INT32   = 5\n"
+"uint8 UINT32  = 6\n"
+"uint8 FLOAT32 = 7\n"
+"uint8 FLOAT64 = 8\n"
+"\n"
+"string name      # Name of field\n"
+"uint32 offset    # Offset from start of point struct\n"
+"uint8  datatype  # Datatype enumeration, see above\n"
+"uint32 count     # How many elements in the field\n"
+;
   }
 
   static const char* value(const ::sensor_msgs::PointField_<ContainerAllocator>&) { return value(); }
@@ -235,7 +272,7 @@ struct Printer< ::sensor_msgs::PointField_<ContainerAllocator> >
   template<typename Stream> static void stream(Stream& s, const std::string& indent, const ::sensor_msgs::PointField_<ContainerAllocator>& v)
   {
     s << indent << "name: ";
-    Printer<std::basic_string<char, std::char_traits<char>, typename ContainerAllocator::template rebind<char>::other > >::stream(s, indent + "  ", v.name);
+    Printer<std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>>>::stream(s, indent + "  ", v.name);
     s << indent << "offset: ";
     Printer<uint32_t>::stream(s, indent + "  ", v.offset);
     s << indent << "datatype: ";

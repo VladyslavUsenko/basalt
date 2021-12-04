@@ -8,7 +8,7 @@
 
 #include <string>
 #include <vector>
-#include <map>
+#include <memory>
 
 #include <ros/types.h>
 #include <ros/serialization.h>
@@ -55,7 +55,7 @@ struct Image_
    typedef uint32_t _width_type;
   _width_type width;
 
-   typedef std::basic_string<char, std::char_traits<char>, typename ContainerAllocator::template rebind<char>::other >  _encoding_type;
+   typedef std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>> _encoding_type;
   _encoding_type encoding;
 
    typedef uint8_t _is_bigendian_type;
@@ -64,7 +64,7 @@ struct Image_
    typedef uint32_t _step_type;
   _step_type step;
 
-   typedef std::vector<uint8_t, typename ContainerAllocator::template rebind<uint8_t>::other >  _data_type;
+   typedef std::vector<uint8_t, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<uint8_t>> _data_type;
   _data_type data;
 
 
@@ -92,6 +92,26 @@ ros::message_operations::Printer< ::sensor_msgs::Image_<ContainerAllocator> >::s
 return s;
 }
 
+
+template<typename ContainerAllocator1, typename ContainerAllocator2>
+bool operator==(const ::sensor_msgs::Image_<ContainerAllocator1> & lhs, const ::sensor_msgs::Image_<ContainerAllocator2> & rhs)
+{
+  return lhs.header == rhs.header &&
+    lhs.height == rhs.height &&
+    lhs.width == rhs.width &&
+    lhs.encoding == rhs.encoding &&
+    lhs.is_bigendian == rhs.is_bigendian &&
+    lhs.step == rhs.step &&
+    lhs.data == rhs.data;
+}
+
+template<typename ContainerAllocator1, typename ContainerAllocator2>
+bool operator!=(const ::sensor_msgs::Image_<ContainerAllocator1> & lhs, const ::sensor_msgs::Image_<ContainerAllocator2> & rhs)
+{
+  return !(lhs == rhs);
+}
+
+
 } // namespace sensor_msgs
 
 namespace ros
@@ -101,23 +121,7 @@ namespace message_traits
 
 
 
-// BOOLTRAITS {'IsFixedSize': False, 'IsMessage': True, 'HasHeader': True}
-// {'std_msgs': ['/opt/ros/kinetic/share/std_msgs/cmake/../msg'], 'geometry_msgs': ['/opt/ros/kinetic/share/geometry_msgs/cmake/../msg'], 'sensor_msgs': ['/tmp/binarydeb/ros-kinetic-sensor-msgs-1.12.5/msg']}
 
-// !!!!!!!!!!! ['__class__', '__delattr__', '__dict__', '__doc__', '__eq__', '__format__', '__getattribute__', '__hash__', '__init__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', '_parsed_fields', 'constants', 'fields', 'full_name', 'has_header', 'header_present', 'names', 'package', 'parsed_fields', 'short_name', 'text', 'types']
-
-
-
-
-template <class ContainerAllocator>
-struct IsFixedSize< ::sensor_msgs::Image_<ContainerAllocator> >
-  : FalseType
-  { };
-
-template <class ContainerAllocator>
-struct IsFixedSize< ::sensor_msgs::Image_<ContainerAllocator> const>
-  : FalseType
-  { };
 
 template <class ContainerAllocator>
 struct IsMessage< ::sensor_msgs::Image_<ContainerAllocator> >
@@ -127,6 +131,16 @@ struct IsMessage< ::sensor_msgs::Image_<ContainerAllocator> >
 template <class ContainerAllocator>
 struct IsMessage< ::sensor_msgs::Image_<ContainerAllocator> const>
   : TrueType
+  { };
+
+template <class ContainerAllocator>
+struct IsFixedSize< ::sensor_msgs::Image_<ContainerAllocator> >
+  : FalseType
+  { };
+
+template <class ContainerAllocator>
+struct IsFixedSize< ::sensor_msgs::Image_<ContainerAllocator> const>
+  : FalseType
   { };
 
 template <class ContainerAllocator>
@@ -169,52 +183,50 @@ struct Definition< ::sensor_msgs::Image_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "# This message contains an uncompressed image\n\
-# (0, 0) is at top-left corner of image\n\
-#\n\
-\n\
-Header header        # Header timestamp should be acquisition time of image\n\
-                     # Header frame_id should be optical frame of camera\n\
-                     # origin of frame should be optical center of cameara\n\
-                     # +x should point to the right in the image\n\
-                     # +y should point down in the image\n\
-                     # +z should point into to plane of the image\n\
-                     # If the frame_id here and the frame_id of the CameraInfo\n\
-                     # message associated with the image conflict\n\
-                     # the behavior is undefined\n\
-\n\
-uint32 height         # image height, that is, number of rows\n\
-uint32 width          # image width, that is, number of columns\n\
-\n\
-# The legal values for encoding are in file src/image_encodings.cpp\n\
-# If you want to standardize a new string format, join\n\
-# ros-users@lists.sourceforge.net and send an email proposing a new encoding.\n\
-\n\
-string encoding       # Encoding of pixels -- channel meaning, ordering, size\n\
-                      # taken from the list of strings in include/sensor_msgs/image_encodings.h\n\
-\n\
-uint8 is_bigendian    # is this data bigendian?\n\
-uint32 step           # Full row length in bytes\n\
-uint8[] data          # actual matrix data, size is (step * rows)\n\
-\n\
-================================================================================\n\
-MSG: std_msgs/Header\n\
-# Standard metadata for higher-level stamped data types.\n\
-# This is generally used to communicate timestamped data \n\
-# in a particular coordinate frame.\n\
-# \n\
-# sequence ID: consecutively increasing ID \n\
-uint32 seq\n\
-#Two-integer timestamp that is expressed as:\n\
-# * stamp.sec: seconds (stamp_secs) since epoch (in Python the variable is called 'secs')\n\
-# * stamp.nsec: nanoseconds since stamp_secs (in Python the variable is called 'nsecs')\n\
-# time-handling sugar is provided by the client library\n\
-time stamp\n\
-#Frame this data is associated with\n\
-# 0: no frame\n\
-# 1: global frame\n\
-string frame_id\n\
-";
+    return "# This message contains an uncompressed image\n"
+"# (0, 0) is at top-left corner of image\n"
+"#\n"
+"\n"
+"Header header        # Header timestamp should be acquisition time of image\n"
+"                     # Header frame_id should be optical frame of camera\n"
+"                     # origin of frame should be optical center of camera\n"
+"                     # +x should point to the right in the image\n"
+"                     # +y should point down in the image\n"
+"                     # +z should point into to plane of the image\n"
+"                     # If the frame_id here and the frame_id of the CameraInfo\n"
+"                     # message associated with the image conflict\n"
+"                     # the behavior is undefined\n"
+"\n"
+"uint32 height         # image height, that is, number of rows\n"
+"uint32 width          # image width, that is, number of columns\n"
+"\n"
+"# The legal values for encoding are in file src/image_encodings.cpp\n"
+"# If you want to standardize a new string format, join\n"
+"# ros-users@lists.sourceforge.net and send an email proposing a new encoding.\n"
+"\n"
+"string encoding       # Encoding of pixels -- channel meaning, ordering, size\n"
+"                      # taken from the list of strings in include/sensor_msgs/image_encodings.h\n"
+"\n"
+"uint8 is_bigendian    # is this data bigendian?\n"
+"uint32 step           # Full row length in bytes\n"
+"uint8[] data          # actual matrix data, size is (step * rows)\n"
+"\n"
+"================================================================================\n"
+"MSG: std_msgs/Header\n"
+"# Standard metadata for higher-level stamped data types.\n"
+"# This is generally used to communicate timestamped data \n"
+"# in a particular coordinate frame.\n"
+"# \n"
+"# sequence ID: consecutively increasing ID \n"
+"uint32 seq\n"
+"#Two-integer timestamp that is expressed as:\n"
+"# * stamp.sec: seconds (stamp_secs) since epoch (in Python the variable is called 'secs')\n"
+"# * stamp.nsec: nanoseconds since stamp_secs (in Python the variable is called 'nsecs')\n"
+"# time-handling sugar is provided by the client library\n"
+"time stamp\n"
+"#Frame this data is associated with\n"
+"string frame_id\n"
+;
   }
 
   static const char* value(const ::sensor_msgs::Image_<ContainerAllocator>&) { return value(); }
@@ -265,7 +277,7 @@ struct Printer< ::sensor_msgs::Image_<ContainerAllocator> >
     s << indent << "width: ";
     Printer<uint32_t>::stream(s, indent + "  ", v.width);
     s << indent << "encoding: ";
-    Printer<std::basic_string<char, std::char_traits<char>, typename ContainerAllocator::template rebind<char>::other > >::stream(s, indent + "  ", v.encoding);
+    Printer<std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>>>::stream(s, indent + "  ", v.encoding);
     s << indent << "is_bigendian: ";
     Printer<uint8_t>::stream(s, indent + "  ", v.is_bigendian);
     s << indent << "step: ";

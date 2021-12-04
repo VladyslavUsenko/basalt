@@ -8,7 +8,7 @@
 
 #include <string>
 #include <vector>
-#include <map>
+#include <memory>
 
 #include <ros/types.h>
 #include <ros/serialization.h>
@@ -48,16 +48,16 @@ struct MultiDOFJointState_
    typedef  ::std_msgs::Header_<ContainerAllocator>  _header_type;
   _header_type header;
 
-   typedef std::vector<std::basic_string<char, std::char_traits<char>, typename ContainerAllocator::template rebind<char>::other > , typename ContainerAllocator::template rebind<std::basic_string<char, std::char_traits<char>, typename ContainerAllocator::template rebind<char>::other > >::other >  _joint_names_type;
+   typedef std::vector<std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>>>> _joint_names_type;
   _joint_names_type joint_names;
 
-   typedef std::vector< ::geometry_msgs::Transform_<ContainerAllocator> , typename ContainerAllocator::template rebind< ::geometry_msgs::Transform_<ContainerAllocator> >::other >  _transforms_type;
+   typedef std::vector< ::geometry_msgs::Transform_<ContainerAllocator> , typename std::allocator_traits<ContainerAllocator>::template rebind_alloc< ::geometry_msgs::Transform_<ContainerAllocator> >> _transforms_type;
   _transforms_type transforms;
 
-   typedef std::vector< ::geometry_msgs::Twist_<ContainerAllocator> , typename ContainerAllocator::template rebind< ::geometry_msgs::Twist_<ContainerAllocator> >::other >  _twist_type;
+   typedef std::vector< ::geometry_msgs::Twist_<ContainerAllocator> , typename std::allocator_traits<ContainerAllocator>::template rebind_alloc< ::geometry_msgs::Twist_<ContainerAllocator> >> _twist_type;
   _twist_type twist;
 
-   typedef std::vector< ::geometry_msgs::Wrench_<ContainerAllocator> , typename ContainerAllocator::template rebind< ::geometry_msgs::Wrench_<ContainerAllocator> >::other >  _wrench_type;
+   typedef std::vector< ::geometry_msgs::Wrench_<ContainerAllocator> , typename std::allocator_traits<ContainerAllocator>::template rebind_alloc< ::geometry_msgs::Wrench_<ContainerAllocator> >> _wrench_type;
   _wrench_type wrench;
 
 
@@ -85,6 +85,24 @@ ros::message_operations::Printer< ::sensor_msgs::MultiDOFJointState_<ContainerAl
 return s;
 }
 
+
+template<typename ContainerAllocator1, typename ContainerAllocator2>
+bool operator==(const ::sensor_msgs::MultiDOFJointState_<ContainerAllocator1> & lhs, const ::sensor_msgs::MultiDOFJointState_<ContainerAllocator2> & rhs)
+{
+  return lhs.header == rhs.header &&
+    lhs.joint_names == rhs.joint_names &&
+    lhs.transforms == rhs.transforms &&
+    lhs.twist == rhs.twist &&
+    lhs.wrench == rhs.wrench;
+}
+
+template<typename ContainerAllocator1, typename ContainerAllocator2>
+bool operator!=(const ::sensor_msgs::MultiDOFJointState_<ContainerAllocator1> & lhs, const ::sensor_msgs::MultiDOFJointState_<ContainerAllocator2> & rhs)
+{
+  return !(lhs == rhs);
+}
+
+
 } // namespace sensor_msgs
 
 namespace ros
@@ -94,23 +112,7 @@ namespace message_traits
 
 
 
-// BOOLTRAITS {'IsFixedSize': False, 'IsMessage': True, 'HasHeader': True}
-// {'std_msgs': ['/opt/ros/kinetic/share/std_msgs/cmake/../msg'], 'geometry_msgs': ['/opt/ros/kinetic/share/geometry_msgs/cmake/../msg'], 'sensor_msgs': ['/tmp/binarydeb/ros-kinetic-sensor-msgs-1.12.5/msg']}
 
-// !!!!!!!!!!! ['__class__', '__delattr__', '__dict__', '__doc__', '__eq__', '__format__', '__getattribute__', '__hash__', '__init__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', '_parsed_fields', 'constants', 'fields', 'full_name', 'has_header', 'header_present', 'names', 'package', 'parsed_fields', 'short_name', 'text', 'types']
-
-
-
-
-template <class ContainerAllocator>
-struct IsFixedSize< ::sensor_msgs::MultiDOFJointState_<ContainerAllocator> >
-  : FalseType
-  { };
-
-template <class ContainerAllocator>
-struct IsFixedSize< ::sensor_msgs::MultiDOFJointState_<ContainerAllocator> const>
-  : FalseType
-  { };
 
 template <class ContainerAllocator>
 struct IsMessage< ::sensor_msgs::MultiDOFJointState_<ContainerAllocator> >
@@ -120,6 +122,16 @@ struct IsMessage< ::sensor_msgs::MultiDOFJointState_<ContainerAllocator> >
 template <class ContainerAllocator>
 struct IsMessage< ::sensor_msgs::MultiDOFJointState_<ContainerAllocator> const>
   : TrueType
+  { };
+
+template <class ContainerAllocator>
+struct IsFixedSize< ::sensor_msgs::MultiDOFJointState_<ContainerAllocator> >
+  : FalseType
+  { };
+
+template <class ContainerAllocator>
+struct IsFixedSize< ::sensor_msgs::MultiDOFJointState_<ContainerAllocator> const>
+  : FalseType
   { };
 
 template <class ContainerAllocator>
@@ -162,92 +174,90 @@ struct Definition< ::sensor_msgs::MultiDOFJointState_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "# Representation of state for joints with multiple degrees of freedom, \n\
-# following the structure of JointState.\n\
-#\n\
-# It is assumed that a joint in a system corresponds to a transform that gets applied \n\
-# along the kinematic chain. For example, a planar joint (as in URDF) is 3DOF (x, y, yaw)\n\
-# and those 3DOF can be expressed as a transformation matrix, and that transformation\n\
-# matrix can be converted back to (x, y, yaw)\n\
-#\n\
-# Each joint is uniquely identified by its name\n\
-# The header specifies the time at which the joint states were recorded. All the joint states\n\
-# in one message have to be recorded at the same time.\n\
-#\n\
-# This message consists of a multiple arrays, one for each part of the joint state. \n\
-# The goal is to make each of the fields optional. When e.g. your joints have no\n\
-# wrench associated with them, you can leave the wrench array empty. \n\
-#\n\
-# All arrays in this message should have the same size, or be empty.\n\
-# This is the only way to uniquely associate the joint name with the correct\n\
-# states.\n\
-\n\
-Header header\n\
-\n\
-string[] joint_names\n\
-geometry_msgs/Transform[] transforms\n\
-geometry_msgs/Twist[] twist\n\
-geometry_msgs/Wrench[] wrench\n\
-\n\
-================================================================================\n\
-MSG: std_msgs/Header\n\
-# Standard metadata for higher-level stamped data types.\n\
-# This is generally used to communicate timestamped data \n\
-# in a particular coordinate frame.\n\
-# \n\
-# sequence ID: consecutively increasing ID \n\
-uint32 seq\n\
-#Two-integer timestamp that is expressed as:\n\
-# * stamp.sec: seconds (stamp_secs) since epoch (in Python the variable is called 'secs')\n\
-# * stamp.nsec: nanoseconds since stamp_secs (in Python the variable is called 'nsecs')\n\
-# time-handling sugar is provided by the client library\n\
-time stamp\n\
-#Frame this data is associated with\n\
-# 0: no frame\n\
-# 1: global frame\n\
-string frame_id\n\
-\n\
-================================================================================\n\
-MSG: geometry_msgs/Transform\n\
-# This represents the transform between two coordinate frames in free space.\n\
-\n\
-Vector3 translation\n\
-Quaternion rotation\n\
-\n\
-================================================================================\n\
-MSG: geometry_msgs/Vector3\n\
-# This represents a vector in free space. \n\
-# It is only meant to represent a direction. Therefore, it does not\n\
-# make sense to apply a translation to it (e.g., when applying a \n\
-# generic rigid transformation to a Vector3, tf2 will only apply the\n\
-# rotation). If you want your data to be translatable too, use the\n\
-# geometry_msgs/Point message instead.\n\
-\n\
-float64 x\n\
-float64 y\n\
-float64 z\n\
-================================================================================\n\
-MSG: geometry_msgs/Quaternion\n\
-# This represents an orientation in free space in quaternion form.\n\
-\n\
-float64 x\n\
-float64 y\n\
-float64 z\n\
-float64 w\n\
-\n\
-================================================================================\n\
-MSG: geometry_msgs/Twist\n\
-# This expresses velocity in free space broken into its linear and angular parts.\n\
-Vector3  linear\n\
-Vector3  angular\n\
-\n\
-================================================================================\n\
-MSG: geometry_msgs/Wrench\n\
-# This represents force in free space, separated into\n\
-# its linear and angular parts.\n\
-Vector3  force\n\
-Vector3  torque\n\
-";
+    return "# Representation of state for joints with multiple degrees of freedom, \n"
+"# following the structure of JointState.\n"
+"#\n"
+"# It is assumed that a joint in a system corresponds to a transform that gets applied \n"
+"# along the kinematic chain. For example, a planar joint (as in URDF) is 3DOF (x, y, yaw)\n"
+"# and those 3DOF can be expressed as a transformation matrix, and that transformation\n"
+"# matrix can be converted back to (x, y, yaw)\n"
+"#\n"
+"# Each joint is uniquely identified by its name\n"
+"# The header specifies the time at which the joint states were recorded. All the joint states\n"
+"# in one message have to be recorded at the same time.\n"
+"#\n"
+"# This message consists of a multiple arrays, one for each part of the joint state. \n"
+"# The goal is to make each of the fields optional. When e.g. your joints have no\n"
+"# wrench associated with them, you can leave the wrench array empty. \n"
+"#\n"
+"# All arrays in this message should have the same size, or be empty.\n"
+"# This is the only way to uniquely associate the joint name with the correct\n"
+"# states.\n"
+"\n"
+"Header header\n"
+"\n"
+"string[] joint_names\n"
+"geometry_msgs/Transform[] transforms\n"
+"geometry_msgs/Twist[] twist\n"
+"geometry_msgs/Wrench[] wrench\n"
+"\n"
+"================================================================================\n"
+"MSG: std_msgs/Header\n"
+"# Standard metadata for higher-level stamped data types.\n"
+"# This is generally used to communicate timestamped data \n"
+"# in a particular coordinate frame.\n"
+"# \n"
+"# sequence ID: consecutively increasing ID \n"
+"uint32 seq\n"
+"#Two-integer timestamp that is expressed as:\n"
+"# * stamp.sec: seconds (stamp_secs) since epoch (in Python the variable is called 'secs')\n"
+"# * stamp.nsec: nanoseconds since stamp_secs (in Python the variable is called 'nsecs')\n"
+"# time-handling sugar is provided by the client library\n"
+"time stamp\n"
+"#Frame this data is associated with\n"
+"string frame_id\n"
+"\n"
+"================================================================================\n"
+"MSG: geometry_msgs/Transform\n"
+"# This represents the transform between two coordinate frames in free space.\n"
+"\n"
+"Vector3 translation\n"
+"Quaternion rotation\n"
+"\n"
+"================================================================================\n"
+"MSG: geometry_msgs/Vector3\n"
+"# This represents a vector in free space. \n"
+"# It is only meant to represent a direction. Therefore, it does not\n"
+"# make sense to apply a translation to it (e.g., when applying a \n"
+"# generic rigid transformation to a Vector3, tf2 will only apply the\n"
+"# rotation). If you want your data to be translatable too, use the\n"
+"# geometry_msgs/Point message instead.\n"
+"\n"
+"float64 x\n"
+"float64 y\n"
+"float64 z\n"
+"================================================================================\n"
+"MSG: geometry_msgs/Quaternion\n"
+"# This represents an orientation in free space in quaternion form.\n"
+"\n"
+"float64 x\n"
+"float64 y\n"
+"float64 z\n"
+"float64 w\n"
+"\n"
+"================================================================================\n"
+"MSG: geometry_msgs/Twist\n"
+"# This expresses velocity in free space broken into its linear and angular parts.\n"
+"Vector3  linear\n"
+"Vector3  angular\n"
+"\n"
+"================================================================================\n"
+"MSG: geometry_msgs/Wrench\n"
+"# This represents force in free space, separated into\n"
+"# its linear and angular parts.\n"
+"Vector3  force\n"
+"Vector3  torque\n"
+;
   }
 
   static const char* value(const ::sensor_msgs::MultiDOFJointState_<ContainerAllocator>&) { return value(); }
@@ -295,7 +305,7 @@ struct Printer< ::sensor_msgs::MultiDOFJointState_<ContainerAllocator> >
     for (size_t i = 0; i < v.joint_names.size(); ++i)
     {
       s << indent << "  joint_names[" << i << "]: ";
-      Printer<std::basic_string<char, std::char_traits<char>, typename ContainerAllocator::template rebind<char>::other > >::stream(s, indent + "  ", v.joint_names[i]);
+      Printer<std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>>>::stream(s, indent + "  ", v.joint_names[i]);
     }
     s << indent << "transforms[]" << std::endl;
     for (size_t i = 0; i < v.transforms.size(); ++i)

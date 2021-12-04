@@ -36,6 +36,7 @@
 #ifndef SENSOR_MSGS_IMAGE_ENCODINGS_H
 #define SENSOR_MSGS_IMAGE_ENCODINGS_H
 
+#include <cstdlib>
 #include <stdexcept>
 #include <string>
 
