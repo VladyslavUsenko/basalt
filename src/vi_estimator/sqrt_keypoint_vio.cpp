@@ -308,6 +308,7 @@ bool SqrtKeypointVioEstimator<Scalar_>::measure(
                   meas->get_start_t_ns());
     BASALT_ASSERT(opt_flow_meas->t_ns ==
                   meas->get_dt_ns() + meas->get_start_t_ns());
+    BASALT_ASSERT(meas->get_dt_ns() > 0);
 
     PoseVelBiasState<Scalar> next_state =
         frame_states.at(last_state_t_ns).getState();
