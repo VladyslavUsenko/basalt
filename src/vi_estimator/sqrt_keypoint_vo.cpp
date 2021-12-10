@@ -1099,21 +1099,32 @@ void SqrtKeypointVoEstimator<Scalar_>::optimize() {
 
         stats.add("get_dense_H_b", t.reset()).format("ms");
 
-        if (config.vio_lm_pose_damping_variant == 1) {
+        int iter = 0;
+        bool inc_valid = false;
+        constexpr int max_num_iter = 3;
+
+        while (iter < max_num_iter && !inc_valid) {
           VecX Hdiag_lambda = (H.diagonal() * lambda).cwiseMax(min_lambda);
-          H.diagonal() += Hdiag_lambda;
+          MatX H_copy = H;
+          H_copy.diagonal() += Hdiag_lambda;
+
+          Eigen::LDLT<Eigen::Ref<MatX>> ldlt(H_copy);
+          inc = ldlt.solve(b);
+          stats.add("solve", t.reset()).format("ms");
+
+          if (!inc.array().isFinite().all()) {
+            lambda = lambda_vee * lambda;
+            lambda_vee *= vee_factor;
+          } else {
+            inc_valid = true;
+          }
+          iter++;
         }
 
-        Eigen::LDLT<Eigen::Ref<MatX>> ldlt(H);
-        inc = ldlt.solve(b);
-        stats.add("solve", t.reset()).format("ms");
-
-        // TODO: instead of crashing, backtrack and increase damping, but make
-        // sure it does not go unnoticed. (Note: right now, without further
-        // handling, Sophus would crash anyway when trying to apply and
-        // increment with NaNs or inf)
-        BASALT_ASSERT_MSG(!inc.array().isFinite().all(),
-                          "numeric failure during");
+        if (!inc_valid) {
+          std::cerr << "Still invalid inc after " << max_num_iter
+                    << " iterations." << std::endl;
+        }
       }
 
       // backup state (then apply increment and check cost decrease)
@@ -1225,7 +1236,6 @@ void SqrtKeypointVoEstimator<Scalar_>::optimize() {
             1 - std::pow<Scalar>(2 * relative_decrease - 1, 3));
         lambda = std::max(min_lambda, lambda);
 
-        constexpr Scalar initial_vee = Scalar(2.0);
         lambda_vee = initial_vee;
 
         it++;
@@ -1253,7 +1263,6 @@ void SqrtKeypointVoEstimator<Scalar_>::optimize() {
         }
 
         lambda = lambda_vee * lambda;
-        constexpr Scalar vee_factor = Scalar(2.0);
         lambda_vee *= vee_factor;
 
         //        lambda = std::max(min_lambda, lambda);
