@@ -78,7 +78,7 @@ struct VioConfig {
   double vio_lm_lambda_initial;
   double vio_lm_lambda_min;
   double vio_lm_lambda_max;
-  int vio_lm_landmark_damping_variant;
+  int vio_lm_landmark_damping_variant;  // currently unused
   int vio_lm_pose_damping_variant;
 
   bool vio_scale_jacobian;

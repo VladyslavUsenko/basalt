@@ -1029,6 +1029,7 @@ void SqrtKeypointVoEstimator<Scalar_>::optimize() {
     stats.add("performQR", t.reset()).format("ms");
 
     if (config.vio_debug) {
+      // TODO: num_points debug output missing
       std::cout << "[LINEARIZE] Error: " << error_total << " num points "
                 << std::endl;
       std::cout << "Iteration " << it << " " << error_total << std::endl;
@@ -1106,6 +1107,13 @@ void SqrtKeypointVoEstimator<Scalar_>::optimize() {
         Eigen::LDLT<Eigen::Ref<MatX>> ldlt(H);
         inc = ldlt.solve(b);
         stats.add("solve", t.reset()).format("ms");
+
+        // TODO: instead of crashing, backtrack and increase damping, but make
+        // sure it does not go unnoticed. (Note: right now, without further
+        // handling, Sophus would crash anyway when trying to apply and
+        // increment with NaNs or inf)
+        BASALT_ASSERT_MSG(!inc.array().isFinite().all(),
+                          "numeric failure during");
       }
 
       // backup state (then apply increment and check cost decrease)

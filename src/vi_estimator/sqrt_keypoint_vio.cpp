@@ -226,6 +226,10 @@ void SqrtKeypointVioEstimator<Scalar_>::initialize(const Eigen::Vector3d& bg_,
             prev_frame->t_ns, last_state.getState().bias_gyro,
             last_state.getState().bias_accel));
 
+        BASALT_ASSERT_MSG(prev_frame->t_ns < curr_frame->t_ns,
+                          "duplicate frame timestamps?! zero time delta leads "
+                          "to invalid IMU integration.");
+
         while (data->t_ns <= prev_frame->t_ns) {
           data = popFromImuDataQueue();
           if (!data) break;
@@ -1127,6 +1131,7 @@ void SqrtKeypointVioEstimator<Scalar_>::optimize() {
       }
 
       if (config.vio_debug) {
+        // TODO: num_points debug output missing
         std::cout << "[LINEARIZE] Error: " << error_total << " num points "
                   << std::endl;
         std::cout << "Iteration " << it << " " << error_total << std::endl;
@@ -1205,6 +1210,13 @@ void SqrtKeypointVioEstimator<Scalar_>::optimize() {
           Eigen::LDLT<Eigen::Ref<MatX>> ldlt(H);
           inc = ldlt.solve(b);
           stats.add("solve", t.reset()).format("ms");
+
+          // TODO: instead of crashing, backtrack and increase damping, but make
+          // sure it does not go unnoticed. (Note: right now, without further
+          // handling, Sophus would crash anyway when trying to apply and
+          // increment with NaNs or inf)
+          BASALT_ASSERT_MSG(!inc.array().isFinite().all(),
+                            "numeric failure during");
         }
 
         // backup state (then apply increment and check cost decrease)

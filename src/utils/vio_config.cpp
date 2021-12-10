@@ -78,7 +78,7 @@ VioConfig::VioConfig() {
   vio_lm_lambda_initial = 1e-8;
   vio_lm_lambda_min = 1e-32;
   vio_lm_lambda_max = 1e2;
-  vio_lm_landmark_damping_variant = 0;
+  vio_lm_landmark_damping_variant = 0;  // currently unused
   vio_lm_pose_damping_variant = 0;
 
   vio_scale_jacobian = true;
