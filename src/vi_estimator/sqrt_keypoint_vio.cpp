@@ -226,6 +226,10 @@ void SqrtKeypointVioEstimator<Scalar_>::initialize(const Eigen::Vector3d& bg_,
             prev_frame->t_ns, last_state.getState().bias_gyro,
             last_state.getState().bias_accel));
 
+        BASALT_ASSERT_MSG(prev_frame->t_ns < curr_frame->t_ns,
+                          "duplicate frame timestamps?! zero time delta leads "
+                          "to invalid IMU integration.");
+
         while (data->t_ns <= prev_frame->t_ns) {
           data = popFromImuDataQueue();
           if (!data) break;
@@ -1127,6 +1131,7 @@ void SqrtKeypointVioEstimator<Scalar_>::optimize() {
       }
 
       if (config.vio_debug) {
+        // TODO: num_points debug output missing
         std::cout << "[LINEARIZE] Error: " << error_total << " num points "
                   << std::endl;
         std::cout << "Iteration " << it << " " << error_total << std::endl;
@@ -1197,14 +1202,32 @@ void SqrtKeypointVioEstimator<Scalar_>::optimize() {
 
           stats.add("get_dense_H_b", t.reset()).format("ms");
 
-          if (config.vio_lm_pose_damping_variant == 1) {
+          int iter = 0;
+          bool inc_valid = false;
+          constexpr int max_num_iter = 3;
+
+          while (iter < max_num_iter && !inc_valid) {
             VecX Hdiag_lambda = (H.diagonal() * lambda).cwiseMax(min_lambda);
-            H.diagonal() += Hdiag_lambda;
+            MatX H_copy = H;
+            H_copy.diagonal() += Hdiag_lambda;
+
+            Eigen::LDLT<Eigen::Ref<MatX>> ldlt(H_copy);
+            inc = ldlt.solve(b);
+            stats.add("solve", t.reset()).format("ms");
+
+            if (!inc.array().isFinite().all()) {
+              lambda = lambda_vee * lambda;
+              lambda_vee *= vee_factor;
+            } else {
+              inc_valid = true;
+            }
+            iter++;
           }
 
-          Eigen::LDLT<Eigen::Ref<MatX>> ldlt(H);
-          inc = ldlt.solve(b);
-          stats.add("solve", t.reset()).format("ms");
+          if (!inc_valid) {
+            std::cerr << "Still invalid inc after " << max_num_iter
+                      << " iterations." << std::endl;
+          }
         }
 
         // backup state (then apply increment and check cost decrease)
@@ -1283,8 +1306,8 @@ void SqrtKeypointVioEstimator<Scalar_>::optimize() {
                              relative_decrease, step_norminf);
           }
 
-          // TODO: consider to remove assert. For now we want to test if we even
-          // run into the l_diff <= 0 case ever in practice
+          // TODO: consider to remove assert. For now we want to test if we
+          // even run into the l_diff <= 0 case ever in practice
           // BASALT_ASSERT_STREAM(l_diff > 0, "l_diff " << l_diff);
 
           // l_diff <= 0 is a theoretical possibility if the model cost change
@@ -1327,7 +1350,6 @@ void SqrtKeypointVioEstimator<Scalar_>::optimize() {
               1 - std::pow<Scalar>(2 * relative_decrease - 1, 3));
           lambda = std::max(min_lambda, lambda);
 
-          constexpr Scalar initial_vee = Scalar(2.0);
           lambda_vee = initial_vee;
 
           it++;
@@ -1356,7 +1378,6 @@ void SqrtKeypointVioEstimator<Scalar_>::optimize() {
           }
 
           lambda = lambda_vee * lambda;
-          constexpr Scalar vee_factor = Scalar(2.0);
           lambda_vee *= vee_factor;
 
           //        lambda = std::max(min_lambda, lambda);

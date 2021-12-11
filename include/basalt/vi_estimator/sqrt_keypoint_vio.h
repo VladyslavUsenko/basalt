@@ -248,6 +248,8 @@ class SqrtKeypointVioEstimator : public VioEstimatorBase,
 
   VioConfig config;
 
+  constexpr static Scalar vee_factor = Scalar(2.0);
+  constexpr static Scalar initial_vee = Scalar(2.0);
   Scalar lambda, min_lambda, max_lambda, lambda_vee;
 
   std::shared_ptr<std::thread> processing_thread;

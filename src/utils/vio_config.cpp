@@ -75,11 +75,9 @@ VioConfig::VioConfig() {
   vio_enforce_realtime = false;
 
   vio_use_lm = false;
-  vio_lm_lambda_initial = 1e-8;
-  vio_lm_lambda_min = 1e-32;
+  vio_lm_lambda_initial = 1e-4;
+  vio_lm_lambda_min = 1e-6;
   vio_lm_lambda_max = 1e2;
-  vio_lm_landmark_damping_variant = 0;
-  vio_lm_pose_damping_variant = 0;
 
   vio_scale_jacobian = true;
 
@@ -192,8 +190,6 @@ void serialize(Archive& ar, basalt::VioConfig& config) {
   ar(CEREAL_NVP(config.vio_lm_lambda_initial));
   ar(CEREAL_NVP(config.vio_lm_lambda_min));
   ar(CEREAL_NVP(config.vio_lm_lambda_max));
-  ar(CEREAL_NVP(config.vio_lm_landmark_damping_variant));
-  ar(CEREAL_NVP(config.vio_lm_pose_damping_variant));
 
   ar(CEREAL_NVP(config.vio_scale_jacobian));
 

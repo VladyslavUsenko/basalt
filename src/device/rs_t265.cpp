@@ -84,8 +84,6 @@ RsT265Device::RsT265Device(bool manual_exposure, int skip_frames,
   }
 }
 
-RsT265Device::~RsT265Device(){};
-
 void RsT265Device::start() {
   auto callback = [&](const rs2::frame& frame) {
     exportCalibration();
@@ -148,20 +146,47 @@ void RsT265Device::start() {
         }
       }
     } else if (auto fs = frame.as<rs2::frameset>()) {
-      if (frame_counter++ % skip_frames != 0) return;
+      BASALT_ASSERT(fs.size() == NUM_CAMS);
+
+      std::vector<rs2::video_frame> vfs;
+      for (int i = 0; i < NUM_CAMS; ++i) {
+        rs2::video_frame vf = fs[i].as<rs2::video_frame>();
+        if (!vf) {
+          std::cout << "Weird Frame, skipping" << std::endl;
+          return;
+        }
+        vfs.push_back(vf);
+      }
+
+      // Callback is called for every new image, so in every other call, the
+      // left frame is updated but the right frame is still from the previous
+      // timestamp. So we only process framesets where both images are valid and
+      // have the same timestamp.
+      for (int i = 1; i < NUM_CAMS; ++i) {
+        if (vfs[0].get_timestamp() != vfs[i].get_timestamp()) {
+          return;
+        }
+      }
+
+      // skip frames if configured
+      if (frame_counter++ % skip_frames != 0) {
+        return;
+      }
 
       OpticalFlowInput::Ptr data(new OpticalFlowInput);
       data->img_data.resize(NUM_CAMS);
 
-      for (int i = 0; i < NUM_CAMS; i++) {
-        auto f = fs[i];
-        if (!f.as<rs2::video_frame>()) {
-          std::cout << "Weird Frame, skipping" << std::endl;
-          continue;
-        }
-        auto vf = f.as<rs2::video_frame>();
+      //      std::cout << "Reading frame " << frame_counter << std::endl;
 
-        data->t_ns = vf.get_timestamp() * 1e6;
+      for (int i = 0; i < NUM_CAMS; i++) {
+        const auto& vf = vfs[i];
+
+        int64_t t_ns = vf.get_timestamp() * 1e6;
+
+        // at this stage both image timestamps are expected to be equal
+        BASALT_ASSERT(i == 0 || t_ns == data->t_ns);
+
+        data->t_ns = t_ns;
 
         data->img_data[i].exposure =
             vf.get_frame_metadata(RS2_FRAME_METADATA_ACTUAL_EXPOSURE) * 1e-6;
@@ -178,6 +203,11 @@ void RsT265Device::start() {
           val = val << 8;
           data_out[j] = val;
         }
+
+        //        std::cout << "Timestamp / exposure " << i << ": " <<
+        //        data->t_ns << " / "
+        //                  << int(data->img_data[i].exposure * 1e3) << "ms" <<
+        //                  std::endl;
       }
 
       last_img_data = data;
