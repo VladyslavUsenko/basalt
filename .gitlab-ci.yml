@@ -274,7 +274,15 @@ catalina-brewclang-relwithdebinfo-compile:
 
 bigsur-relwithdebinfo-compile:
   <<: *compile_test_definition
-  tags: [macos, "11"]
+  tags: [macos, "11", x86_64]
+  only:
+#    - master
+  variables:
+    BUILD_TYPE: CiRelWithDebInfo
+
+monterey-arm-relwithdebinfo-compile:
+  <<: *compile_test_definition
+  tags: [macos, "12", arm64]
   only:
 #    - master
   variables:
