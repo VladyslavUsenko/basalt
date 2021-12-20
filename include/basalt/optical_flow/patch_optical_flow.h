@@ -50,6 +50,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace basalt {
 
+// TODO: patches are currently never erased, so over time memory consumption
+// increases
+// TODO: some changes from FrameToFrameOpticalFlow could be back-ported
+// (adjustments to Scalar=float, tbb parallelization, ...).
+
+/// PatchOpticalFlow keeps reference patches from the frame where the point was
+/// initially created. Should result in more consistent tracks (less drift over
+/// time) than frame-to-frame tracking, but it results in shorter tracks in
+/// practice.
 template <typename Scalar, template <typename> typename Pattern>
 class PatchOpticalFlow : public OpticalFlowBase {
  public:
