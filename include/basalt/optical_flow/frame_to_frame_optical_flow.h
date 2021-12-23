@@ -51,6 +51,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace basalt {
 
+/// Unlike PatchOpticalFlow, FrameToFrameOpticalFlow always tracks patches
+/// against the previous frame, not the initial frame where a track was created.
+/// While it might cause more drift of the patch location, it leads to longer
+/// tracks in practice.
 template <typename Scalar, template <typename> typename Pattern>
 class FrameToFrameOpticalFlow : public OpticalFlowBase {
  public:

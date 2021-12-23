@@ -54,6 +54,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace basalt {
 
+/// MultiscaleFrameToFrameOpticalFlow is the same as FrameToFrameOpticalFlow,
+/// but patches can be created at all pyramid levels, not just the lowest
+/// pyramid.
 template <typename Scalar, template <typename> typename Pattern>
 class MultiscaleFrameToFrameOpticalFlow : public OpticalFlowBase {
  public:
