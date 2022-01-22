@@ -35,6 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <Eigen/Dense>
+#include <sophus/se2.hpp>
 
 #include <basalt/image/image.h>
 #include <basalt/optical_flow/patterns.h>
@@ -71,23 +72,57 @@ struct OpticalFlowPatch {
     setFromImage(img, pos);
   }
 
-  void setFromImage(const Image<const uint16_t> &img, const Vector2 &pos) {
-    this->pos = pos;
-
+  template <typename ImgT>
+  static void setData(const ImgT &img, const Vector2 &pos, Scalar &mean,
+                      VectorP &data, const Sophus::SE2<Scalar> *se2 = nullptr) {
     int num_valid_points = 0;
     Scalar sum = 0;
-    Vector2 grad_sum(0, 0);
 
-    MatrixP2 grad;
+    for (int i = 0; i < PATTERN_SIZE; i++) {
+      Vector2 p;
+      if (se2) {
+        p = pos + (*se2) * pattern2.col(i);
+      } else {
+        p = pos + pattern2.col(i);
+      };
+
+      if (img.InBounds(p, 2)) {
+        Scalar val = img.template interp<Scalar>(p);
+        data[i] = val;
+        sum += val;
+        num_valid_points++;
+      } else {
+        data[i] = -1;
+      }
+    }
+
+    mean = sum / num_valid_points;
+    data /= mean;
+  }
+
+  template <typename ImgT>
+  static void setDataJacSe2(const ImgT &img, const Vector2 &pos, Scalar &mean,
+                            VectorP &data, MatrixP3 &J_se2) {
+    int num_valid_points = 0;
+    Scalar sum = 0;
+    Vector3 grad_sum_se2(0, 0, 0);
+
+    Eigen::Matrix<Scalar, 2, 3> Jw_se2;
+    Jw_se2.template topLeftCorner<2, 2>().setIdentity();
 
     for (int i = 0; i < PATTERN_SIZE; i++) {
       Vector2 p = pos + pattern2.col(i);
+
+      // Fill jacobians with respect to SE2 warp
+      Jw_se2(0, 2) = -pattern2(1, i);
+      Jw_se2(1, 2) = pattern2(0, i);
+
       if (img.InBounds(p, 2)) {
-        Vector3 valGrad = img.interpGrad<Scalar>(p);
+        Vector3 valGrad = img.template interpGrad<Scalar>(p);
         data[i] = valGrad[0];
         sum += valGrad[0];
-        grad.row(i) = valGrad.template tail<2>();
-        grad_sum += valGrad.template tail<2>();
+        J_se2.row(i) = valGrad.template tail<2>().transpose() * Jw_se2;
+        grad_sum_se2 += J_se2.row(i);
         num_valid_points++;
       } else {
         data[i] = -1;
@@ -96,30 +131,25 @@ struct OpticalFlowPatch {
 
     mean = sum / num_valid_points;
 
-    Scalar mean_inv = num_valid_points / sum;
-
-    Eigen::Matrix<Scalar, 2, 3> Jw_se2;
-    Jw_se2.template topLeftCorner<2, 2>().setIdentity();
-
-    MatrixP3 J_se2;
+    const Scalar mean_inv = num_valid_points / sum;
 
     for (int i = 0; i < PATTERN_SIZE; i++) {
       if (data[i] >= 0) {
-        const Scalar data_i = data[i];
-        const Vector2 grad_i = grad.row(i);
-        grad.row(i) =
-            num_valid_points * (grad_i * sum - grad_sum * data_i) / (sum * sum);
-
+        J_se2.row(i) -= grad_sum_se2.transpose() * data[i] / sum;
         data[i] *= mean_inv;
       } else {
-        grad.row(i).setZero();
+        J_se2.row(i).setZero();
       }
-
-      // Fill jacobians with respect to SE2 warp
-      Jw_se2(0, 2) = -pattern2(1, i);
-      Jw_se2(1, 2) = pattern2(0, i);
-      J_se2.row(i) = grad.row(i) * Jw_se2;
     }
+    J_se2 *= mean_inv;
+  }
+
+  void setFromImage(const Image<const uint16_t> &img, const Vector2 &pos) {
+    this->pos = pos;
+
+    MatrixP3 J_se2;
+
+    setDataJacSe2(img, pos, mean, data, J_se2);
 
     Matrix3 H_se2 = J_se2.transpose() * J_se2;
     Matrix3 H_se2_inv;
@@ -143,7 +173,6 @@ struct OpticalFlowPatch {
                        const Matrix2P &transformed_pattern,
                        VectorP &residual) const {
     Scalar sum = 0;
-    Vector2 grad_sum(0, 0);
     int num_valid_points = 0;
 
     for (int i = 0; i < PATTERN_SIZE; i++) {
