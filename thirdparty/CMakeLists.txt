@@ -19,6 +19,10 @@ set(BUILD_EXAMPLES OFF CACHE BOOL "Enable BUILD_EXAMPLES")
 set(BUILD_PANGOLIN_LIBREALSENSE OFF CACHE BOOL "Enable librealsense")
 set(BUILD_PANGOLIN_LIBREALSENSE2 OFF CACHE BOOL "Enable librealsense2")
 
+# disable ffmpeg b/c build is broken on macOS since 2022-02
+# see: https://github.com/stevenlovegrove/Pangolin/issues/737
+set(BUILD_PANGOLIN_FFMPEG OFF CACHE BOOL "Build support for ffmpeg video input")
+
 set(EIGEN_INCLUDE_DIR "${EIGEN3_INCLUDE_DIR}")
 set(EIGEN_INCLUDE_DIRS "${EIGEN3_INCLUDE_DIR}")
 
