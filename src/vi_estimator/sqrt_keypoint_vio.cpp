@@ -41,6 +41,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <basalt/utils/system_utils.h>
 #include <basalt/vi_estimator/sc_ba_base.h>
 #include <basalt/utils/cast_utils.hpp>
+#include <basalt/utils/format.hpp>
 #include <basalt/utils/time_utils.hpp>
 
 #include <basalt/linearization/linearization_base.hpp>
@@ -54,8 +55,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <chrono>
 
 namespace basalt {
-
-using namespace fmt::literals;
 
 template <class Scalar_>
 SqrtKeypointVioEstimator<Scalar_>::SqrtKeypointVioEstimator(

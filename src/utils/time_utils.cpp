@@ -1,16 +1,14 @@
 #include <basalt/utils/assert.h>
+#include <basalt/utils/format.hpp>
 #include <basalt/utils/time_utils.hpp>
 
 #include <fstream>
 #include <iomanip>
 
-#include <fmt/format.h>
 #include <Eigen/Dense>
 #include <nlohmann/json.hpp>
 
 namespace basalt {
-
-using namespace fmt::literals;
 
 // compute the median of an eigen vector
 // Note: Changes the order of elements in the vector!
