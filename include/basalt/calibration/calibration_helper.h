@@ -78,6 +78,7 @@ using CalibInitPoseMap =
 class CalibHelper {
  public:
   static void detectCorners(const VioDatasetPtr& vio_data,
+                            const AprilGrid& april_grid,
                             CalibCornerMap& calib_corners,
                             CalibCornerMap& calib_corners_rejected);
 

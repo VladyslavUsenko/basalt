@@ -106,6 +106,7 @@ bool estimateTransformation(
 }
 
 void CalibHelper::detectCorners(const VioDatasetPtr &vio_data,
+                                const AprilGrid &april_grid,
                                 CalibCornerMap &calib_corners,
                                 CalibCornerMap &calib_corners_rejected) {
   calib_corners.clear();
@@ -114,7 +115,8 @@ void CalibHelper::detectCorners(const VioDatasetPtr &vio_data,
   tbb::parallel_for(
       tbb::blocked_range<size_t>(0, vio_data->get_image_timestamps().size()),
       [&](const tbb::blocked_range<size_t> &r) {
-        ApriltagDetector ad;
+        const int numTags = april_grid.getTagCols() * april_grid.getTagRows();
+        ApriltagDetector ad(numTags);
 
         for (size_t j = r.begin(); j != r.end(); ++j) {
           int64_t timestamp_ns = vio_data->get_image_timestamps()[j];

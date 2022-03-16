@@ -9,7 +9,7 @@ struct ApriltagDetectorData;
 
 class ApriltagDetector {
  public:
-  ApriltagDetector();
+  ApriltagDetector(int numTags);
 
   ~ApriltagDetector();
 
