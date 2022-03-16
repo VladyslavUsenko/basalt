@@ -65,9 +65,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <basalt/utils/system_utils.h>
 #include <basalt/utils/vis_utils.h>
+#include <basalt/utils/format.hpp>
 #include <basalt/utils/time_utils.hpp>
 
-using namespace fmt::literals;
+// enable the "..."_format(...) string literal
+using namespace basalt::literals;
 
 // GUI functions
 void draw_image_overlay(pangolin::View& v, size_t cam_id);
