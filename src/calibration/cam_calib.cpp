@@ -415,7 +415,8 @@ void CamCalib::detectCorners() {
   processing_thread.reset(new std::thread([this]() {
     std::cout << "Started detecting corners" << std::endl;
 
-    CalibHelper::detectCorners(this->vio_dataset, this->calib_corners,
+    CalibHelper::detectCorners(this->vio_dataset, this->april_grid,
+                               this->calib_corners,
                                this->calib_corners_rejected);
 
     std::string path =
