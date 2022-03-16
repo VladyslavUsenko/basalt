@@ -284,33 +284,98 @@ set_property(TARGET basalt::cli11 PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${CMAKE
 add_library(basalt::magic_enum INTERFACE IMPORTED)
 set_property(TARGET basalt::magic_enum PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/magic_enum/include)
 
+# main library
+add_library(basalt SHARED)
 
-add_library(basalt SHARED
-  src/io/dataset_io.cpp
-  src/io/marg_data_io.cpp
-  src/calibration/aprilgrid.cpp
-  src/calibration/calibraiton_helper.cpp
-  src/calibration/vignette.cpp
-  src/optical_flow/optical_flow.cpp
-  src/linearization/landmark_block.cpp
-  src/linearization/linearization_base.cpp
-  src/linearization/linearization_abs_qr.cpp
-  src/linearization/linearization_abs_sc.cpp
-  src/linearization/linearization_rel_sc.cpp
-  src/utils/vio_config.cpp
-  src/utils/system_utils.cpp
-  src/utils/time_utils.cpp
-  src/utils/keypoints.cpp
-  src/vi_estimator/marg_helper.cpp
-  src/vi_estimator/sqrt_keypoint_vio.cpp
-  src/vi_estimator/sqrt_keypoint_vo.cpp
-  src/vi_estimator/vio_estimator.cpp
-  src/vi_estimator/ba_base.cpp
-  src/vi_estimator/sqrt_ba_base.cpp
-  src/vi_estimator/sc_ba_base.cpp
-  src/vi_estimator/nfr_mapper.cpp
-  src/vi_estimator/landmark_database.cpp)
-
+# List all header and source files with target_sources.
+# This ensures, e.g., that QtCreator >= 6.0 properly recognize these headers to belong to the project.
+# To support cmake < 3.13, use absolute paths (see: https://crascit.com/2016/01/31/enhanced-source-file-handling-with-target_sources/)
+target_sources(basalt
+  PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/calibration/aprilgrid.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/calibration/calibration_helper.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/calibration/cam_calib.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/calibration/cam_imu_calib.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/calibration/vignette.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/device/rs_t265.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/hash_bow/hash_bow.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/io/dataset_io.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/io/dataset_io_euroc.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/io/dataset_io_kitti.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/io/dataset_io_rosbag.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/io/dataset_io_uzh.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/io/marg_data_io.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/linearization/block_diagonal.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/linearization/imu_block.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/linearization/landmark_block.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/linearization/landmark_block_abs_dynamic.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/linearization/linearization_abs_qr.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/linearization/linearization_abs_sc.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/linearization/linearization_base.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/linearization/linearization_rel_sc.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/optical_flow/frame_to_frame_optical_flow.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/optical_flow/multiscale_frame_to_frame_optical_flow.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/optical_flow/optical_flow.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/optical_flow/patch.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/optical_flow/patch_optical_flow.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/optical_flow/patterns.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/optimization/accumulator.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/optimization/linearize.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/optimization/poses_linearize.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/optimization/poses_optimize.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/optimization/spline_linearize.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/optimization/spline_optimize.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/utils/ba_utils.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/utils/cast_utils.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/utils/common_types.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/utils/filesystem.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/utils/format.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/utils/imu_types.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/utils/keypoints.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/utils/nfr.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/utils/sim_utils.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/utils/system_utils.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/utils/test_utils.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/utils/time_utils.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/utils/tracks.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/utils/union_find.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/utils/vio_config.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/utils/vis_utils.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/vi_estimator/ba_base.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/vi_estimator/landmark_database.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/vi_estimator/marg_helper.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/vi_estimator/nfr_mapper.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/vi_estimator/sc_ba_base.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/vi_estimator/sqrt_ba_base.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/vi_estimator/sqrt_keypoint_vio.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/vi_estimator/sqrt_keypoint_vo.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/basalt/vi_estimator/vio_estimator.h
+  PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/calibration/aprilgrid.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/calibration/calibraiton_helper.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/calibration/vignette.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/io/dataset_io.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/io/marg_data_io.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/linearization/landmark_block.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/linearization/linearization_abs_qr.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/linearization/linearization_abs_sc.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/linearization/linearization_base.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/linearization/linearization_rel_sc.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/optical_flow/optical_flow.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/utils/keypoints.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/utils/system_utils.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/utils/time_utils.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/utils/vio_config.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/vi_estimator/ba_base.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/vi_estimator/landmark_database.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/vi_estimator/marg_helper.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/vi_estimator/nfr_mapper.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/vi_estimator/sc_ba_base.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/vi_estimator/sqrt_ba_base.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/vi_estimator/sqrt_keypoint_vio.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/vi_estimator/sqrt_keypoint_vo.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/vi_estimator/vio_estimator.cpp
+)
 
 target_link_libraries(basalt
   PUBLIC ${STD_CXX_FS} basalt::opencv basalt::basalt-headers TBB::tbb
