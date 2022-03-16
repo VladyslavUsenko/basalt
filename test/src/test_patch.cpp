@@ -26,6 +26,8 @@ struct SmoothFunction {
   BASALT_HOST_DEVICE inline bool InBounds(
       const Eigen::MatrixBase<Derived>& p,
       const typename Derived::Scalar border) const {
+    UNUSED(p);
+    UNUSED(border);
     return true;
   }
 };
