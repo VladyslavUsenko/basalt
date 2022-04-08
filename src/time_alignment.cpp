@@ -129,10 +129,6 @@ int main(int argc, char **argv) {
     return app.exit(e);
   }
 
-  if (!dataset_path.empty() && dataset_path[dataset_path.length() - 1] != '/') {
-    dataset_path += '/';
-  }
-
   basalt::VioDatasetPtr vio_dataset;
 
   const bool use_calib =
