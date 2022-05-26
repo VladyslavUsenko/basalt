@@ -21,7 +21,7 @@ screenread_sty = r"""
 %                 a bit more aesthetically pleasing
 %  24 Jan 2012  Argument to \SetScreen is screen width
 %  23 Jan 2012  Remove package showlayout
-%  22 Jan 2012  Initial version, based on ideas in 
+%  22 Jan 2012  Initial version, based on ideas in
 %               B. Veytsman amd M. Ware, Tugboat 32 (2011) 261.
 
 \RequirePackage{everyshi}

@@ -98,7 +98,7 @@ The following options control the optimization process:
 * `stop_thresh` defines the stopping criteria. Optimization will stop when the maximum increment is smaller than this value.
 
 
-**NOTE:** In this case we use a pre-calibrated sequence, so most of refinements or Mocap to IMU calibration will not have any visible effect. If you want to test this functionality use the "raw" sequences, for example `http://vision.in.tum.de/tumvi/raw/dataset-calib-cam3.bag` and `http://vision.in.tum.de/tumvi/raw/dataset-calib-imu1.bag`. 
+**NOTE:** In this case we use a pre-calibrated sequence, so most of refinements or Mocap to IMU calibration will not have any visible effect. If you want to test this functionality use the "raw" sequences, for example `http://vision.in.tum.de/tumvi/raw/dataset-calib-cam3.bag` and `http://vision.in.tum.de/tumvi/raw/dataset-calib-imu1.bag`.
 
 ## EuRoC dataset
 Download the datasets for camera and camera-IMU calibration:

@@ -29,7 +29,7 @@ out_dir = sys.argv[1]
 
 def load_data(x, prefix, key):
     fname = out_dir + '/' + prefix + '_' + key
-    if os.path.isfile(fname): 
+    if os.path.isfile(fname):
         with open(fname, 'r') as f:
             j = json.load(f)
             res = round(j['rms_ate'], 3)
@@ -56,7 +56,3 @@ print(row_format.format(*datasets_short))
 print(row_format.format(*vio['ate']))
 #print(row_format.format(*vio['time']))
 print(row_format.format(*vio['num_frames']))
-
-
-
-

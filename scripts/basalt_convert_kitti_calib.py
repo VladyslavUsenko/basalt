@@ -123,7 +123,7 @@ with open(kitti_calib_file, 'r') as stream:
     if len(lines) != 52:
         print('Issues loading calibration')
         print(lines)
-    
+
     P0 = np.array([float(x) for x in lines[1:13]]).reshape(3,4)
     P1 = np.array([float(x) for x in lines[14:26]]).reshape(3,4)
     print('P0\n', P0)

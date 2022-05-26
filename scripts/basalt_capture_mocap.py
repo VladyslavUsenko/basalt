@@ -61,4 +61,3 @@ if __name__ == '__main__':
     out_file.write('#timestamp [ns], p_RS_R_x [m], p_RS_R_y [m], p_RS_R_z [m], q_RS_w [], q_RS_x [], q_RS_y [], q_RS_z []\n')
     listener()
     out_file.close()
-

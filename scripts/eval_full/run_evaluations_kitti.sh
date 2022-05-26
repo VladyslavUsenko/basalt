@@ -30,4 +30,3 @@ echo $d
    basalt_kitti_eval --traj-path $folder_name/kitti_$d.txt --gt-path $DATASET_PATH/$d/poses.txt --result-path $folder_name/rpe_$d.txt
 
 done
-

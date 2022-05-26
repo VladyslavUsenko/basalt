@@ -40,7 +40,7 @@ else()
   string(TOLOWER "${CMAKE_BUILD_TYPE}" build_type_suffix)
   # build suffix of this project
   get_filename_component(my_build_name "${CMAKE_BINARY_DIR}" NAME)
-  
+
   set(opengv_build_names "${my_build_name}/opengv" "build-${build_type_suffix}/opengv" "build/opengv" "build/lib")
 endif()
 
@@ -82,4 +82,3 @@ endif()
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(OPENGV DEFAULT_MSG
                                   OPENGV_LIBS OPENGV_INCLUDE_DIR)
- 

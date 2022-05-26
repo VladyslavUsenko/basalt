@@ -4,7 +4,7 @@ We demonstrate the usage of the system with the `MH_05_difficult` sequence of th
 
 **Note:** The path to calibration and configuration files used here works for the APT installation. If you compile from source specify the appropriate path to the files in [data folder](/data/).
 
-Download the sequence from the dataset and extract it. 
+Download the sequence from the dataset and extract it.
 ```
 mkdir euroc_data
 cd euroc_data
@@ -18,7 +18,7 @@ cd ../
 ### Visual-inertial odometry
 To run the visual-inertial odometry execute the following command in `euroc_data` folder where you downloaded the dataset.
 ```
-basalt_vio --dataset-path MH_05_difficult/ --cam-calib /usr/etc/basalt/euroc_ds_calib.json --dataset-type euroc --config-path /usr/etc/basalt/euroc_config.json --marg-data euroc_marg_data --show-gui 1 
+basalt_vio --dataset-path MH_05_difficult/ --cam-calib /usr/etc/basalt/euroc_ds_calib.json --dataset-type euroc --config-path /usr/etc/basalt/euroc_config.json --marg-data euroc_marg_data --show-gui 1
 ```
 The command line options have the following meaning:
 * `--dataset-path` path to the dataset.
@@ -44,7 +44,7 @@ By default the system starts with `continue_fast` enabled. This option visualize
 
 For evaluation the button `align_se3` is used. It aligns the GT trajectory with the current estimate using an SE(3) transformation and prints the transformation and the root-mean-squared absolute trajectory error (RMS ATE).
 
-The button `save_traj` saves the trajectory in one of two formats (`euroc_fmt` or `tum_rgbd_fmt`). In EuRoC format each pose is a line in the file and has the following format `timestamp[ns],tx,ty,tz,qw,qx,qy,qz`. TUM RBG-D can be used with [TUM RGB-D](https://vision.in.tum.de/data/datasets/rgbd-dataset/tools) or [UZH](https://github.com/uzh-rpg/rpg_trajectory_evaluation) trajectory evaluation tools and has the following format `timestamp[s] tx ty tz qx qy qz qw`. 
+The button `save_traj` saves the trajectory in one of two formats (`euroc_fmt` or `tum_rgbd_fmt`). In EuRoC format each pose is a line in the file and has the following format `timestamp[ns],tx,ty,tz,qw,qx,qy,qz`. TUM RBG-D can be used with [TUM RGB-D](https://vision.in.tum.de/data/datasets/rgbd-dataset/tools) or [UZH](https://github.com/uzh-rpg/rpg_trajectory_evaluation) trajectory evaluation tools and has the following format `timestamp[s] tx ty tz qx qy qz qw`.
 
 
 ### Visual-inertial mapping
@@ -98,7 +98,7 @@ This will run the GUI and print an average track length after the dataset is pro
 
 We demonstrate the usage of the system with the `magistrale1` sequence of the [TUM-VI dataset](https://vision.in.tum.de/data/datasets/visual-inertial-dataset) as an example.
 
-Download the sequence from the dataset and extract it. 
+Download the sequence from the dataset and extract it.
 ```
 mkdir tumvi_data
 cd tumvi_data
@@ -109,7 +109,7 @@ tar -xvf dataset-magistrale1_512_16.tar
 ### Visual-inertial odometry
 To run the visual-inertial odometry execute the following command in `tumvi_data` folder where you downloaded the dataset.
 ```
-basalt_vio --dataset-path dataset-magistrale1_512_16/ --cam-calib /usr/etc/basalt/tumvi_512_ds_calib.json --dataset-type euroc --config-path /usr/etc/basalt/tumvi_512_config.json --marg-data tumvi_marg_data --show-gui 1 
+basalt_vio --dataset-path dataset-magistrale1_512_16/ --cam-calib /usr/etc/basalt/tumvi_512_ds_calib.json --dataset-type euroc --config-path /usr/etc/basalt/tumvi_512_config.json --marg-data tumvi_marg_data --show-gui 1
 ```
 ![magistrale1_vio](/doc/img/magistrale1_vio.png)
 

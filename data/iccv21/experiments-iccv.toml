@@ -356,7 +356,7 @@ metrics = [
     {name = "time_exec_realtimefactor", display_name = "real-time", geometric_mean = true, format_string = "{:.1f}x"},
     {name = "time_exec", display_name = "t total [s]", geometric_mean = false, decimals = 1},
     {name = "time_opt", display_name = "t opt [s]", geometric_mean = false, decimals = 1},
-    {name = "time_marg", display_name = "t marg [s]", geometric_mean = false,  decimals = 1},    
+    {name = "time_marg", display_name = "t marg [s]", geometric_mean = false,  decimals = 1},
     {name = "avg_num_it", display_name = "avg #it", geometric_mean = false, decimals = 1},
     {name = "avg_num_it_failed", display_name = "avg #it-failed", geometric_mean = false, decimals = 1},
 ]
@@ -588,6 +588,3 @@ show = "<SHOW_NULLSPACE_PLOTS>"
     "vo_sq-64",
     "vo_sq-32",
   ]
-
-
-

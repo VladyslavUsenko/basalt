@@ -6,7 +6,7 @@ We demonstrate the usage of the system with the [KITTI dataset](http://www.cvlib
 
 **Note:** The path to calibration and configuration files used here works for the APT installation. If you compile from source specify the appropriate path to the files in [data folder](/data/).
 
-Download the sequences (`data_odometry_gray.zip`) from the dataset and extract it. 
+Download the sequences (`data_odometry_gray.zip`) from the dataset and extract it.
 ```
 # We assume you have extracted the sequences in ~/dataset_gray/sequences/
 # Convert calibration to the basalt format
