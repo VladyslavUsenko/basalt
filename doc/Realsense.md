@@ -22,7 +22,7 @@ unzip sequence0
 ## Recording Own Dataset
 You can record your own sequences using the `basalt_rs_t265_record` executable:
 ```
-basalt_rs_t265_record --dataset-path ~/t265_calib_data/ --manual-exposure 
+basalt_rs_t265_record --dataset-path ~/t265_calib_data/ --manual-exposure
 ```
 * `--dataset-path` specifies the location where the recorded dataset will be stored. In this case it will be stored in `~/t265_calib_data/<current_timestamp>/`.
 * `--manual-exposure` disables the autoexposure. In this tutorial the autoexposure is disabled for all calibration sequences, but for the VIO sequence (sequence0) we enable it.
@@ -58,7 +58,7 @@ Run the response function calibration:
 ```
 basalt_response_calib.py -d ~/t265_calib_data/response_calib
 ```
-You should see the response function and the irradiance image similar to the one shown below. For the details of the algorithm see Section 2.3.1 of [[arXiv:1607.02555]](https://arxiv.org/abs/1607.02555). The results suggest that the response function used in the camera is linear. 
+You should see the response function and the irradiance image similar to the one shown below. For the details of the algorithm see Section 2.3.1 of [[arXiv:1607.02555]](https://arxiv.org/abs/1607.02555). The results suggest that the response function used in the camera is linear.
 ![t265_inv_resp_irradiance](/doc/img/t265_inv_resp_irradiance.png)
 
 ## Multi-Camera Geometric and Vignette Calibration
@@ -70,7 +70,7 @@ For the camera calibration we need to record a dataset with a static aprilgrid p
 * Move the camera slowly to reduce the motion blur.
 * Cover the entire field of view of the camera with the calibration pattern. Try to observe the pattern from different angles.
 * Make sure you do not cast shadows at the pattern (important for vignette calibration).
-* Rename the dataset to `cam_calib` 
+* Rename the dataset to `cam_calib`
 
 Run the calibration executable:
 ```
@@ -94,7 +94,7 @@ To perform the calibration follow these steps:
 
 
 ## IMU and Motion Capture Calibration
-After calibrating cameras we can proceed to geometric and time calibration of the cameras, IMU and motion capture system. Setting up the motion capture system is specific for your setup. 
+After calibrating cameras we can proceed to geometric and time calibration of the cameras, IMU and motion capture system. Setting up the motion capture system is specific for your setup.
 
 For the motion capture recording we use [ros_vrpn_client](https://github.com/ethz-asl/ros_vrpn_client) with [basalt_capture_mocap.py](/scripts/basalt_capture_mocap.py). We record the data to the `mocap0` folder and then move it to the `mav0` directory of the camera dataset. This script is provided as an example. Motion capture setup is different in every particular case.
 

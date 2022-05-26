@@ -81,14 +81,14 @@ for key, value in timestamps.items():
             if os.path.exists(dataset_path + '/mav0/' + key + '/data/' + str(v) + e):
                 img_exists = True
 
-        if not img_exists:   
+        if not img_exists:
             print('No image data for ' + key + ' at timestamp ' + str(v))
-    
+
     exposure_file = dataset_path + '/mav0/' + key + '/exposure.csv'
     if not os.path.exists(exposure_file):
         print('No exposure data for ' + key)
         continue
-    
+
     exposure_data = np.loadtxt(exposure_file, delimiter=',', dtype=np.int64)
     for v in value:
         idx = np.searchsorted(exposure_data[:, 0], v)

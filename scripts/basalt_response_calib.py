@@ -53,7 +53,7 @@ num_pixels_by_intensity = np.bincount(imgs.flat)
 print('num_pixels_by_intensity', num_pixels_by_intensity)
 
 inv_resp = np.arange(num_pixels_by_intensity.shape[0], dtype=np.float64)
-inv_resp[-1] = -1.0 # Use negative numbers to detect saturation 
+inv_resp[-1] = -1.0 # Use negative numbers to detect saturation
 
 
 def opt_irradiance():
@@ -72,18 +72,18 @@ def opt_irradiance():
 
 def opt_inv_resp():
     generated_imgs = irradiance[np.newaxis, :, :] * exposures[:, np.newaxis, np.newaxis]
-    
+
     num_pixels_by_intensity = np.bincount(imgs.flat, generated_imgs.flat >= 0)
-    
+
     generated_imgs[generated_imgs < 0] = 0
     sum_by_intensity = np.bincount(imgs.flat, generated_imgs.flat)
-    
+
     new_inv_resp = inv_resp
 
     idx = np.nonzero(num_pixels_by_intensity > 0)
     new_inv_resp[idx] = sum_by_intensity[idx] / num_pixels_by_intensity[idx]
-    new_inv_resp[-1] = -1.0 # Use negative numbers to detect saturation 
-    return new_inv_resp 
+    new_inv_resp[-1] = -1.0 # Use negative numbers to detect saturation
+    return new_inv_resp
 
 def print_error():
     generated_imgs = irradiance[np.newaxis, :, :] * exposures[:, np.newaxis, np.newaxis]
@@ -109,5 +109,3 @@ ax1.set_title('Inverse Response Function')
 ax2.imshow(irradiance)
 ax2.set_title('Irradiance Image')
 plt.show()
-
-

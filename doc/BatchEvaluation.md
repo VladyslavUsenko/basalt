@@ -57,13 +57,13 @@ config files to evaluate other aspects of the system.
      tables and plots you additionally need latexmk and a LaTeX
      distribution (Ubuntu: `sudo apt install texlive-latex-extra
      latexmk`; macOS with Homebrew: `brew install --cask mactex`).
-  
+
 ## Folder Structure
 
 The batch evaluation scripts and config files assume a certain folder
 structure inside a "parent" folder, since relative paths are used to
 find the compiled executable and calibration files. So **it's
-important to follow the folder structure**. 
+important to follow the folder structure**.
 
 ```
 parent-folder/

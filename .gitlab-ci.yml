@@ -288,18 +288,24 @@ monterey-arm-relwithdebinfo-compile:
   variables:
     BUILD_TYPE: CiRelWithDebInfo
 
-
-# check if clang-format would make any changes
-clang-format:
+# pre-commit checks
+pre-commit:
   tags:
     - docker
+  image:
+    python:3.10
   stage: build
   variables:
     GIT_SUBMODULE_STRATEGY: none
+    PRE_COMMIT_HOME: ${CI_PROJECT_DIR}/.cache/pre-commit
+  cache:
+    paths:
+      - ${PRE_COMMIT_HOME}
+    key: ${CI_JOB_NAME}
   script:
-    - ./scripts/clang-format-all.sh
-    # check if any files are now modified and error if yes
-    - (if [ -n "`git diff --name-only --diff-filter=M --ignore-submodules`" ]; then echo $'\n    Some files are not properly formatted. You can use "./scripts/clang-format-all.sh".\n'; git diff --diff-filter=M; false; fi)
+    - pip install pre-commit
+    - pre-commit install
+    - pre-commit run -a
 
 bionic-test:
   <<: *test_deb_definition
@@ -366,7 +372,7 @@ gen_results:
   stage: results
   variables:
     GIT_STRATEGY: none
-  tags: 
+  tags:
     - docker
   when: on_success
   artifacts:
@@ -393,7 +399,7 @@ deploy:
   when: manual
   variables:
     GIT_STRATEGY: none
-  tags: 
+  tags:
     - docker
   only:
     - master
@@ -407,7 +413,7 @@ deploy:
   script:
     - scp $SCP_FLAGS deb_bionic/*.deb $REPOSITORY_URL/bionic/
     - scp $SCP_FLAGS deb_focal/*.deb $REPOSITORY_URL/focal/
-    
+
 
 .docker_build_template: &docker_build_definition
   image: docker:stable

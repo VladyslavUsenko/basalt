@@ -38,7 +38,7 @@ def version_less(vstr1, vstr2):
 
 def compute_caching_hash(d):
     """Generate a hash from a dictionary to use as a cache file name
-    
+
     This is intended to be used for experiments cache files
     """
     string = json.dumps(d, sort_keys=True, ensure_ascii=True)
@@ -49,9 +49,9 @@ def compute_caching_hash(d):
 
 class Experiment:
     """Holds the logs for one experiment: a single odometry config run on a set of sequences
-    
+
     For one experiment, each sequence may have at most one Run.
-    
+
     Since for each run we have multiple log files and there may be many runs, we
     cache the loaded configs / output / log files (after preprocessing) into a single
     binary cache file (pickle). This significantly speeds up loading results when
@@ -69,9 +69,9 @@ class Experiment:
                  extend=None,
                  extend_override=False):
         """Load an experiment and all it's runs from a set of directories
-        
-        There may be no duplicate runs of the same sequence.      
-        
+
+        There may be no duplicate runs of the same sequence.
+
         :param log_dirs: list of directories to look for runs in
         :param name: experiment name
         :param display_name: optional experiment display name
@@ -80,8 +80,8 @@ class Experiment:
         :param spec: the config spec for this experiment; mainly informational for informative error messages; the
                functionally relevant information has already be extracted an preprocessed (other arguments)
         :param seq_name_mapping: optional mapping of sequence names; may contain only part of the sequences
-        :param extend: optionally provide base experiment whose runs are copied (and possibly extended) 
-        :param extend_override: if True, sequences in the extended experiment may be replaced, if they are also found in `log_dirs` 
+        :param extend: optionally provide base experiment whose runs are copied (and possibly extended)
+        :param extend_override: if True, sequences in the extended experiment may be replaced, if they are also found in `log_dirs`
         """
 
         self.name = name
@@ -120,7 +120,7 @@ class Experiment:
 
     def sequences(self, filter_regex=None):
         """return list of sequence names found for this experiment
-        
+
         :param filter_regex: if provided, return only they sequences that match the regex
         """
         if filter_regex is None:
@@ -131,13 +131,13 @@ class Experiment:
     @staticmethod
     def load_spec(spec, base_path, cache_dir, seq_name_mapping=None, extra_filter_regex=None, other_specs=[]):
         """Load a single experiment from logs or cache
-        
+
         The cache key is determined by the 'pattern', 'filter_regex' and 'extend' keys
         in the spec. That means changing the name or display name for example doesn't
-        invalidate the cache. If the experiment is not found in cache, it is loaded from 
+        invalidate the cache. If the experiment is not found in cache, it is loaded from
         the run directories and then saved in cache.
-        
-        :param spec: experiment spec from the config file 
+
+        :param spec: experiment spec from the config file
         :param base_path: base folder to search for run dirs in
         :param cache_dir: cache directory
         :param seq_name_mapping: optional sequence name mapping
@@ -217,10 +217,10 @@ class Experiment:
     @staticmethod
     def get_log_dirs(base_path, spec, filter_regex=None):
         """Return list of run directories given an experiments spec
-        
-        :param base_path: base directory to search in 
+
+        :param base_path: base directory to search in
         :param spec: experiment spec, e.g. from an experiments config file
-        :param filter_regex: optional additional regex; limits result to matching paths 
+        :param filter_regex: optional additional regex; limits result to matching paths
         :return: list of (filtered) paths (joined with base path)
         """
         log_dirs = [d for p in spec.pattern for d in glob(os.path.join(base_path, p)) if Run.is_run_dir(d)]
@@ -233,9 +233,9 @@ class Experiment:
     @staticmethod
     def load_all(specs, config_file, base_path, cache_dir, seq_name_mapping=None):
         """Load a set experiments from log files or cache
-        
+
         If there is more than one experiment with the same name, an error is raised.
-        
+
         :param specs: list of experiments specs, e.g. from a experiments config file
         :param config_file: experiments config file path (currently unused)
         :param base_path: base directory relative to which all patterns in experiments are search for
@@ -291,13 +291,13 @@ class Experiment:
 
 def load_experiments_config(path, args=None):
     """Load experiments config file, applying substitutions and setting defaults
-    
+
     An experiments config file defines general options, locations of experimental runs,
     and results sections that define tables and plots to render.
-    
+
     Substitutions and templates can be used to more concisely describe repetitive
     definitions (e.g. generate the same plot for ALL runs of an experiment).
-    
+
     :param log_dirs: optional command line arguments to override some values in the config
     :type log_dirs: Union[dict, argparse.Namespace]
     """

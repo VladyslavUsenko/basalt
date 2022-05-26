@@ -30,4 +30,3 @@ for d in "${DIRS[@]}"
 do
     licenseheaders -d "$d" -y $YEAR -o "$OWNER" -t "$TEMPLATE" -vv
 done
-

@@ -40,7 +40,7 @@ mean_values = {
 
 def load_data(x, prefix, key, mean_values):
     fname = out_dir + '/' + prefix + '_' + key + '.txt'
-    if os.path.isfile(fname): 
+    if os.path.isfile(fname):
         with open(fname, 'r') as f:
             j = json.load(f)
             res = j['results']

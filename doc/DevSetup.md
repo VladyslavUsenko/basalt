@@ -68,4 +68,3 @@ After that, in QtCreator open to the `CMakeLists.txt` in the `basalt` folder and
 ![qt_creator_configure_project](/doc/img/qt_creator_configure_project.png)
 
 Finally, you should be able to build and run the project.
-

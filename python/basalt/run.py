@@ -19,7 +19,7 @@ from .util import load_trajectory_tum_if_exists
 
 class Run:
     """Loads files from a single run of an experiment from a folder (config, status, output, log, ...)
-    
+
     A single run is one invocation of odometry with a specific config on a specific sequence.
     This is meant to be used on directories created with the 'generate-batch-configs' and 'run-all-in' scripts.
     It's best-effort, loading as many of the files as are present.
@@ -96,7 +96,7 @@ class Run:
     @staticmethod
     def is_run_dir(dirpath):
         """Returns True if the folder may be a run directory, based on the present files
-        
+
         This is intended to be used for auto-detecting run directories in a file tree.
         """
 

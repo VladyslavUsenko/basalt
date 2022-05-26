@@ -32,7 +32,7 @@ if [ -z $CLANG_FORMAT_CMD ]; then
     echo "clang-format not installed..."
     exit 1
 fi
-    
+
 # clang format check version
 MAJOR_VERSION_NEEDED=8
 
