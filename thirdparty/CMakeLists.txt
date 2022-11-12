@@ -102,6 +102,11 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION
   target_compile_options(pangolin PRIVATE "-Wno-unused-but-set-variable;-Wno-null-pointer-subtraction")
 endif()
 
+# fix pangolin: clang >= 14.0
+if((CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang") AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 14.0.0)
+  target_compile_options(pangolin PRIVATE "-Wno-unused-but-set-variable")
+endif()
+
 # fix pangolin: GCC >= 9.0
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 9.0)
   target_compile_options(pangolin PRIVATE "-Wno-stringop-truncation;-Wno-deprecated-copy")
