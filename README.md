@@ -36,7 +36,7 @@ Optimization (describes square-root optimization and marginalization used in VIO
 Set up keys, add the repository to the sources list, update the Ubuntu package index and install Basalt:
 ```
 sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0AD9A3000D97B6C9
-sudo sh -c 'echo "deb [arch=amd64] http://packages.usenko.eu/ubuntu $(lsb_release -sc) $(lsb_release -sc)/main" > /etc/apt/sources.list.d/basalt.list'
+sudo sh -c 'echo "deb [arch=amd64] http://packages.usenko.net/ubuntu $(lsb_release -sc) $(lsb_release -sc)/main" > /etc/apt/sources.list.d/basalt.list'
 sudo apt-get update
 sudo apt-get dist-upgrade
 sudo apt-get install basalt
