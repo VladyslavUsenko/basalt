@@ -175,6 +175,18 @@ focal-release-compile:
     - scripts/eval_full/*
     expire_in: 1 week
 
+jammy-release-compile:
+  <<: *prepare_docker_definition
+  <<: *compile_test_package_definition
+  image: vladyslavusenko/b_image_jammy:latest
+  variables:
+    CXX_MARCH: 'haswell'
+    DEB_DIR: deb_focal
+  artifacts:
+    paths:
+    - deb_jammy/*.deb
+    expire_in: 1 week
+
 focal-debug-compile:
   <<: *prepare_docker_definition
   <<: *compile_test_package_definition
@@ -309,6 +321,15 @@ focal-test:
     DEB_DIR: deb_focal
     GIT_STRATEGY: none
 
+jammy-test:
+  <<: *test_deb_definition
+  image: vladyslavusenko/b_image_jammy:latest
+  only:
+    - master
+  variables:
+    DEB_DIR: deb_jammy
+    GIT_STRATEGY: none
+
 # evaluate on EuRoC sequences
 eval_euroc_master:
   <<: *eval_euroc_definition
@@ -397,6 +418,7 @@ deploy:
   script:
     - scp $SCP_FLAGS deb_bionic/*.deb $REPOSITORY_URL/bionic/
     - scp $SCP_FLAGS deb_focal/*.deb $REPOSITORY_URL/focal/
+    - scp $SCP_FLAGS deb_jammy/*.deb $REPOSITORY_URL/jammy/
 
 
 .docker_build_template: &docker_build_definition
@@ -468,3 +490,10 @@ focal-repository-check:
   variables:
     GIT_STRATEGY: none
     REPO_NAME: focal
+
+jammy-repository-check:
+  image: ubuntu:22.04
+  <<: *repository_check_definition
+  variables:
+    GIT_STRATEGY: none
+    REPO_NAME: jammy
