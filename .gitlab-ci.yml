@@ -153,8 +153,8 @@ bionic-release-compile:
     # on the updatd libstdc++. So we use clang instead, which works
     # with the default libstdc++ on bionic and doesn't lead to
     # additional runtime dependencies for the debian package.
-    CC: clang-12
-    CXX: clang++-12
+    CC: clang-15
+    CXX: clang++-15
     CXX_MARCH: 'haswell'
     DEB_DIR: deb_bionic
   artifacts:
@@ -431,6 +431,12 @@ docker-build-focal:
     GIT_SUBMODULE_STRATEGY: none
     B_IMAGE_NAME: b_image_focal
 
+docker-build-jammy:
+  <<: *docker_build_definition
+  variables:
+    DOCKER_TLS_CERTDIR: '/certs'
+    GIT_SUBMODULE_STRATEGY: none
+    B_IMAGE_NAME: b_image_jammy
 
 
 .repository_check_template: &repository_check_definition
