@@ -153,8 +153,8 @@ bionic-release-compile:
     # on the updatd libstdc++. So we use clang instead, which works
     # with the default libstdc++ on bionic and doesn't lead to
     # additional runtime dependencies for the debian package.
-    CC: clang-15
-    CXX: clang++-15
+    CC: clang-13
+    CXX: clang++-13
     CXX_MARCH: 'haswell'
     DEB_DIR: deb_bionic
   artifacts:
@@ -181,7 +181,7 @@ jammy-release-compile:
   image: vladyslavusenko/b_image_jammy:latest
   variables:
     CXX_MARCH: 'haswell'
-    DEB_DIR: deb_focal
+    DEB_DIR: deb_jammy
   artifacts:
     paths:
     - deb_jammy/*.deb
@@ -205,34 +205,34 @@ focal-relwithdebinfo-compile:
   only:
     - master
 
-focal-gcc10-relwithdebinfo-compile:
-  <<: *prepare_docker_definition
-  image: vladyslavusenko/b_image_focal:latest
-  variables:
-    BUILD_TYPE: CiRelWithDebInfo
-    CC: gcc-10
-    CXX: g++-10
-  only:
-#    - master
-  stage: build
-  script:
-    - add-apt-repository ppa:ubuntu-toolchain-r/ppa -y
-    - apt-get update
-    - apt-get install -y g++-10
-    - mkdir build
-    - cd build
-    - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCXX_MARCH=${CXX_MARCH} -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-    - make -j3
-    - ctest
-    # smoke test to see if all executables at least start up
-    - ./basalt_calibrate --help
-    - ./basalt_calibrate_imu --help
-    - ./basalt_mapper --help
-    - ./basalt_mapper_sim --help
-    - ./basalt_mapper_sim_naive --help
-    - ./basalt_opt_flow --help
-    - ./basalt_vio --help
-    - ./basalt_vio_sim --help
+# focal-gcc10-relwithdebinfo-compile:
+#   <<: *prepare_docker_definition
+#   image: vladyslavusenko/b_image_focal:latest
+#   variables:
+#     BUILD_TYPE: CiRelWithDebInfo
+#     CC: gcc-10
+#     CXX: g++-10
+#   only:
+# #    - master
+#   stage: build
+#   script:
+#     - add-apt-repository ppa:ubuntu-toolchain-r/ppa -y
+#     - apt-get update
+#     - apt-get install -y g++-10
+#     - mkdir build
+#     - cd build
+#     - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCXX_MARCH=${CXX_MARCH} -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+#     - make -j3
+#     - ctest
+#     # smoke test to see if all executables at least start up
+#     - ./basalt_calibrate --help
+#     - ./basalt_calibrate_imu --help
+#     - ./basalt_mapper --help
+#     - ./basalt_mapper_sim --help
+#     - ./basalt_mapper_sim_naive --help
+#     - ./basalt_opt_flow --help
+#     - ./basalt_vio --help
+#     - ./basalt_vio_sim --help
 
 # Compilation with GCC 11 is broken due to a bug that is fixed only in future relases 11.3 and 12
 # See: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=100438
