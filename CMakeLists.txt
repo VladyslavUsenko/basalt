@@ -27,7 +27,7 @@ if(LSB_RELEASE_PROGRAM)
   if(${LSB_RELEASE_ID_SHORT} EQUAL "22.04")
     set(DEBIAN_DEPENDS "libtbb12, liblz4-1, libbz2-1.0, libboost-filesystem1.74.0, libboost-date-time1.74.0, libboost-program-options1.74.0, libboost-regex1.74.0, libopencv-dev, libglew2.2, libjpeg8, libpng16-16, librealsense2, librealsense2-dkms, librealsense2-gl, librealsense2-utils")
 
-  if(${LSB_RELEASE_ID_SHORT} EQUAL "20.04")
+  elseif(${LSB_RELEASE_ID_SHORT} EQUAL "20.04")
     set(DEBIAN_DEPENDS "libtbb2, liblz4-1, libbz2-1.0, libboost-filesystem1.71.0, libboost-date-time1.71.0, libboost-program-options1.71.0, libboost-regex1.71.0, libopencv-dev, libglew2.1, libjpeg8, libpng16-16, librealsense2, librealsense2-dkms, librealsense2-gl, librealsense2-utils")
 
   elseif(${LSB_RELEASE_ID_SHORT} EQUAL "18.04")
