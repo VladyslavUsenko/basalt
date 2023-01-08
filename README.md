@@ -32,7 +32,7 @@ Optimization (describes square-root optimization and marginalization used in VIO
 
 
 ## Installation
-### APT installation for Ubuntu 20.04 and 18.04 (Fast)
+### APT installation for Ubuntu 22.04, 20.04 and 18.04 (Fast)
 Set up keys, add the repository to the sources list, update the Ubuntu package index and install Basalt:
 ```
 sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0AD9A3000D97B6C9
