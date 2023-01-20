@@ -45,9 +45,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <librealsense2/rs.hpp>
 
-#include <pangolin/image/typed_image.h>
-#include <pangolin/pangolin.h>
-
 #include <tbb/concurrent_queue.h>
 
 #include <basalt/imu/imu_types.h>
