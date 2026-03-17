@@ -40,7 +40,8 @@ add_release_link() {
     local auth_header="$1"
     local name="$2"
     local url="$3"
-    local link_type="$4"
+    local filepath="$4"
+    local link_type="$5"
 
     local link_data
     local link_response
@@ -48,10 +49,12 @@ add_release_link() {
     link_data=$(jq -n \
         --arg name "${name}" \
         --arg url "${url}" \
+        --arg filepath "${filepath}" \
         --arg link_type "${link_type}" \
         '{
             name: $name,
             url: $url,
+            filepath: $filepath,
             link_type: $link_type
         }')
 
@@ -240,18 +243,20 @@ upload_artifact_links() {
             local artifact_name="${artifact}"
             local artifact_url
             artifact_url="$(artifact_url "${artifact_name}")"
+            local artifact_filepath="/${artifact_name}"
 
             log_info "  Adding link: ${artifact_name}"
-            add_release_link "${auth_header}" "${artifact_name}" "${artifact_url}" "package"
+            add_release_link "${auth_header}" "${artifact_name}" "${artifact_url}" "${artifact_filepath}" "package"
 
             # Also add checksum file
             if [ -f "${artifact}.sha256" ]; then
                 local checksum_name="${artifact}.sha256"
                 local checksum_url
                 checksum_url="$(artifact_url "${checksum_name}")"
+                local checksum_filepath="/${checksum_name}"
 
                 log_info "  Adding link: ${checksum_name}"
-                add_release_link "${auth_header}" "${checksum_name}" "${checksum_url}" "other"
+                add_release_link "${auth_header}" "${checksum_name}" "${checksum_url}" "${checksum_filepath}" "other"
             fi
         fi
     done
@@ -261,9 +266,10 @@ upload_artifact_links() {
         local checksums_name="checksums.txt"
         local checksums_url
         checksums_url="$(artifact_url "${checksums_name}")"
+        local checksums_filepath="/${checksums_name}"
 
         log_info "  Adding link: ${checksums_name}"
-        add_release_link "${auth_header}" "${checksums_name}" "${checksums_url}" "other"
+        add_release_link "${auth_header}" "${checksums_name}" "${checksums_url}" "${checksums_filepath}" "other"
     fi
 }
 
