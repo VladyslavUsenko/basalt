@@ -25,6 +25,7 @@ else
 fi
 
 DOWNLOAD_URL="${BASALT_DOWNLOAD_URL:-}"
+ARTIFACT_JOB_NAME="${BASALT_ARTIFACT_JOB_NAME:-ubuntu22-build}"
 BASE_URL="${GITLAB_URL}/api/v4/projects/${PROJECT}/releases"
 
 log() {
@@ -86,12 +87,19 @@ get_latest_version() {
     curl -s "${BASE_URL}/per/latest" 2>/dev/null | grep -o '"tag_name":"[^"]*"' | cut -d'"' -f4
 }
 
+artifact_url() {
+    _version="$1"
+    _artifact="$2"
+
+    echo "${GITLAB_URL}/${PROJECT}/-/jobs/artifacts/${_version}/raw/artifacts/${_artifact}?job=${ARTIFACT_JOB_NAME}"
+}
+
 # Download checksum file
 download_checksum() {
     _version="$1"
     _artifact="$2"
 
-    _checksum_url="${GITLAB_URL}/${PROJECT}/-/releases/${_version}/downloads/${_artifact}.sha256"
+    _checksum_url="$(artifact_url "${_version}" "${_artifact}.sha256")"
 
     log "Downloading checksum from ${_checksum_url}..."
     if ! curl -sSLf "${_checksum_url}" -o "${_artifact}.sha256" 2>/dev/null; then
@@ -246,7 +254,7 @@ main() {
         _artifact="basalt.tar.gz"
     else
         _artifact="basalt-${_version}-${_arch}.tar.gz"
-        _url="${GITLAB_URL}/${PROJECT}/-/releases/${_version}/downloads/${_artifact}"
+        _url="$(artifact_url "${_version}" "${_artifact}")"
     fi
 
     log "Downloading from $_url ..."
@@ -260,7 +268,7 @@ ${GITLAB_URL}/${PROJECT}/-/releases"
     if [ -z "${DOWNLOAD_URL}" ]; then
         download_checksum "${_version}" "${_artifact}" || true
         if [ -f "basalt.tar.gz.sha256" ]; then
-            _expected_checksum="$(tr -d '[:space:]' < basalt.tar.gz.sha256)"
+            _expected_checksum="$(awk '{print $1}' < basalt.tar.gz.sha256)"
             verify_checksum "basalt.tar.gz" "${_expected_checksum}"
         fi
     fi

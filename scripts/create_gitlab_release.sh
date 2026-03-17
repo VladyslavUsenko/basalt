@@ -16,6 +16,7 @@ PROJECT_PATH="${CI_PROJECT_PATH:-}"
 TAG_NAME="${CI_COMMIT_TAG:-}"
 JOB_TOKEN="${CI_JOB_TOKEN:-}"
 PRIVATE_TOKEN="${GITLAB_TOKEN:-}"
+ARTIFACT_JOB_NAME="${BASALT_ARTIFACT_JOB_NAME:-ubuntu22-build}"
 
 # Colors for output
 RED='\033[0;31m'
@@ -66,6 +67,14 @@ add_release_link() {
         log_warn "    ✗ Failed to add link for ${name}"
         echo "${link_response}" | jq -r '.message // .error // .' >&2
     fi
+}
+
+artifact_url() {
+    local artifact_path="$1"
+    local project_url="${CI_PROJECT_URL:-${GITLAB_BASE_URL}/${PROJECT_PATH}}"
+
+    printf '%s/-/jobs/artifacts/%s/raw/artifacts/%s?job=%s\n' \
+        "${project_url}" "${TAG_NAME}" "${artifact_path}" "${ARTIFACT_JOB_NAME}"
 }
 
 # Check required variables
@@ -173,9 +182,9 @@ EOF
         cat <<EOF
 ### Checksums
 
-```
+\`\`\`
 $(cat "${checksums_file}")
-```
+\`\`\`
 
 EOF
     fi
@@ -229,7 +238,8 @@ upload_artifact_links() {
     for artifact in basalt-*.tar.gz; do
         if [ -f "${artifact}" ]; then
             local artifact_name="${artifact}"
-            local artifact_url="${project_url}/-/releases/${TAG_NAME}/downloads/${artifact_name}"
+            local artifact_url
+            artifact_url="$(artifact_url "${artifact_name}")"
 
             log_info "  Adding link: ${artifact_name}"
             add_release_link "${auth_header}" "${artifact_name}" "${artifact_url}" "package"
@@ -237,7 +247,8 @@ upload_artifact_links() {
             # Also add checksum file
             if [ -f "${artifact}.sha256" ]; then
                 local checksum_name="${artifact}.sha256"
-                local checksum_url="${project_url}/-/releases/${TAG_NAME}/downloads/${checksum_name}"
+                local checksum_url
+                checksum_url="$(artifact_url "${checksum_name}")"
 
                 log_info "  Adding link: ${checksum_name}"
                 add_release_link "${auth_header}" "${checksum_name}" "${checksum_url}" "other"
@@ -248,7 +259,8 @@ upload_artifact_links() {
     # Add checksums.txt
     if [ -f "checksums.txt" ]; then
         local checksums_name="checksums.txt"
-        local checksums_url="${project_url}/-/releases/${TAG_NAME}/downloads/${checksums_name}"
+        local checksums_url
+        checksums_url="$(artifact_url "${checksums_name}")"
 
         log_info "  Adding link: ${checksums_name}"
         add_release_link "${auth_header}" "${checksums_name}" "${checksums_url}" "other"
