@@ -16,7 +16,7 @@ exclude: thirdparty/
 repos:
 # Standard hooks
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: "v4.2.0"
+  rev: "v6.0.0"
   hooks:
   - id: check-added-large-files
   - id: check-case-conflict
@@ -28,20 +28,22 @@ repos:
     exclude: ".gitlab-ci.yml"
   - id: debug-statements
   - id: end-of-file-fixer
+    exclude: "^vcpkg/ports/.*\\.patch$"
   - id: mixed-line-ending
   - id: requirements-txt-fixer
   - id: trailing-whitespace
+    exclude: "^vcpkg/ports/.*\\.patch$"
   - id: check-ast
 
 # Changes tabs to spaces
 - repo: https://github.com/Lucas-C/pre-commit-hooks
-  rev: "v1.1.13"
+  rev: "v1.5.6"
   hooks:
   - id: remove-tabs
 
 # Clang format the codebase automatically
 - repo: https://github.com/pre-commit/mirrors-clang-format
-  rev: "v14.0.3"
+  rev: "v22.1.0"
   hooks:
   - id: clang-format
     exclude: "^.*thirdparty/.*$"

@@ -81,8 +81,8 @@ struct Pattern24 {
 
 template <class Scalar>
 const typename Pattern24<Scalar>::Matrix2P Pattern24<Scalar>::pattern2 =
-    Eigen::Map<Pattern24<Scalar>::Matrix2P>((Scalar *)
-                                                Pattern24<Scalar>::pattern_raw);
+    Eigen::Map<Pattern24<Scalar>::Matrix2P>(
+        (Scalar*)Pattern24<Scalar>::pattern_raw);
 
 template <class Scalar>
 struct Pattern52 {
@@ -139,8 +139,8 @@ struct Pattern52 {
 
 template <class Scalar>
 const typename Pattern52<Scalar>::Matrix2P Pattern52<Scalar>::pattern2 =
-    Eigen::Map<Pattern52<Scalar>::Matrix2P>((Scalar *)
-                                                Pattern52<Scalar>::pattern_raw);
+    Eigen::Map<Pattern52<Scalar>::Matrix2P>(
+        (Scalar*)Pattern52<Scalar>::pattern_raw);
 
 // Same as Pattern52 but twice smaller
 template <class Scalar>

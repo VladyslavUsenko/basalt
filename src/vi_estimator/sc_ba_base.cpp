@@ -797,9 +797,9 @@ void ScBundleAdjustmentBase<Scalar_>::computeImuError(
 // instatiate templates
 
 // Note: double specialization is unconditional, b/c NfrMapper depends on it.
-//#ifdef BASALT_INSTANTIATIONS_DOUBLE
+// #ifdef BASALT_INSTANTIATIONS_DOUBLE
 template class ScBundleAdjustmentBase<double>;
-//#endif
+// #endif
 
 #ifdef BASALT_INSTANTIATIONS_FLOAT
 template class ScBundleAdjustmentBase<float>;

@@ -18,7 +18,7 @@ cd ../
 ### Visual-inertial odometry
 To run the visual-inertial odometry execute the following command in `euroc_data` folder where you downloaded the dataset.
 ```
-basalt_vio --dataset-path MH_05_difficult/ --cam-calib /usr/etc/basalt/euroc_ds_calib.json --dataset-type euroc --config-path /usr/etc/basalt/euroc_config.json --marg-data euroc_marg_data --show-gui 1
+basalt_vio --dataset-path MH_05_difficult/ --cam-calib ~/.local/etc/basalt/euroc_ds_calib.json --dataset-type euroc --config-path ~/.local/etc/basalt/euroc_config.json --marg-data euroc_marg_data --show-gui 1
 ```
 The command line options have the following meaning:
 * `--dataset-path` path to the dataset.
@@ -50,7 +50,7 @@ The button `save_traj` saves the trajectory in one of two formats (`euroc_fmt` o
 ### Visual-inertial mapping
 To run the mapping tool execute the following command:
 ```
-basalt_mapper --cam-calib /usr/etc/basalt/euroc_ds_calib.json --marg-data euroc_marg_data
+basalt_mapper --cam-calib ~/.local/etc/basalt/euroc_ds_calib.json --marg-data euroc_marg_data
 ```
 Here `--marg-data` is the folder with the results from VIO.
 
@@ -87,7 +87,7 @@ For more systematic evaluation see the evaluation scripts in the [scripts/eval_f
 ### Optical Flow
 The visual-inertial odometry relies on the optical flow results. To enable a better analysis of the system we also provide a separate optical flow executable
 ```
-basalt_opt_flow --dataset-path MH_05_difficult/ --cam-calib /usr/etc/basalt/euroc_ds_calib.json --dataset-type euroc --config-path /usr/etc/basalt/euroc_config.json --show-gui 1
+basalt_opt_flow --dataset-path MH_05_difficult/ --cam-calib ~/.local/etc/basalt/euroc_ds_calib.json --dataset-type euroc --config-path ~/.local/etc/basalt/euroc_config.json --show-gui 1
 ```
 
 This will run the GUI and print an average track length after the dataset is processed.
@@ -109,13 +109,13 @@ tar -xvf dataset-magistrale1_512_16.tar
 ### Visual-inertial odometry
 To run the visual-inertial odometry execute the following command in `tumvi_data` folder where you downloaded the dataset.
 ```
-basalt_vio --dataset-path dataset-magistrale1_512_16/ --cam-calib /usr/etc/basalt/tumvi_512_ds_calib.json --dataset-type euroc --config-path /usr/etc/basalt/tumvi_512_config.json --marg-data tumvi_marg_data --show-gui 1
+basalt_vio --dataset-path dataset-magistrale1_512_16/ --cam-calib ~/.local/etc/basalt/tumvi_512_ds_calib.json --dataset-type euroc --config-path ~/.local/etc/basalt/tumvi_512_config.json --marg-data tumvi_marg_data --show-gui 1
 ```
 ![magistrale1_vio](/doc/img/magistrale1_vio.png)
 
 ### Visual-inertial mapping
 To run the mapping tool execute the following command:
 ```
-basalt_mapper --cam-calib /usr/etc/basalt/tumvi_512_ds_calib.json --marg-data tumvi_marg_data
+basalt_mapper --cam-calib ~/.local/etc/basalt/tumvi_512_ds_calib.json --marg-data tumvi_marg_data
 ```
 ![magistrale1_mapping](/doc/img/magistrale1_mapping.png)

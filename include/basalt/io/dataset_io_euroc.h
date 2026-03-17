@@ -38,7 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <basalt/io/dataset_io.h>
 #include <basalt/utils/filesystem.h>
 
-#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgcodecs.hpp>
 
 namespace basalt {
 
@@ -67,22 +67,22 @@ class EurocVioDataset : public VioDataset {
   std::vector<std::unordered_map<int64_t, double>> exposure_times;
 
  public:
-  ~EurocVioDataset(){};
+  ~EurocVioDataset() {};
 
   size_t get_num_cams() const { return num_cams; }
 
-  std::vector<int64_t> &get_image_timestamps() { return image_timestamps; }
+  std::vector<int64_t>& get_image_timestamps() { return image_timestamps; }
 
-  const Eigen::aligned_vector<AccelData> &get_accel_data() const {
+  const Eigen::aligned_vector<AccelData>& get_accel_data() const {
     return accel_data;
   }
-  const Eigen::aligned_vector<GyroData> &get_gyro_data() const {
+  const Eigen::aligned_vector<GyroData>& get_gyro_data() const {
     return gyro_data;
   }
-  const std::vector<int64_t> &get_gt_timestamps() const {
+  const std::vector<int64_t>& get_gt_timestamps() const {
     return gt_timestamps;
   }
-  const Eigen::aligned_vector<Sophus::SE3d> &get_gt_pose_data() const {
+  const Eigen::aligned_vector<Sophus::SE3d>& get_gt_pose_data() const {
     return gt_pose_data;
   }
 
@@ -103,8 +103,8 @@ class EurocVioDataset : public VioDataset {
         if (img.type() == CV_8UC1) {
           res[i].img.reset(new ManagedImage<uint16_t>(img.cols, img.rows));
 
-          const uint8_t *data_in = img.ptr();
-          uint16_t *data_out = res[i].img->ptr;
+          const uint8_t* data_in = img.ptr();
+          uint16_t* data_out = res[i].img->ptr;
 
           size_t full_size = img.cols * img.rows;
           for (size_t i = 0; i < full_size; i++) {
@@ -115,8 +115,8 @@ class EurocVioDataset : public VioDataset {
         } else if (img.type() == CV_8UC3) {
           res[i].img.reset(new ManagedImage<uint16_t>(img.cols, img.rows));
 
-          const uint8_t *data_in = img.ptr();
-          uint16_t *data_out = res[i].img->ptr;
+          const uint8_t* data_in = img.ptr();
+          uint16_t* data_out = res[i].img->ptr;
 
           size_t full_size = img.cols * img.rows;
           for (size_t i = 0; i < full_size; i++) {
@@ -153,7 +153,7 @@ class EurocIO : public DatasetIoInterface {
  public:
   EurocIO(bool load_mocap_as_gt) : load_mocap_as_gt(load_mocap_as_gt) {}
 
-  void read(const std::string &path) {
+  void read(const std::string& path) {
     if (!fs::exists(path))
       std::cerr << "No dataset found in " << path << std::endl;
 
@@ -191,8 +191,8 @@ class EurocIO : public DatasetIoInterface {
   VioDatasetPtr get_data() { return data; }
 
  private:
-  void read_exposure(const std::string &path,
-                     std::unordered_map<int64_t, double> &exposure_data) {
+  void read_exposure(const std::string& path,
+                     std::unordered_map<int64_t, double>& exposure_data) {
     exposure_data.clear();
 
     std::ifstream f(path + "exposure.csv");
@@ -212,7 +212,7 @@ class EurocIO : public DatasetIoInterface {
     }
   }
 
-  void read_image_timestamps(const std::string &path) {
+  void read_image_timestamps(const std::string& path) {
     std::ifstream f(path + "data.csv");
     std::string line;
     while (std::getline(f, line)) {
@@ -228,7 +228,7 @@ class EurocIO : public DatasetIoInterface {
     }
   }
 
-  void read_imu_data(const std::string &path) {
+  void read_imu_data(const std::string& path) {
     data->accel_data.clear();
     data->gyro_data.clear();
 
@@ -256,7 +256,7 @@ class EurocIO : public DatasetIoInterface {
     }
   }
 
-  void read_gt_data_state(const std::string &path) {
+  void read_gt_data_state(const std::string& path) {
     data->gt_timestamps.clear();
     data->gt_pose_data.clear();
 
@@ -283,7 +283,7 @@ class EurocIO : public DatasetIoInterface {
     }
   }
 
-  void read_gt_data_pose(const std::string &path) {
+  void read_gt_data_pose(const std::string& path) {
     data->gt_timestamps.clear();
     data->gt_pose_data.clear();
 

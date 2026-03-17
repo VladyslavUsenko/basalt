@@ -49,12 +49,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace basalt {
 
-CamCalib::CamCalib(const std::string &dataset_path,
-                   const std::string &dataset_type,
-                   const std::string &aprilgrid_path,
-                   const std::string &cache_path,
-                   const std::string &cache_dataset_name, int skip_images,
-                   const std::vector<std::string> &cam_types, bool show_gui)
+CamCalib::CamCalib(const std::string& dataset_path,
+                   const std::string& dataset_type,
+                   const std::string& aprilgrid_path,
+                   const std::string& cache_path,
+                   const std::string& cache_dataset_name, int skip_images,
+                   const std::vector<std::string>& cam_types, bool show_gui)
     : dataset_path(dataset_path),
       dataset_type(dataset_type),
       april_grid(aprilgrid_path),
@@ -64,15 +64,15 @@ CamCalib::CamCalib(const std::string &dataset_path,
       cam_types(cam_types),
       show_gui(show_gui),
       show_frame("ui.show_frame", 0, 0, 1500),
-      show_corners("ui.show_corners", true, false, true),
-      show_corners_rejected("ui.show_corners_rejected", false, false, true),
-      show_init_reproj("ui.show_init_reproj", false, false, true),
-      show_opt("ui.show_opt", true, false, true),
-      show_vign("ui.show_vign", false, false, true),
-      show_ids("ui.show_ids", false, false, true),
+      show_corners("ui.show_corners", true, true),
+      show_corners_rejected("ui.show_corners_rejected", false, true),
+      show_init_reproj("ui.show_init_reproj", false, true),
+      show_opt("ui.show_opt", true, true),
+      show_vign("ui.show_vign", false, true),
+      show_ids("ui.show_ids", false, true),
       huber_thresh("ui.huber_thresh", 4.0, 0.1, 10.0),
-      opt_intr("ui.opt_intr", true, false, true),
-      opt_until_convg("ui.opt_until_converge", false, false, true),
+      opt_intr("ui.opt_intr", true, true),
+      opt_until_convg("ui.opt_until_converge", false, true),
       stop_thresh("ui.stop_thresh", 1e-8, 1e-10, 0.01, true) {
   if (show_gui) initGui();
 
@@ -103,21 +103,21 @@ void CamCalib::initGui() {
            .SetBounds(0.5, 1.0, pangolin::Attach::Pix(UI_WIDTH), 1.0)
            .SetLayout(pangolin::LayoutEqual);
 
-  pangolin::View &vign_plot_display =
+  pangolin::View& vign_plot_display =
       pangolin::CreateDisplay().SetBounds(0.0, 0.5, 0.72, 1.0);
 
   vign_plotter.reset(new pangolin::Plotter(&vign_data_log, 0.0, 1000.0, 0.0,
                                            1.0, 0.01f, 0.01f));
   vign_plot_display.AddDisplay(*vign_plotter);
 
-  pangolin::View &polar_error_display = pangolin::CreateDisplay().SetBounds(
+  pangolin::View& polar_error_display = pangolin::CreateDisplay().SetBounds(
       0.0, 0.5, pangolin::Attach::Pix(UI_WIDTH), 0.43);
 
   polar_plotter.reset(
       new pangolin::Plotter(nullptr, 0.0, 120.0, 0.0, 1.0, 0.01f, 0.01f));
   polar_error_display.AddDisplay(*polar_plotter);
 
-  pangolin::View &azimuthal_plot_display =
+  pangolin::View& azimuthal_plot_display =
       pangolin::CreateDisplay().SetBounds(0.0, 0.5, 0.45, 0.7);
 
   azimuth_plotter.reset(
@@ -212,7 +212,7 @@ void CamCalib::computeVign() {
   std::vector<std::vector<float>> vign_data;
   ve.compute_data_log(vign_data);
   vign_data_log.Clear();
-  for (const auto &v : vign_data) vign_data_log.Log(v);
+  for (const auto& v : vign_data) vign_data_log.Log(v);
 
   {
     vign_plotter->ClearSeries();
@@ -257,7 +257,7 @@ void CamCalib::renderingLoop() {
         size_t frame_id = static_cast<size_t>(show_frame);
         int64_t timestamp = vio_dataset->get_image_timestamps()[frame_id];
 
-        const std::vector<ImageData> &img_vec =
+        const std::vector<ImageData>& img_vec =
             vio_dataset->get_image_data(timestamp);
 
         for (size_t cam_id = 0; cam_id < vio_dataset->get_num_cams(); cam_id++)
@@ -462,7 +462,7 @@ void CamCalib::initCamIntrinsics() {
     for (size_t i = 0; i < vio_dataset->get_image_timestamps().size();
          i += inc) {
       const int64_t timestamp_ns = vio_dataset->get_image_timestamps()[i];
-      const std::vector<basalt::ImageData> &img_vec =
+      const std::vector<basalt::ImageData>& img_vec =
           vio_dataset->get_image_data(timestamp_ns);
 
       TimeCamId tcid(timestamp_ns, j);
@@ -488,14 +488,14 @@ void CamCalib::initCamIntrinsics() {
   // Try perfect pinhole initialization for cameras that are not initalized.
   for (size_t j = 0; j < vio_dataset->get_num_cams(); j++) {
     if (!cam_initialized[j]) {
-      std::vector<CalibCornerData *> pinhole_corners;
+      std::vector<CalibCornerData*> pinhole_corners;
       int w = 0;
       int h = 0;
 
       for (size_t i = 0; i < vio_dataset->get_image_timestamps().size();
            i += inc) {
         const int64_t timestamp_ns = vio_dataset->get_image_timestamps()[i];
-        const std::vector<basalt::ImageData> &img_vec =
+        const std::vector<basalt::ImageData>& img_vec =
             vio_dataset->get_image_data(timestamp_ns);
 
         TimeCamId tcid(timestamp_ns, j);
@@ -734,7 +734,7 @@ void CamCalib::initOptimization() {
   calib_opt->setAprilgridCorners3d(april_grid.aprilgrid_corner_pos_3d);
 
   std::unordered_set<TimeCamId> invalid_frames;
-  for (const auto &kv : calib_corners) {
+  for (const auto& kv : calib_corners) {
     if (kv.second.corner_ids.size() < MIN_CORNERS)
       invalid_frames.insert(kv.first);
   }
@@ -773,7 +773,7 @@ void CamCalib::initOptimization() {
     }
   }
 
-  for (const auto &kv : calib_corners) {
+  for (const auto& kv : calib_corners) {
     if (invalid_frames.count(kv.first) == 0)
       calib_opt->addAprilgridMeasurement(kv.first.frame_id, kv.first.cam_id,
                                          kv.second.corners,
@@ -865,7 +865,7 @@ void CamCalib::loadDataset() {
 void CamCalib::optimize() { optimizeWithParam(true); }
 
 bool CamCalib::optimizeWithParam(bool print_info,
-                                 std::map<std::string, double> *stats) {
+                                 std::map<std::string, double>* stats) {
   if (calib_init_poses.empty()) {
     std::cerr << "No initial camera poses. Press init_cam_poses initialize "
                  "camera poses "
@@ -949,7 +949,7 @@ void CamCalib::saveCalib() {
   }
 }
 
-void CamCalib::drawImageOverlay(pangolin::View &v, size_t cam_id) {
+void CamCalib::drawImageOverlay(pangolin::View& v, size_t cam_id) {
   UNUSED(v);
 
   size_t frame_id = show_frame;
@@ -965,8 +965,8 @@ void CamCalib::drawImageOverlay(pangolin::View &v, size_t cam_id) {
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
       if (calib_corners.find(tcid) != calib_corners.end()) {
-        const CalibCornerData &cr = calib_corners.at(tcid);
-        const CalibCornerData &cr_rej = calib_corners_rejected.at(tcid);
+        const CalibCornerData& cr = calib_corners.at(tcid);
+        const CalibCornerData& cr_rej = calib_corners_rejected.at(tcid);
 
         for (size_t i = 0; i < cr.corners.size(); i++) {
           // the radius is the threshold used for maximum displacement. The
@@ -976,7 +976,9 @@ void CamCalib::drawImageOverlay(pangolin::View &v, size_t cam_id) {
           pangolin::glDrawCirclePerimeter(c[0], c[1], radius);
 
           if (show_ids)
-            pangolin::default_font().Text("%d", cr.corner_ids[i]).Draw(c[0], c[1]);
+            pangolin::default_font()
+                .Text("%d", cr.corner_ids[i])
+                .Draw(c[0], c[1]);
         }
 
         pangolin::default_font()
@@ -1015,7 +1017,7 @@ void CamCalib::drawImageOverlay(pangolin::View &v, size_t cam_id) {
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
       if (calib_init_poses.find(tcid) != calib_init_poses.end()) {
-        const CalibInitPoseData &cr = calib_init_poses.at(tcid);
+        const CalibInitPoseData& cr = calib_init_poses.at(tcid);
 
         for (size_t i = 0; i < cr.reprojected_corners.size(); i++) {
           Eigen::Vector2d c = cr.reprojected_corners[i];
@@ -1029,7 +1031,9 @@ void CamCalib::drawImageOverlay(pangolin::View &v, size_t cam_id) {
             .Draw(5, 100);
 
       } else {
-        pangolin::default_font().Text("Initial pose not processed").Draw(5, 100);
+        pangolin::default_font()
+            .Text("Initial pose not processed")
+            .Draw(5, 100);
       }
     }
 
@@ -1042,7 +1046,7 @@ void CamCalib::drawImageOverlay(pangolin::View &v, size_t cam_id) {
       if (reprojected_corners.find(tcid) != reprojected_corners.end()) {
         if (calib_corners.count(tcid) > 0 &&
             calib_corners.at(tcid).corner_ids.size() >= MIN_CORNERS) {
-          const auto &rc = reprojected_corners.at(tcid);
+          const auto& rc = reprojected_corners.at(tcid);
 
           for (size_t i = 0; i < rc.corners_proj.size(); i++) {
             if (!rc.corners_proj_success[i]) continue;
@@ -1050,10 +1054,13 @@ void CamCalib::drawImageOverlay(pangolin::View &v, size_t cam_id) {
             Eigen::Vector2d c = rc.corners_proj[i];
             pangolin::glDrawCirclePerimeter(c[0], c[1], 3.0);
 
-            if (show_ids) pangolin::default_font().Text("%d", i).Draw(c[0], c[1]);
+            if (show_ids)
+              pangolin::default_font().Text("%d", i).Draw(c[0], c[1]);
           }
         } else {
-          pangolin::default_font().Text("Too few corners detected.").Draw(5, 150);
+          pangolin::default_font()
+              .Text("Too few corners detected.")
+              .Draw(5, 150);
         }
       }
     }
@@ -1067,7 +1074,7 @@ void CamCalib::drawImageOverlay(pangolin::View &v, size_t cam_id) {
       if (reprojected_vignette.find(tcid) != reprojected_vignette.end()) {
         if (calib_corners.count(tcid) > 0 &&
             calib_corners.at(tcid).corner_ids.size() >= MIN_CORNERS) {
-          const auto &rc = reprojected_vignette.at(tcid);
+          const auto& rc = reprojected_vignette.at(tcid);
 
           bool has_errors = false;
           auto it = reprojected_vignette_error.find(tcid);
@@ -1090,7 +1097,9 @@ void CamCalib::drawImageOverlay(pangolin::View &v, size_t cam_id) {
             }
           }
         } else {
-          pangolin::default_font().Text("Too few corners detected.").Draw(5, 200);
+          pangolin::default_font()
+              .Text("Too few corners detected.")
+              .Draw(5, 200);
         }
       }
     }

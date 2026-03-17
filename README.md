@@ -32,26 +32,42 @@ Optimization (describes square-root optimization and marginalization used in VIO
 
 
 ## Installation
-### APT installation for Ubuntu 22.04, 20.04 and 18.04 (Fast)
-Set up keys, add the repository to the sources list, update the Ubuntu package index and install Basalt:
+### Binary installation from GitLab releases
+Install the latest published release into `~/.local`:
 ```
-sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0AD9A3000D97B6C9
-sudo sh -c 'echo "deb [arch=amd64] http://packages.usenko.net/ubuntu $(lsb_release -sc) $(lsb_release -sc)/main" > /etc/apt/sources.list.d/basalt.list'
-sudo apt-get update
-sudo apt-get dist-upgrade
-sudo apt-get install basalt
+curl -LsSf https://gitlab.com/VladyslavUsenko/basalt/-/raw/master/scripts/install.sh | sh
 ```
 
-### Source installation for Ubuntu >= 18.04 and MacOS >= 10.14 Mojave
-Clone the source code for the project and build it. For MacOS you should have [Homebrew](https://brew.sh/) installed.
+Install a specific release:
+```
+curl -LsSf https://gitlab.com/VladyslavUsenko/basalt/-/raw/master/scripts/install.sh | sh -s -- <tag>
+```
+
+The installer places binaries in `~/.local/bin`, libraries in `~/.local/lib`, and data files in `~/.local/etc/basalt`.
+
+### Source installation (CMake presets + vcpkg)
+Clone the source code with the `thirdparty/vcpkg` submodule, then build with CMake presets. Install CMake (>= 3.24), Ninja, and a C++ compiler first.
 ```
 git clone --recursive https://gitlab.com/VladyslavUsenko/basalt.git
 cd basalt
-./scripts/install_deps.sh
-mkdir build
-cd build
-cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
-make -j8
+# If you cloned without --recursive, fetch the vcpkg submodule:
+# git submodule update --init thirdparty/vcpkg
+
+# Bootstrap vcpkg once if needed:
+# ./thirdparty/vcpkg/bootstrap-vcpkg.sh -disableMetrics
+
+cmake --preset relwithdebinfo
+cmake --build --preset relwithdebinfo -j8
+ctest --preset relwithdebinfo
+```
+
+By default presets use:
+`thirdparty/vcpkg/scripts/buildsystems/vcpkg.cmake`
+
+On macOS, the repository also includes helper scripts for local development and packaging:
+```
+./scripts/build_macos.sh
+./scripts/package_macos_release.sh <tag>
 ```
 
 ## Usage
@@ -69,7 +85,7 @@ make -j8
 
 ## Licence
 The code is provided under a BSD 3-clause license. See the LICENSE file for details.
-Note also the different licenses of thirdparty submodules.
+Note also the different licenses of thirdparty code.
 
 Some improvements are ported back from the fork
 [granite](https://github.com/DLR-RM/granite) (MIT license).

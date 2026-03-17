@@ -42,13 +42,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <tbb/concurrent_unordered_map.h>
 
+#include <pangolin/display/default_font.h>
 #include <pangolin/display/image_view.h>
 #include <pangolin/gl/gldraw.h>
 #include <pangolin/image/image.h>
 #include <pangolin/image/image_io.h>
 #include <pangolin/image/typed_image.h>
 #include <pangolin/pangolin.h>
-#include <pangolin/display/default_font.h>
 
 #include <CLI/CLI.hpp>
 
@@ -120,29 +120,29 @@ pangolin::Plotter* plotter;
 
 pangolin::Var<int> show_frame("ui.show_frame", 0, 0, 1000);
 
-pangolin::Var<bool> show_obs("ui.show_obs", true, false, true);
-pangolin::Var<bool> show_obs_noisy("ui.show_obs_noisy", true, false, true);
-pangolin::Var<bool> show_obs_vio("ui.show_obs_vio", true, false, true);
+pangolin::Var<bool> show_obs("ui.show_obs", true, true);
+pangolin::Var<bool> show_obs_noisy("ui.show_obs_noisy", true, true);
+pangolin::Var<bool> show_obs_vio("ui.show_obs_vio", true, true);
 
-pangolin::Var<bool> show_ids("ui.show_ids", false, false, true);
+pangolin::Var<bool> show_ids("ui.show_ids", false, true);
 
-pangolin::Var<bool> show_accel("ui.show_accel", false, false, true);
-pangolin::Var<bool> show_gyro("ui.show_gyro", false, false, true);
-pangolin::Var<bool> show_gt_vel("ui.show_gt_vel", false, false, true);
-pangolin::Var<bool> show_gt_pos("ui.show_gt_pos", true, false, true);
-pangolin::Var<bool> show_gt_bg("ui.show_gt_bg", false, false, true);
-pangolin::Var<bool> show_gt_ba("ui.show_gt_ba", false, false, true);
+pangolin::Var<bool> show_accel("ui.show_accel", false, true);
+pangolin::Var<bool> show_gyro("ui.show_gyro", false, true);
+pangolin::Var<bool> show_gt_vel("ui.show_gt_vel", false, true);
+pangolin::Var<bool> show_gt_pos("ui.show_gt_pos", true, true);
+pangolin::Var<bool> show_gt_bg("ui.show_gt_bg", false, true);
+pangolin::Var<bool> show_gt_ba("ui.show_gt_ba", false, true);
 
-pangolin::Var<bool> show_est_vel("ui.show_est_vel", false, false, true);
-pangolin::Var<bool> show_est_pos("ui.show_est_pos", true, false, true);
-pangolin::Var<bool> show_est_bg("ui.show_est_bg", false, false, true);
-pangolin::Var<bool> show_est_ba("ui.show_est_ba", false, false, true);
+pangolin::Var<bool> show_est_vel("ui.show_est_vel", false, true);
+pangolin::Var<bool> show_est_pos("ui.show_est_pos", true, true);
+pangolin::Var<bool> show_est_bg("ui.show_est_bg", false, true);
+pangolin::Var<bool> show_est_ba("ui.show_est_ba", false, true);
 
 using Button = pangolin::Var<std::function<void(void)>>;
 
 Button next_step_btn("ui.next_step", &next_step);
 
-pangolin::Var<bool> continue_btn("ui.continue", true, false, true);
+pangolin::Var<bool> continue_btn("ui.continue", true, true);
 
 Button align_step_btn("ui.align_se3", &alignButton);
 
@@ -428,7 +428,9 @@ void draw_image_overlay(pangolin::View& v, size_t cam_id) {
           pangolin::default_font().Text("%d", cr.id[i]).Draw(c[0], c[1]);
       }
 
-      pangolin::default_font().Text("%d noisy points", cr.pos.size()).Draw(5, 40);
+      pangolin::default_font()
+          .Text("%d noisy points", cr.pos.size())
+          .Draw(5, 40);
     }
   }
 

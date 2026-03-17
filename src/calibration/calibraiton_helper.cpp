@@ -59,11 +59,11 @@ namespace basalt {
 
 template <class CamT>
 bool estimateTransformation(
-    const CamT &cam_calib,
-    const Eigen::aligned_vector<Eigen::Vector2d> &corners,
-    const std::vector<int> &corner_ids,
-    const Eigen::aligned_vector<Eigen::Vector4d> &aprilgrid_corner_pos_3d,
-    Sophus::SE3d &T_target_camera, size_t &num_inliers) {
+    const CamT& cam_calib,
+    const Eigen::aligned_vector<Eigen::Vector2d>& corners,
+    const std::vector<int>& corner_ids,
+    const Eigen::aligned_vector<Eigen::Vector4d>& aprilgrid_corner_pos_3d,
+    Sophus::SE3d& T_target_camera, size_t& num_inliers) {
   opengv::bearingVectors_t bearingVectors;
   opengv::points_t points;
 
@@ -105,22 +105,22 @@ bool estimateTransformation(
   return ransac.inliers_.size() > 8;
 }
 
-void CalibHelper::detectCorners(const VioDatasetPtr &vio_data,
-                                const AprilGrid &april_grid,
-                                CalibCornerMap &calib_corners,
-                                CalibCornerMap &calib_corners_rejected) {
+void CalibHelper::detectCorners(const VioDatasetPtr& vio_data,
+                                const AprilGrid& april_grid,
+                                CalibCornerMap& calib_corners,
+                                CalibCornerMap& calib_corners_rejected) {
   calib_corners.clear();
   calib_corners_rejected.clear();
 
   tbb::parallel_for(
       tbb::blocked_range<size_t>(0, vio_data->get_image_timestamps().size()),
-      [&](const tbb::blocked_range<size_t> &r) {
+      [&](const tbb::blocked_range<size_t>& r) {
         const int numTags = april_grid.getTagCols() * april_grid.getTagRows();
         ApriltagDetector ad(numTags);
 
         for (size_t j = r.begin(); j != r.end(); ++j) {
           int64_t timestamp_ns = vio_data->get_image_timestamps()[j];
-          const std::vector<ImageData> &img_vec =
+          const std::vector<ImageData>& img_vec =
               vio_data->get_image_data(timestamp_ns);
 
           for (size_t i = 0; i < img_vec.size(); i++) {
@@ -150,22 +150,22 @@ void CalibHelper::detectCorners(const VioDatasetPtr &vio_data,
 }
 
 void CalibHelper::initCamPoses(
-    const Calibration<double>::Ptr &calib,
-    const Eigen::aligned_vector<Eigen::Vector4d> &aprilgrid_corner_pos_3d,
-    CalibCornerMap &calib_corners, CalibInitPoseMap &calib_init_poses) {
+    const Calibration<double>::Ptr& calib,
+    const Eigen::aligned_vector<Eigen::Vector4d>& aprilgrid_corner_pos_3d,
+    CalibCornerMap& calib_corners, CalibInitPoseMap& calib_init_poses) {
   calib_init_poses.clear();
 
   std::vector<TimeCamId> corners;
   corners.reserve(calib_corners.size());
-  for (const auto &kv : calib_corners) {
+  for (const auto& kv : calib_corners) {
     corners.emplace_back(kv.first);
   }
 
   tbb::parallel_for(tbb::blocked_range<size_t>(0, corners.size()),
-                    [&](const tbb::blocked_range<size_t> &r) {
+                    [&](const tbb::blocked_range<size_t>& r) {
                       for (size_t j = r.begin(); j != r.end(); ++j) {
                         TimeCamId tcid = corners[j];
-                        const CalibCornerData &ccd = calib_corners.at(tcid);
+                        const CalibCornerData& ccd = calib_corners.at(tcid);
 
                         CalibInitPoseData cp;
 
@@ -178,9 +178,9 @@ void CalibHelper::initCamPoses(
 }
 
 bool CalibHelper::initializeIntrinsics(
-    const Eigen::aligned_vector<Eigen::Vector2d> &corners,
-    const std::vector<int> &corner_ids, const AprilGrid &aprilgrid, int cols,
-    int rows, Eigen::Vector4d &init_intr) {
+    const Eigen::aligned_vector<Eigen::Vector2d>& corners,
+    const std::vector<int>& corner_ids, const AprilGrid& aprilgrid, int cols,
+    int rows, Eigen::Vector4d& init_intr) {
   // First, initialize the image center at the center of the image.
 
   Eigen::aligned_map<int, Eigen::Vector2d> id_to_corner;
@@ -233,7 +233,7 @@ bool CalibHelper::initializeIntrinsics(
       if (P.size() > MIN_CORNERS) {
         // Resize P to fit with the count of valid points.
 
-        Eigen::Map<Eigen::Matrix4Xd> P_mat((double *)P.data(), 4, P.size());
+        Eigen::Map<Eigen::Matrix4Xd> P_mat((double*)P.data(), 4, P.size());
 
         // std::cerr << "P_mat\n" << P_mat.transpose() << std::endl;
 
@@ -301,7 +301,7 @@ bool CalibHelper::initializeIntrinsics(
         }
 
       }  // If this observation has enough valid corners
-    }    // For each row in the image.
+    }  // For each row in the image.
 
   if (success) init_intr << 0.5 * gamma0, 0.5 * gamma0, _cu, _cv;
 
@@ -309,9 +309,9 @@ bool CalibHelper::initializeIntrinsics(
 }
 
 bool CalibHelper::initializeIntrinsicsPinhole(
-    const std::vector<CalibCornerData *> pinhole_corners,
-    const AprilGrid &aprilgrid, int cols, int rows,
-    Eigen::Vector4d &init_intr) {
+    const std::vector<CalibCornerData*> pinhole_corners,
+    const AprilGrid& aprilgrid, int cols, int rows,
+    Eigen::Vector4d& init_intr) {
   // First, initialize the image center at the center of the image.
 
   const double _cu = cols / 2.0 - 0.5;
@@ -329,9 +329,9 @@ bool CalibHelper::initializeIntrinsicsPinhole(
 
   int i = 0;
 
-  for (const CalibCornerData *ccd : pinhole_corners) {
-    const auto &corners = ccd->corners;
-    const auto &corner_ids = ccd->corner_ids;
+  for (const CalibCornerData* ccd : pinhole_corners) {
+    const auto& corners = ccd->corners;
+    const auto& corner_ids = ccd->corner_ids;
 
     std::vector<cv::Point2f> M(corners.size()), imagePoints(corners.size());
     for (size_t j = 0; j < corners.size(); ++j) {
@@ -408,9 +408,9 @@ bool CalibHelper::initializeIntrinsicsPinhole(
 }
 
 void CalibHelper::computeInitialPose(
-    const Calibration<double>::Ptr &calib, size_t cam_id,
-    const Eigen::aligned_vector<Eigen::Vector4d> &aprilgrid_corner_pos_3d,
-    const CalibCornerData &cd, CalibInitPoseData &cp) {
+    const Calibration<double>::Ptr& calib, size_t cam_id,
+    const Eigen::aligned_vector<Eigen::Vector4d>& aprilgrid_corner_pos_3d,
+    const CalibCornerData& cd, CalibInitPoseData& cp) {
   if (cd.corners.size() < 8) {
     cp.num_inliers = 0;
     return;
@@ -420,7 +420,7 @@ void CalibHelper::computeInitialPose(
   size_t num_inliers;
 
   std::visit(
-      [&](const auto &cam) {
+      [&](const auto& cam) {
         Sophus::SE3d T_target_camera;
         success = estimateTransformation(cam, cd.corners, cd.corner_ids,
                                          aprilgrid_corner_pos_3d, cp.T_a_c,
@@ -442,11 +442,11 @@ void CalibHelper::computeInitialPose(
 }
 
 size_t CalibHelper::computeReprojectionError(
-    const UnifiedCamera<double> &cam_calib,
-    const Eigen::aligned_vector<Eigen::Vector2d> &corners,
-    const std::vector<int> &corner_ids,
-    const Eigen::aligned_vector<Eigen::Vector4d> &aprilgrid_corner_pos_3d,
-    const Sophus::SE3d &T_target_camera, double &error) {
+    const UnifiedCamera<double>& cam_calib,
+    const Eigen::aligned_vector<Eigen::Vector2d>& corners,
+    const std::vector<int>& corner_ids,
+    const Eigen::aligned_vector<Eigen::Vector4d>& aprilgrid_corner_pos_3d,
+    const Sophus::SE3d& T_target_camera, double& error) {
   size_t num_projected = 0;
   error = 0;
 

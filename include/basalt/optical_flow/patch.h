@@ -68,13 +68,13 @@ struct OpticalFlowPatch {
 
   OpticalFlowPatch() = default;
 
-  OpticalFlowPatch(const Image<const uint16_t> &img, const Vector2 &pos) {
+  OpticalFlowPatch(const Image<const uint16_t>& img, const Vector2& pos) {
     setFromImage(img, pos);
   }
 
   template <typename ImgT>
-  static void setData(const ImgT &img, const Vector2 &pos, Scalar &mean,
-                      VectorP &data, const Sophus::SE2<Scalar> *se2 = nullptr) {
+  static void setData(const ImgT& img, const Vector2& pos, Scalar& mean,
+                      VectorP& data, const Sophus::SE2<Scalar>* se2 = nullptr) {
     int num_valid_points = 0;
     Scalar sum = 0;
 
@@ -101,8 +101,8 @@ struct OpticalFlowPatch {
   }
 
   template <typename ImgT>
-  static void setDataJacSe2(const ImgT &img, const Vector2 &pos, Scalar &mean,
-                            VectorP &data, MatrixP3 &J_se2) {
+  static void setDataJacSe2(const ImgT& img, const Vector2& pos, Scalar& mean,
+                            VectorP& data, MatrixP3& J_se2) {
     int num_valid_points = 0;
     Scalar sum = 0;
     Vector3 grad_sum_se2(0, 0, 0);
@@ -144,7 +144,7 @@ struct OpticalFlowPatch {
     J_se2 *= mean_inv;
   }
 
-  void setFromImage(const Image<const uint16_t> &img, const Vector2 &pos) {
+  void setFromImage(const Image<const uint16_t>& img, const Vector2& pos) {
     this->pos = pos;
 
     MatrixP3 J_se2;
@@ -169,9 +169,9 @@ struct OpticalFlowPatch {
             data.array().isFinite().all();
   }
 
-  inline bool residual(const Image<const uint16_t> &img,
-                       const Matrix2P &transformed_pattern,
-                       VectorP &residual) const {
+  inline bool residual(const Image<const uint16_t>& img,
+                       const Matrix2P& transformed_pattern,
+                       VectorP& residual) const {
     Scalar sum = 0;
     int num_valid_points = 0;
 

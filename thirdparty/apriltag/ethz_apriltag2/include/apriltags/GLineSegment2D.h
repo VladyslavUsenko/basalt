@@ -23,7 +23,6 @@ private:
   GLine2D line;
   std::pair<float,float> p0;
   std::pair<float,float> p1;
-  int weight;
 };
 
 } // namespace

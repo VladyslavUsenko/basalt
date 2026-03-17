@@ -15,7 +15,7 @@ wget http://vision.in.tum.de/tumvi/calibrated/512_16/dataset-calib-imu1_512_16.b
 ### Camera calibration
 Run the camera calibration:
 ```
-basalt_calibrate --dataset-path ~/tumvi_calib_data/dataset-calib-cam3_512_16.bag --dataset-type bag --aprilgrid /usr/etc/basalt/aprilgrid_6x6.json --result-path ~/tumvi_calib_result/ --cam-types ds ds
+basalt_calibrate --dataset-path ~/tumvi_calib_data/dataset-calib-cam3_512_16.bag --dataset-type bag --aprilgrid ~/.local/etc/basalt/aprilgrid_6x6.json --result-path ~/tumvi_calib_result/ --cam-types ds ds
 ```
 The command line options have the following meaning:
 * `--dataset-path` path to the dataset.
@@ -55,7 +55,7 @@ You can also control the process using the following buttons:
 ### Camera + IMU + Mocap calibration
 After calibrating the camera you can run the camera + IMU + Mocap calibration. The result path should point to the **same folder as before**:
 ```
-basalt_calibrate_imu --dataset-path ~/tumvi_calib_data/dataset-calib-imu1_512_16.bag --dataset-type bag --aprilgrid /usr/etc/basalt/aprilgrid_6x6.json --result-path ~/tumvi_calib_result/ --gyro-noise-std 0.000282 --accel-noise-std 0.016 --gyro-bias-std 0.0001 --accel-bias-std 0.001
+basalt_calibrate_imu --dataset-path ~/tumvi_calib_data/dataset-calib-imu1_512_16.bag --dataset-type bag --aprilgrid ~/.local/etc/basalt/aprilgrid_6x6.json --result-path ~/tumvi_calib_result/ --gyro-noise-std 0.000282 --accel-noise-std 0.016 --gyro-bias-std 0.0001 --accel-bias-std 0.001
 ```
 The command line options for the IMU noise are continous-time and defined as in [Kalibr](https://github.com/ethz-asl/kalibr/wiki/IMU-Noise-Model):
 * `--gyro-noise-std` gyroscope white noise.
@@ -112,14 +112,14 @@ wget http://robotics.ethz.ch/~asl-datasets/ijrr_euroc_mav_dataset/calibration_da
 ### Camera calibration
 Run the camera calibration:
 ```
-basalt_calibrate --dataset-path ~/euroc_calib_data/cam_april.bag --dataset-type bag --aprilgrid /usr/etc/basalt/aprilgrid_6x6.json --result-path ~/euroc_calib_result/ --cam-types ds ds
+basalt_calibrate --dataset-path ~/euroc_calib_data/cam_april.bag --dataset-type bag --aprilgrid ~/.local/etc/basalt/aprilgrid_6x6.json --result-path ~/euroc_calib_result/ --cam-types ds ds
 ```
 ![euroc_cam_calib](/doc/img/euroc_cam_calib.png)
 
 ### Camera + IMU calibration
 After calibrating the camera you can run the camera + IMU calibration. The result-path should point to the same folder as before:
 ```
-basalt_calibrate_imu --dataset-path ~/euroc_calib_data/imu_april.bag --dataset-type bag --aprilgrid /usr/etc/basalt/aprilgrid_6x6.json --result-path ~/euroc_calib_result/ --gyro-noise-std 0.000282 --accel-noise-std 0.016 --gyro-bias-std 0.0001 --accel-bias-std 0.001
+basalt_calibrate_imu --dataset-path ~/euroc_calib_data/imu_april.bag --dataset-type bag --aprilgrid ~/.local/etc/basalt/aprilgrid_6x6.json --result-path ~/euroc_calib_result/ --gyro-noise-std 0.000282 --accel-noise-std 0.016 --gyro-bias-std 0.0001 --accel-bias-std 0.001
 ```
 ![euroc_imu_calib](/doc/img/euroc_imu_calib.png)
 
@@ -136,14 +136,14 @@ wget http://rpg.ifi.uzh.ch/datasets/uzh-fpv/calib/indoor_forward_calib_snapdrago
 ### Camera calibration
 Run the camera calibration:
 ```
-basalt_calibrate --dataset-path ~/uzh_calib_data/indoor_forward_calib_snapdragon_cam.bag --dataset-type bag --aprilgrid /usr/etc/basalt/aprilgrid_5x4_uzh.json --result-path ~/uzh_calib_result/ --cam-types ds ds
+basalt_calibrate --dataset-path ~/uzh_calib_data/indoor_forward_calib_snapdragon_cam.bag --dataset-type bag --aprilgrid ~/.local/etc/basalt/aprilgrid_5x4_uzh.json --result-path ~/uzh_calib_result/ --cam-types ds ds
 ```
 ![uzh_cam_calib](/doc/img/uzh_cam_calib.png)
 
 ### Camera + IMU calibration
 After calibrating the camera you can run the camera + IMU calibration. The result-path should point to the same folder as before:
 ```
-basalt_calibrate_imu --dataset-path ~/uzh_calib_data/indoor_forward_calib_snapdragon_imu.bag --dataset-type bag --aprilgrid /usr/etc/basalt/aprilgrid_5x4_uzh.json --result-path ~/uzh_calib_result/ --gyro-noise-std 0.05 --accel-noise-std 0.1 --gyro-bias-std 4e-5 --accel-bias-std 0.002
+basalt_calibrate_imu --dataset-path ~/uzh_calib_data/indoor_forward_calib_snapdragon_imu.bag --dataset-type bag --aprilgrid ~/.local/etc/basalt/aprilgrid_5x4_uzh.json --result-path ~/uzh_calib_result/ --gyro-noise-std 0.05 --accel-noise-std 0.1 --gyro-bias-std 4e-5 --accel-bias-std 0.002
 ```
 ![uzh_imu_calib](/doc/img/uzh_imu_calib.png)
 
@@ -161,7 +161,7 @@ tar xvf dynamic.tar.gz
 ### Camera calibration
 Run the camera calibration:
 ```
-basalt_calibrate --dataset-path ~/kalibr_calib_data/static/static.bag --dataset-type bag --aprilgrid /usr/etc/basalt/aprilgrid_6x6.json --result-path ~/kalibr_calib_result/ --cam-types ds ds ds ds
+basalt_calibrate --dataset-path ~/kalibr_calib_data/static/static.bag --dataset-type bag --aprilgrid ~/.local/etc/basalt/aprilgrid_6x6.json --result-path ~/kalibr_calib_result/ --cam-types ds ds ds ds
 ```
 ![kalibr_cam_calib](/doc/img/kalibr_cam_calib.png)
 
@@ -169,6 +169,6 @@ basalt_calibrate --dataset-path ~/kalibr_calib_data/static/static.bag --dataset-
 ### Camera + IMU calibration
 After calibrating the camera you can run the camera + IMU calibration. The result-path should point to the same folder as before:
 ```
-basalt_calibrate_imu --dataset-path ~/kalibr_calib_data/dynamic/dynamic.bag --dataset-type bag --aprilgrid /usr/etc/basalt/aprilgrid_6x6.json --result-path ~/kalibr_calib_result/ --gyro-noise-std 0.005 --accel-noise-std 0.01 --gyro-bias-std 4.0e-06 --accel-bias-std 0.0002
+basalt_calibrate_imu --dataset-path ~/kalibr_calib_data/dynamic/dynamic.bag --dataset-type bag --aprilgrid ~/.local/etc/basalt/aprilgrid_6x6.json --result-path ~/kalibr_calib_result/ --gyro-noise-std 0.005 --accel-noise-std 0.01 --gyro-bias-std 4.0e-06 --accel-bias-std 0.0002
 ```
 ![kalibr_imu_calib](/doc/img/kalibr_imu_calib.png)

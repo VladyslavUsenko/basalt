@@ -1,0 +1,30 @@
+diff --git a/components/pango_windowing/src/display_x11.cpp b/components/pango_windowing/src/display_x11.cpp
+index 5f808f1..2ec85e5 100644
+--- a/components/pango_windowing/src/display_x11.cpp
++++ b/components/pango_windowing/src/display_x11.cpp
+@@ -431,9 +431,9 @@ void X11Window::ProcessEvents() {
+         {
+             const int button = ev.xbutton.button-1;
+             MouseSignal(MouseEvent{
+-               (float)ev.xbutton.x, (float)ev.xbutton.y,
+-               GetEventFlagsFromXState(ev.xkey.state),
+-               button, ev.xbutton.type == ButtonPress
++                {(float)ev.xbutton.x, (float)ev.xbutton.y,
++                 GetEventFlagsFromXState(ev.xkey.state)},
++                button, ev.xbutton.type == ButtonPress
+            });
+            break;
+         }
+@@ -499,9 +499,9 @@ void X11Window::ProcessEvents() {
+
+             if(key >=0) {
+                 KeyboardSignal(KeyboardEvent{
+-                    (float)ev.xkey.x, (float)ev.xkey.y,
+-                    GetEventFlagsFromXState(ev.xkey.state),
+-                    (unsigned char)key, ev.type == KeyPress
++                    {(float)ev.xkey.x, (float)ev.xkey.y,
++                     GetEventFlagsFromXState(ev.xkey.state)},
++                    (unsigned char)key, ev.type == KeyPress
+                 });
+             }
+

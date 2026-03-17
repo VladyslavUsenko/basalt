@@ -48,15 +48,15 @@ class VignetteEstimator {
   static const int border_size = 2;
 
   VignetteEstimator(
-      const VioDatasetPtr &vio_dataset,
-      const Eigen::aligned_vector<Eigen::Vector2d> &optical_centers,
-      const Eigen::aligned_vector<Eigen::Vector2i> &resolutions,
-      const std::map<TimeCamId, Eigen::aligned_vector<Eigen::Vector3d>>
-          &reprojected_vignette,
-      const AprilGrid &april_grid);
+      const VioDatasetPtr& vio_dataset,
+      const Eigen::aligned_vector<Eigen::Vector2d>& optical_centers,
+      const Eigen::aligned_vector<Eigen::Vector2i>& resolutions,
+      const std::map<TimeCamId, Eigen::aligned_vector<Eigen::Vector3d>>&
+          reprojected_vignette,
+      const AprilGrid& april_grid);
 
-  void compute_error(std::map<TimeCamId, std::vector<double>>
-                         *reprojected_vignette_error = nullptr);
+  void compute_error(std::map<TimeCamId, std::vector<double>>*
+                         reprojected_vignette_error = nullptr);
 
   void opt_irradience();
 
@@ -64,11 +64,11 @@ class VignetteEstimator {
 
   void optimize();
 
-  void compute_data_log(std::vector<std::vector<float>> &vign_data_log);
+  void compute_data_log(std::vector<std::vector<float>>& vign_data_log);
 
-  void save_vign_png(const std::string &path);
+  void save_vign_png(const std::string& path);
 
-  inline const std::vector<basalt::RdSpline<1, SPLINE_N>> &get_vign_param() {
+  inline const std::vector<basalt::RdSpline<1, SPLINE_N>>& get_vign_param() {
     return vign_param;
   }
 
@@ -80,7 +80,7 @@ class VignetteEstimator {
   Eigen::aligned_vector<Eigen::Vector2i> resolutions;
   std::map<TimeCamId, Eigen::aligned_vector<Eigen::Vector3d>>
       reprojected_vignette;
-  const AprilGrid &april_grid;
+  const AprilGrid& april_grid;
 
   size_t vign_size;
   std::vector<double> irradiance;

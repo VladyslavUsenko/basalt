@@ -20,6 +20,6 @@ Optionally you can also copy the provided ground-truth poses to `poses.txt` in t
 ### Visual odometry
 To run the visual odometry execute the following command.
 ```
-basalt_vio --dataset-path ~/dataset_gray/sequences/00/ --cam-calib /work/kitti/dataset_gray/sequences/00/basalt_calib.json --dataset-type kitti --config-path /usr/etc/basalt/kitti_config.json --show-gui 1 --use-imu 0
+basalt_vio --dataset-path ~/dataset_gray/sequences/00/ --cam-calib /work/kitti/dataset_gray/sequences/00/basalt_calib.json --dataset-type kitti --config-path ~/.local/etc/basalt/kitti_config.json --show-gui 1 --use-imu 0
 ```
 ![magistrale1_vio](/doc/img/kitti.png)

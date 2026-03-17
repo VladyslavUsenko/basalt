@@ -41,15 +41,15 @@ namespace basalt {
 
 template <class Scalar_>
 void LandmarkDatabase<Scalar_>::addLandmark(KeypointId lm_id,
-                                            const Keypoint<Scalar> &pos) {
-  auto &kpt = kpts[lm_id];
+                                            const Keypoint<Scalar>& pos) {
+  auto& kpt = kpts[lm_id];
   kpt.direction = pos.direction;
   kpt.inv_dist = pos.inv_dist;
   kpt.host_kf_id = pos.host_kf_id;
 }
 
 template <class Scalar_>
-void LandmarkDatabase<Scalar_>::removeFrame(const FrameId &frame) {
+void LandmarkDatabase<Scalar_>::removeFrame(const FrameId& frame) {
   for (auto it = kpts.begin(); it != kpts.end();) {
     for (auto it2 = it->second.obs.begin(); it2 != it->second.obs.end();) {
       if (it2->first.frame_id == frame)
@@ -68,9 +68,9 @@ void LandmarkDatabase<Scalar_>::removeFrame(const FrameId &frame) {
 
 template <class Scalar_>
 void LandmarkDatabase<Scalar_>::removeKeyframes(
-    const std::set<FrameId> &kfs_to_marg,
-    const std::set<FrameId> &poses_to_marg,
-    const std::set<FrameId> &states_to_marg_all) {
+    const std::set<FrameId>& kfs_to_marg,
+    const std::set<FrameId>& poses_to_marg,
+    const std::set<FrameId>& states_to_marg_all) {
   for (auto it = kpts.begin(); it != kpts.end();) {
     if (kfs_to_marg.count(it->second.host_kf_id.frame_id) > 0) {
       it = removeLandmarkHelper(it);
@@ -97,25 +97,25 @@ template <class Scalar_>
 std::vector<TimeCamId> LandmarkDatabase<Scalar_>::getHostKfs() const {
   std::vector<TimeCamId> res;
 
-  for (const auto &kv : observations) res.emplace_back(kv.first);
+  for (const auto& kv : observations) res.emplace_back(kv.first);
 
   return res;
 }
 
 template <class Scalar_>
-std::vector<const Keypoint<Scalar_> *>
-LandmarkDatabase<Scalar_>::getLandmarksForHost(const TimeCamId &tcid) const {
-  std::vector<const Keypoint<Scalar> *> res;
+std::vector<const Keypoint<Scalar_>*>
+LandmarkDatabase<Scalar_>::getLandmarksForHost(const TimeCamId& tcid) const {
+  std::vector<const Keypoint<Scalar>*> res;
 
-  for (const auto &[k, obs] : observations.at(tcid))
-    for (const auto &v : obs) res.emplace_back(&kpts.at(v));
+  for (const auto& [k, obs] : observations.at(tcid))
+    for (const auto& v : obs) res.emplace_back(&kpts.at(v));
 
   return res;
 }
 
 template <class Scalar_>
 void LandmarkDatabase<Scalar_>::addObservation(
-    const TimeCamId &tcid_target, const KeypointObservation<Scalar> &o) {
+    const TimeCamId& tcid_target, const KeypointObservation<Scalar>& o) {
   auto it = kpts.find(o.kpt_id);
   BASALT_ASSERT(it != kpts.end());
 
@@ -125,25 +125,25 @@ void LandmarkDatabase<Scalar_>::addObservation(
 }
 
 template <class Scalar_>
-Keypoint<Scalar_> &LandmarkDatabase<Scalar_>::getLandmark(KeypointId lm_id) {
+Keypoint<Scalar_>& LandmarkDatabase<Scalar_>::getLandmark(KeypointId lm_id) {
   return kpts.at(lm_id);
 }
 
 template <class Scalar_>
-const Keypoint<Scalar_> &LandmarkDatabase<Scalar_>::getLandmark(
+const Keypoint<Scalar_>& LandmarkDatabase<Scalar_>::getLandmark(
     KeypointId lm_id) const {
   return kpts.at(lm_id);
 }
 
 template <class Scalar_>
-const std::unordered_map<TimeCamId, std::map<TimeCamId, std::set<KeypointId>>>
-    &LandmarkDatabase<Scalar_>::getObservations() const {
+const std::unordered_map<TimeCamId, std::map<TimeCamId, std::set<KeypointId>>>&
+LandmarkDatabase<Scalar_>::getObservations() const {
   return observations;
 }
 
 template <class Scalar_>
-const Eigen::aligned_unordered_map<KeypointId, Keypoint<Scalar_>>
-    &LandmarkDatabase<Scalar_>::getLandmarks() const {
+const Eigen::aligned_unordered_map<KeypointId, Keypoint<Scalar_>>&
+LandmarkDatabase<Scalar_>::getLandmarks() const {
   return kpts;
 }
 
@@ -161,8 +161,8 @@ template <class Scalar_>
 int LandmarkDatabase<Scalar_>::numObservations() const {
   int num_observations = 0;
 
-  for (const auto &[_, val_map] : observations) {
-    for (const auto &[_, val] : val_map) {
+  for (const auto& [_, val_map] : observations) {
+    for (const auto& [_, val] : val_map) {
       num_observations += val.size();
     }
   }
@@ -181,7 +181,7 @@ LandmarkDatabase<Scalar_>::removeLandmarkHelper(
     LandmarkDatabase<Scalar>::MapIter it) {
   auto host_it = observations.find(it->second.host_kf_id);
 
-  for (const auto &[k, v] : it->second.obs) {
+  for (const auto& [k, v] : it->second.obs) {
     auto target_it = host_it->second.find(k);
     target_it->second.erase(it->first);
 
@@ -216,7 +216,7 @@ void LandmarkDatabase<Scalar_>::removeLandmark(KeypointId lm_id) {
 
 template <class Scalar_>
 void LandmarkDatabase<Scalar_>::removeObservations(
-    KeypointId lm_id, const std::set<TimeCamId> &obs) {
+    KeypointId lm_id, const std::set<TimeCamId>& obs) {
   auto it = kpts.find(lm_id);
   BASALT_ASSERT(it != kpts.end());
 
@@ -236,9 +236,9 @@ void LandmarkDatabase<Scalar_>::removeObservations(
 // instatiate templates
 
 // Note: double specialization is unconditional, b/c NfrMapper depends on it.
-//#ifdef BASALT_INSTANTIATIONS_DOUBLE
+// #ifdef BASALT_INSTANTIATIONS_DOUBLE
 template class LandmarkDatabase<double>;
-//#endif
+// #endif
 
 #ifdef BASALT_INSTANTIATIONS_FLOAT
 template class LandmarkDatabase<float>;

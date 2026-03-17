@@ -45,12 +45,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace basalt {
 
-CamImuCalib::CamImuCalib(const std::string &dataset_path,
-                         const std::string &dataset_type,
-                         const std::string &aprilgrid_path,
-                         const std::string &cache_path,
-                         const std::string &cache_dataset_name, int skip_images,
-                         const std::vector<double> &imu_noise, bool show_gui)
+CamImuCalib::CamImuCalib(const std::string& dataset_path,
+                         const std::string& dataset_type,
+                         const std::string& aprilgrid_path,
+                         const std::string& cache_path,
+                         const std::string& cache_dataset_name, int skip_images,
+                         const std::vector<double>& imu_noise, bool show_gui)
     : dataset_path(dataset_path),
       dataset_type(dataset_type),
       april_grid(aprilgrid_path),
@@ -60,28 +60,28 @@ CamImuCalib::CamImuCalib(const std::string &dataset_path,
       show_gui(show_gui),
       imu_noise(imu_noise),
       show_frame("ui.show_frame", 0, 0, 1500),
-      show_corners("ui.show_corners", true, false, true),
-      show_corners_rejected("ui.show_corners_rejected", false, false, true),
-      show_init_reproj("ui.show_init_reproj", false, false, true),
-      show_opt("ui.show_opt", true, false, true),
-      show_ids("ui.show_ids", false, false, true),
-      show_accel("ui.show_accel", true, false, true),
-      show_gyro("ui.show_gyro", false, false, true),
-      show_pos("ui.show_pos", false, false, true),
-      show_rot_error("ui.show_rot_error", false, false, true),
-      show_mocap("ui.show_mocap", false, false, true),
-      show_mocap_rot_error("ui.show_mocap_rot_error", false, false, true),
-      show_mocap_rot_vel("ui.show_mocap_rot_vel", false, false, true),
-      show_spline("ui.show_spline", true, false, true),
-      show_data("ui.show_data", true, false, true),
-      opt_intr("ui.opt_intr", false, false, true),
-      opt_poses("ui.opt_poses", false, false, true),
-      opt_corners("ui.opt_corners", true, false, true),
-      opt_cam_time_offset("ui.opt_cam_time_offset", false, false, true),
-      opt_imu_scale("ui.opt_imu_scale", false, false, true),
-      opt_mocap("ui.opt_mocap", false, false, true),
+      show_corners("ui.show_corners", true, true),
+      show_corners_rejected("ui.show_corners_rejected", false, true),
+      show_init_reproj("ui.show_init_reproj", false, true),
+      show_opt("ui.show_opt", true, true),
+      show_ids("ui.show_ids", false, true),
+      show_accel("ui.show_accel", true, true),
+      show_gyro("ui.show_gyro", false, true),
+      show_pos("ui.show_pos", false, true),
+      show_rot_error("ui.show_rot_error", false, true),
+      show_mocap("ui.show_mocap", false, true),
+      show_mocap_rot_error("ui.show_mocap_rot_error", false, true),
+      show_mocap_rot_vel("ui.show_mocap_rot_vel", false, true),
+      show_spline("ui.show_spline", true, true),
+      show_data("ui.show_data", true, true),
+      opt_intr("ui.opt_intr", false, true),
+      opt_poses("ui.opt_poses", false, true),
+      opt_corners("ui.opt_corners", true, true),
+      opt_cam_time_offset("ui.opt_cam_time_offset", false, true),
+      opt_imu_scale("ui.opt_imu_scale", false, true),
+      opt_mocap("ui.opt_mocap", false, true),
       huber_thresh("ui.huber_thresh", 4.0, 0.1, 10.0),
-      opt_until_convg("ui.opt_until_converge", false, false, true),
+      opt_until_convg("ui.opt_until_converge", false, true),
       stop_thresh("ui.stop_thresh", 1e-8, 1e-10, 0.01, true) {
   if (show_gui) initGui();
 }
@@ -100,7 +100,7 @@ void CamImuCalib::initGui() {
            .SetBounds(0.5, 1.0, pangolin::Attach::Pix(UI_WIDTH), 1.0)
            .SetLayout(pangolin::LayoutEqual);
 
-  pangolin::View &plot_display = pangolin::CreateDisplay().SetBounds(
+  pangolin::View& plot_display = pangolin::CreateDisplay().SetBounds(
       0.0, 0.5, pangolin::Attach::Pix(UI_WIDTH), 1.0);
 
   pangolin::CreatePanel("ui").SetBounds(0.0, 1.0, 0.0,
@@ -162,7 +162,7 @@ void CamImuCalib::renderingLoop() {
         size_t frame_id = static_cast<size_t>(show_frame);
         int64_t timestamp = vio_dataset->get_image_timestamps()[frame_id];
 
-        const std::vector<ImageData> &img_vec =
+        const std::vector<ImageData>& img_vec =
             vio_dataset->get_image_data(timestamp);
 
         for (size_t cam_id = 0; cam_id < vio_dataset->get_num_cams(); cam_id++)
@@ -413,20 +413,20 @@ void CamImuCalib::initOptimization() {
   calib_opt->setAprilgridCorners3d(april_grid.aprilgrid_corner_pos_3d);
 
   for (size_t i = 0; i < vio_dataset->get_accel_data().size(); i++) {
-    const basalt::AccelData &ad = vio_dataset->get_accel_data()[i];
-    const basalt::GyroData &gd = vio_dataset->get_gyro_data()[i];
+    const basalt::AccelData& ad = vio_dataset->get_accel_data()[i];
+    const basalt::GyroData& gd = vio_dataset->get_gyro_data()[i];
 
     calib_opt->addAccelMeasurement(ad.timestamp_ns, ad.data);
     calib_opt->addGyroMeasurement(gd.timestamp_ns, gd.data);
   }
 
   std::set<uint64_t> invalid_timestamps;
-  for (const auto &kv : calib_corners) {
+  for (const auto& kv : calib_corners) {
     if (kv.second.corner_ids.size() < MIN_CORNERS)
       invalid_timestamps.insert(kv.first.frame_id);
   }
 
-  for (const auto &kv : calib_corners) {
+  for (const auto& kv : calib_corners) {
     if (invalid_timestamps.find(kv.first.frame_id) == invalid_timestamps.end())
       calib_opt->addAprilgridMeasurement(kv.first.frame_id, kv.first.cam_id,
                                          kv.second.corners,
@@ -456,7 +456,7 @@ void CamImuCalib::initOptimization() {
       if (!g_initialized) {
         for (size_t i = 0;
              i < vio_dataset->get_accel_data().size() && !g_initialized; i++) {
-          const basalt::AccelData &ad = vio_dataset->get_accel_data()[i];
+          const basalt::AccelData& ad = vio_dataset->get_accel_data()[i];
           if (std::abs(ad.timestamp_ns - timestamp_ns) < 3000000) {
             g_a_init = T_a_i.so3() * ad.data;
             g_initialized = true;
@@ -684,7 +684,7 @@ void CamImuCalib::loadDataset() {
 void CamImuCalib::optimize() { optimizeWithParam(true); }
 
 bool CamImuCalib::optimizeWithParam(bool print_info,
-                                    std::map<std::string, double> *stats) {
+                                    std::map<std::string, double>* stats) {
   if (!calib_opt.get() || !calib_opt->calibInitialized()) {
     std::cerr << "Initalize optimization first!" << std::endl;
     return true;
@@ -810,7 +810,7 @@ void CamImuCalib::saveMocapCalib() {
   }
 }
 
-void CamImuCalib::drawImageOverlay(pangolin::View &v, size_t cam_id) {
+void CamImuCalib::drawImageOverlay(pangolin::View& v, size_t cam_id) {
   UNUSED(v);
 
   size_t frame_id = show_frame;
@@ -826,8 +826,8 @@ void CamImuCalib::drawImageOverlay(pangolin::View &v, size_t cam_id) {
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
       if (calib_corners.find(tcid) != calib_corners.end()) {
-        const CalibCornerData &cr = calib_corners.at(tcid);
-        const CalibCornerData &cr_rej = calib_corners_rejected.at(tcid);
+        const CalibCornerData& cr = calib_corners.at(tcid);
+        const CalibCornerData& cr_rej = calib_corners_rejected.at(tcid);
 
         for (size_t i = 0; i < cr.corners.size(); i++) {
           // the radius is the threshold used for maximum displacement. The
@@ -837,7 +837,9 @@ void CamImuCalib::drawImageOverlay(pangolin::View &v, size_t cam_id) {
           pangolin::glDrawCirclePerimeter(c[0], c[1], radius);
 
           if (show_ids)
-            pangolin::default_font().Text("%d", cr.corner_ids[i]).Draw(c[0], c[1]);
+            pangolin::default_font()
+                .Text("%d", cr.corner_ids[i])
+                .Draw(c[0], c[1]);
         }
 
         pangolin::default_font()
@@ -876,7 +878,7 @@ void CamImuCalib::drawImageOverlay(pangolin::View &v, size_t cam_id) {
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
       if (calib_init_poses.find(tcid) != calib_init_poses.end()) {
-        const CalibInitPoseData &cr = calib_init_poses.at(tcid);
+        const CalibInitPoseData& cr = calib_init_poses.at(tcid);
 
         for (size_t i = 0; i < cr.reprojected_corners.size(); i++) {
           Eigen::Vector2d c = cr.reprojected_corners[i];
@@ -890,7 +892,9 @@ void CamImuCalib::drawImageOverlay(pangolin::View &v, size_t cam_id) {
             .Draw(5, 100);
 
       } else {
-        pangolin::default_font().Text("Initial pose not processed").Draw(5, 100);
+        pangolin::default_font()
+            .Text("Initial pose not processed")
+            .Draw(5, 100);
       }
     }
 
@@ -903,7 +907,7 @@ void CamImuCalib::drawImageOverlay(pangolin::View &v, size_t cam_id) {
       if (reprojected_corners.find(tcid) != reprojected_corners.end()) {
         if (calib_corners.count(tcid) > 0 &&
             calib_corners.at(tcid).corner_ids.size() >= MIN_CORNERS) {
-          const auto &rc = reprojected_corners.at(tcid);
+          const auto& rc = reprojected_corners.at(tcid);
 
           for (size_t i = 0; i < rc.corners_proj.size(); i++) {
             if (!rc.corners_proj_success[i]) continue;
@@ -911,10 +915,13 @@ void CamImuCalib::drawImageOverlay(pangolin::View &v, size_t cam_id) {
             Eigen::Vector2d c = rc.corners_proj[i];
             pangolin::glDrawCirclePerimeter(c[0], c[1], 3.0);
 
-            if (show_ids) pangolin::default_font().Text("%d", i).Draw(c[0], c[1]);
+            if (show_ids)
+              pangolin::default_font().Text("%d", i).Draw(c[0], c[1]);
           }
         } else {
-          pangolin::default_font().Text("Too few corners detected.").Draw(5, 150);
+          pangolin::default_font()
+              .Text("Too few corners detected.")
+              .Draw(5, 150);
         }
       }
     }
@@ -931,8 +938,8 @@ void CamImuCalib::recomputeDataLog() {
   double min_time = vio_dataset->get_accel_data()[0].timestamp_ns * 1e-9;
 
   for (size_t i = 0; i < vio_dataset->get_accel_data().size(); i++) {
-    const basalt::AccelData &ad = vio_dataset->get_accel_data()[i];
-    const basalt::GyroData &gd = vio_dataset->get_gyro_data()[i];
+    const basalt::AccelData& ad = vio_dataset->get_accel_data()[i];
+    const basalt::GyroData& gd = vio_dataset->get_gyro_data()[i];
 
     Eigen::Vector3d a_sp(0, 0, 0), g_sp(0, 0, 0);
 
@@ -964,7 +971,7 @@ void CamImuCalib::recomputeDataLog() {
     int64_t timestamp_ns = vio_dataset->get_image_timestamps()[i];
 
     TimeCamId tcid(timestamp_ns, 0);
-    const auto &it = calib_init_poses.find(tcid);
+    const auto& it = calib_init_poses.find(tcid);
 
     double t = timestamp_ns * 1e-9 - min_time;
 

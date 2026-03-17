@@ -84,18 +84,18 @@ class RosbagVioDataset : public VioDataset {
 
   size_t get_num_cams() const { return num_cams; }
 
-  std::vector<int64_t> &get_image_timestamps() { return image_timestamps; }
+  std::vector<int64_t>& get_image_timestamps() { return image_timestamps; }
 
-  const Eigen::aligned_vector<AccelData> &get_accel_data() const {
+  const Eigen::aligned_vector<AccelData>& get_accel_data() const {
     return accel_data;
   }
-  const Eigen::aligned_vector<GyroData> &get_gyro_data() const {
+  const Eigen::aligned_vector<GyroData>& get_gyro_data() const {
     return gyro_data;
   }
-  const std::vector<int64_t> &get_gt_timestamps() const {
+  const std::vector<int64_t>& get_gt_timestamps() const {
     return gt_timestamps;
   }
-  const Eigen::aligned_vector<Sophus::SE3d> &get_gt_pose_data() const {
+  const Eigen::aligned_vector<Sophus::SE3d>& get_gt_pose_data() const {
     return gt_pose_data;
   }
 
@@ -108,7 +108,7 @@ class RosbagVioDataset : public VioDataset {
 
     if (it != image_data_idx.end())
       for (size_t i = 0; i < num_cams; i++) {
-        ImageData &id = res[i];
+        ImageData& id = res[i];
 
         if (!it->second[i].has_value()) continue;
 
@@ -132,8 +132,8 @@ class RosbagVioDataset : public VioDataset {
         }
 
         if (img_msg->encoding == "mono8") {
-          const uint8_t *data_in = img_msg->data.data();
-          uint16_t *data_out = id.img->ptr;
+          const uint8_t* data_in = img_msg->data.data();
+          uint16_t* data_out = id.img->ptr;
 
           for (size_t i = 0; i < img_msg->data.size(); i++) {
             int val = data_in[i];
@@ -162,7 +162,7 @@ class RosbagIO : public DatasetIoInterface {
  public:
   RosbagIO() {}
 
-  void read(const std::string &path) {
+  void read(const std::string& path) {
     if (!fs::exists(path))
       std::cerr << "No dataset found in " << path << std::endl;
 
@@ -174,7 +174,7 @@ class RosbagIO : public DatasetIoInterface {
     rosbag::View view(*data->bag);
 
     // get topics
-    std::vector<const rosbag::ConnectionInfo *> connection_infos =
+    std::vector<const rosbag::ConnectionInfo*> connection_infos =
         view.getConnections();
 
     std::set<std::string> cam_topics;
@@ -182,7 +182,7 @@ class RosbagIO : public DatasetIoInterface {
     std::string mocap_topic;
     std::string point_topic;
 
-    for (const rosbag::ConnectionInfo *info : connection_infos) {
+    for (const rosbag::ConnectionInfo* info : connection_infos) {
       //      if (info->topic.substr(0, 4) == std::string("/cam")) {
       //        cam_topics.insert(info->topic);
       //      } else if (info->topic.substr(0, 4) == std::string("/imu")) {
@@ -209,12 +209,12 @@ class RosbagIO : public DatasetIoInterface {
     std::cout << "imu_topic: " << imu_topic << std::endl;
     std::cout << "mocap_topic: " << mocap_topic << std::endl;
     std::cout << "cam_topics: ";
-    for (const std::string &s : cam_topics) std::cout << s << " ";
+    for (const std::string& s : cam_topics) std::cout << s << " ";
     std::cout << std::endl;
 
     std::map<std::string, int> topic_to_id;
     int idx = 0;
-    for (const std::string &s : cam_topics) {
+    for (const std::string& s : cam_topics) {
       topic_to_id[s] = idx;
       idx++;
     }
@@ -236,15 +236,15 @@ class RosbagIO : public DatasetIoInterface {
 
     std::set<int64_t> image_timestamps;
 
-    for (const rosbag::MessageInstance &m : view) {
-      const std::string &topic = m.getTopic();
+    for (const rosbag::MessageInstance& m : view) {
+      const std::string& topic = m.getTopic();
 
       if (cam_topics.find(topic) != cam_topics.end()) {
         sensor_msgs::ImageConstPtr img_msg =
             m.instantiate<sensor_msgs::Image>();
         int64_t timestamp_ns = img_msg->header.stamp.toNSec();
 
-        auto &img_vec = data->image_data_idx[timestamp_ns];
+        auto& img_vec = data->image_data_idx[timestamp_ns];
         if (img_vec.size() == 0) img_vec.resize(data->num_cams);
 
         img_vec[topic_to_id.at(topic)] = m.index_entry_;

@@ -1,5 +1,14 @@
 
 
+### Build prerequisites
+Basalt uses CMake presets together with the `thirdparty/vcpkg` submodule.
+
+Install these tools first:
+- CMake >= 3.24
+- Ninja
+- a C++ compiler
+- `clang-format`
+
 ### Clang-format
 We use clang-format to maintain a consistent formating of the code. Since there are small differences between different version of clang-format we use version 11 on all platforms.
 
@@ -61,9 +70,27 @@ Select file as predefined style in `Clang Format` tab. Also select `None` as the
 First, clone the project repository.
 ```
 git clone --recursive https://gitlab.com/VladyslavUsenko/basalt.git
+cd basalt
 ```
 
-After that, in QtCreator open to the `CMakeLists.txt` in the `basalt` folder and configure the project with `Release with Debug Info` configuration. The build directory should point to `/<your_installation_path>/basalt/build`.
+If you cloned without `--recursive`, fetch the vcpkg submodule:
+```
+git submodule update --init thirdparty/vcpkg
+```
+
+Bootstrap vcpkg once if needed:
+```
+./thirdparty/vcpkg/bootstrap-vcpkg.sh -disableMetrics
+```
+
+After that, in QtCreator open `CMakeLists.txt` in the `basalt` folder and configure with the `relwithdebinfo` preset. You can also initialize the build once from the terminal first:
+```
+cmake --preset relwithdebinfo
+cmake --build --preset relwithdebinfo -j8
+ctest --preset relwithdebinfo
+```
+
+The default toolchain path used by the presets is `thirdparty/vcpkg/scripts/buildsystems/vcpkg.cmake`.
 
 ![qt_creator_configure_project](/doc/img/qt_creator_configure_project.png)
 

@@ -37,7 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <CLI/CLI.hpp>
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   std::string dataset_path;
   std::string dataset_type;
   std::string aprilgrid_path;
@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
 
   try {
     app.parse(argc, argv);
-  } catch (const CLI::ParseError &e) {
+  } catch (const CLI::ParseError& e) {
     return app.exit(e);
   }
 

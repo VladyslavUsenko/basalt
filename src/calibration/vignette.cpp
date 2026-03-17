@@ -35,17 +35,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <basalt/calibration/vignette.h>
 
-#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgcodecs.hpp>
 
 namespace basalt {
 
 VignetteEstimator::VignetteEstimator(
-    const VioDatasetPtr &vio_dataset,
-    const Eigen::aligned_vector<Eigen::Vector2d> &optical_centers,
-    const Eigen::aligned_vector<Eigen::Vector2i> &resolutions,
-    const std::map<TimeCamId, Eigen::aligned_vector<Eigen::Vector3d>>
-        &reprojected_vignette,
-    const AprilGrid &april_grid)
+    const VioDatasetPtr& vio_dataset,
+    const Eigen::aligned_vector<Eigen::Vector2d>& optical_centers,
+    const Eigen::aligned_vector<Eigen::Vector2i>& resolutions,
+    const std::map<TimeCamId, Eigen::aligned_vector<Eigen::Vector3d>>&
+        reprojected_vignette,
+    const AprilGrid& april_grid)
     : vio_dataset(vio_dataset),
       optical_centers(optical_centers),
       resolutions(resolutions),
@@ -80,7 +80,7 @@ VignetteEstimator::VignetteEstimator(
 }
 
 void VignetteEstimator::compute_error(
-    std::map<TimeCamId, std::vector<double>> *reprojected_vignette_error) {
+    std::map<TimeCamId, std::vector<double>>* reprojected_vignette_error) {
   //  double error = 0;
   //  double mean_residual = 0;
   double max_residual = 0;
@@ -91,9 +91,9 @@ void VignetteEstimator::compute_error(
 
   if (reprojected_vignette_error) reprojected_vignette_error->clear();
 
-  for (const auto &kv : reprojected_vignette) {
-    const TimeCamId &tcid = kv.first;
-    const auto &points_2d_val = kv.second;
+  for (const auto& kv : reprojected_vignette) {
+    const TimeCamId& tcid = kv.first;
+    const auto& points_2d_val = kv.second;
 
     Eigen::Vector2d oc = optical_centers[tcid.cam_id];
 
@@ -147,9 +147,9 @@ void VignetteEstimator::opt_irradience() {
   std::vector<double> new_irradiance(irradiance.size(), 0);
   std::vector<int> new_irradiance_count(irradiance.size(), 0);
 
-  for (const auto &kv : reprojected_vignette) {
-    const TimeCamId &tcid = kv.first;
-    const auto &points_2d_val = kv.second;
+  for (const auto& kv : reprojected_vignette) {
+    const TimeCamId& tcid = kv.first;
+    const auto& points_2d_val = kv.second;
 
     Eigen::Vector2d oc = optical_centers[tcid.cam_id];
 
@@ -182,9 +182,9 @@ void VignetteEstimator::opt_vign() {
   std::vector<std::vector<double>> new_vign_param_count(
       vio_dataset->get_num_cams(), std::vector<double>(num_knots, 0));
 
-  for (const auto &kv : reprojected_vignette) {
-    const TimeCamId &tcid = kv.first;
-    const auto &points_2d_val = kv.second;
+  for (const auto& kv : reprojected_vignette) {
+    const TimeCamId& tcid = kv.first;
+    const auto& points_2d_val = kv.second;
 
     //      Sophus::SE3d T_w_cam =
     //          calib_opt->getT_w_i(tcid.first) *
@@ -248,13 +248,13 @@ void VignetteEstimator::optimize() {
 }
 
 void VignetteEstimator::compute_data_log(
-    std::vector<std::vector<float>> &vign_data_log) {
+    std::vector<std::vector<float>>& vign_data_log) {
   std::vector<std::vector<double>> num_proj_points(
       vio_dataset->get_num_cams(), std::vector<double>(vign_size, 0));
 
-  for (const auto &kv : reprojected_vignette) {
-    const TimeCamId &tcid = kv.first;
-    const auto &points_2d = kv.second;
+  for (const auto& kv : reprojected_vignette) {
+    const TimeCamId& tcid = kv.first;
+    const auto& points_2d = kv.second;
 
     Eigen::Vector2d oc = optical_centers[tcid.cam_id];
 
@@ -282,7 +282,7 @@ void VignetteEstimator::compute_data_log(
   }
 }
 
-void VignetteEstimator::save_vign_png(const std::string &path) {
+void VignetteEstimator::save_vign_png(const std::string& path) {
   for (size_t k = 0; k < vio_dataset->get_num_cams(); k++) {
     ManagedImage<uint16_t> vign_img(resolutions[k][0], resolutions[k][1]);
     vign_img.Fill(0);

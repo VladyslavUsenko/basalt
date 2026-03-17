@@ -1,0 +1,4 @@
+basalt-headers provides CMake targets:
+
+  find_package(basalt-headers CONFIG REQUIRED)
+  target_link_libraries(main PRIVATE basalt::basalt-headers)
