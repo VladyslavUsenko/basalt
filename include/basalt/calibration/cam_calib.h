@@ -59,10 +59,10 @@ class PosesOptimization;
 
 class CamCalib {
  public:
-  CamCalib(const std::string &dataset_path, const std::string &dataset_type,
-           const std::string &aprilgrid_path, const std::string &cache_path,
-           const std::string &cache_dataset_name, int skip_images,
-           const std::vector<std::string> &cam_types, bool show_gui = true);
+  CamCalib(const std::string& dataset_path, const std::string& dataset_type,
+           const std::string& aprilgrid_path, const std::string& cache_path,
+           const std::string& cache_dataset_name, int skip_images,
+           const std::vector<std::string>& cam_types, bool show_gui = true);
 
   ~CamCalib();
 
@@ -91,11 +91,11 @@ class CamCalib {
   void optimize();
 
   bool optimizeWithParam(bool print_info,
-                         std::map<std::string, double> *stats = nullptr);
+                         std::map<std::string, double>* stats = nullptr);
 
   void saveCalib();
 
-  void drawImageOverlay(pangolin::View &v, size_t cam_id);
+  void drawImageOverlay(pangolin::View& v, size_t cam_id);
 
   bool hasCorners() const;
 
@@ -163,7 +163,7 @@ class CamCalib {
 
   std::vector<pangolin::Colour> cam_colors;
 
-  pangolin::View *img_view_display;
+  pangolin::View* img_view_display;
 
   std::vector<std::shared_ptr<pangolin::ImageView>> img_view;
 

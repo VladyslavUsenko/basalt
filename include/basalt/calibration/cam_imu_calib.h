@@ -59,10 +59,10 @@ class SplineOptimization;
 
 class CamImuCalib {
  public:
-  CamImuCalib(const std::string &dataset_path, const std::string &dataset_type,
-              const std::string &aprilgrid_path, const std::string &cache_path,
-              const std::string &cache_dataset_name, int skip_images,
-              const std::vector<double> &imu_noise, bool show_gui = true);
+  CamImuCalib(const std::string& dataset_path, const std::string& dataset_type,
+              const std::string& aprilgrid_path, const std::string& cache_path,
+              const std::string& cache_dataset_name, int skip_images,
+              const std::vector<double>& imu_noise, bool show_gui = true);
 
   ~CamImuCalib();
 
@@ -89,13 +89,13 @@ class CamImuCalib {
   void optimize();
 
   bool optimizeWithParam(bool print_info,
-                         std::map<std::string, double> *stats = nullptr);
+                         std::map<std::string, double>* stats = nullptr);
 
   void saveCalib();
 
   void saveMocapCalib();
 
-  void drawImageOverlay(pangolin::View &v, size_t cam_id);
+  void drawImageOverlay(pangolin::View& v, size_t cam_id);
 
   void recomputeDataLog();
 
@@ -171,8 +171,8 @@ class CamImuCalib {
   pangolin::Var<bool> opt_until_convg;
   pangolin::Var<double> stop_thresh;
 
-  pangolin::Plotter *plotter;
-  pangolin::View *img_view_display;
+  pangolin::Plotter* plotter;
+  pangolin::View* img_view_display;
 
   std::vector<std::shared_ptr<pangolin::ImageView>> img_view;
 

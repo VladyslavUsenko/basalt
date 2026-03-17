@@ -46,13 +46,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <tbb/concurrent_unordered_map.h>
 #include <tbb/global_control.h>
 
+#include <pangolin/display/default_font.h>
 #include <pangolin/display/image_view.h>
 #include <pangolin/gl/gldraw.h>
 #include <pangolin/image/image.h>
 #include <pangolin/image/image_io.h>
 #include <pangolin/image/typed_image.h>
 #include <pangolin/pangolin.h>
-#include <pangolin/display/default_font.h>
 
 #include <CLI/CLI.hpp>
 
@@ -93,32 +93,32 @@ pangolin::Plotter* plotter;
 
 pangolin::Var<int> show_frame("ui.show_frame", 0, 0, 1500);
 
-pangolin::Var<bool> show_flow("ui.show_flow", false, false, true);
-pangolin::Var<bool> show_obs("ui.show_obs", true, false, true);
-pangolin::Var<bool> show_ids("ui.show_ids", false, false, true);
+pangolin::Var<bool> show_flow("ui.show_flow", false, true);
+pangolin::Var<bool> show_obs("ui.show_obs", true, true);
+pangolin::Var<bool> show_ids("ui.show_ids", false, true);
 
-pangolin::Var<bool> show_est_pos("ui.show_est_pos", true, false, true);
-pangolin::Var<bool> show_est_vel("ui.show_est_vel", false, false, true);
-pangolin::Var<bool> show_est_bg("ui.show_est_bg", false, false, true);
-pangolin::Var<bool> show_est_ba("ui.show_est_ba", false, false, true);
+pangolin::Var<bool> show_est_pos("ui.show_est_pos", true, true);
+pangolin::Var<bool> show_est_vel("ui.show_est_vel", false, true);
+pangolin::Var<bool> show_est_bg("ui.show_est_bg", false, true);
+pangolin::Var<bool> show_est_ba("ui.show_est_ba", false, true);
 
-pangolin::Var<bool> show_gt("ui.show_gt", true, false, true);
+pangolin::Var<bool> show_gt("ui.show_gt", true, true);
 
 Button next_step_btn("ui.next_step", &next_step);
 Button prev_step_btn("ui.prev_step", &prev_step);
 
-pangolin::Var<bool> continue_btn("ui.continue", false, false, true);
-pangolin::Var<bool> continue_fast("ui.continue_fast", true, false, true);
+pangolin::Var<bool> continue_btn("ui.continue", false, true);
+pangolin::Var<bool> continue_fast("ui.continue_fast", true, true);
 
 Button align_se3_btn("ui.align_se3", &alignButton);
 
-pangolin::Var<bool> euroc_fmt("ui.euroc_fmt", true, false, true);
-pangolin::Var<bool> tum_rgbd_fmt("ui.tum_rgbd_fmt", false, false, true);
-pangolin::Var<bool> kitti_fmt("ui.kitti_fmt", false, false, true);
-pangolin::Var<bool> save_groundtruth("ui.save_groundtruth", false, false, true);
+pangolin::Var<bool> euroc_fmt("ui.euroc_fmt", true, true);
+pangolin::Var<bool> tum_rgbd_fmt("ui.tum_rgbd_fmt", false, true);
+pangolin::Var<bool> kitti_fmt("ui.kitti_fmt", false, true);
+pangolin::Var<bool> save_groundtruth("ui.save_groundtruth", false, true);
 Button save_traj_btn("ui.save_traj", &saveTrajectoryButton);
 
-pangolin::Var<bool> follow("ui.follow", true, false, true);
+pangolin::Var<bool> follow("ui.follow", true, true);
 
 // pangolin::Var<bool> record("ui.record", false, false, true);
 
@@ -750,7 +750,9 @@ void draw_image_overlay(pangolin::View& v, size_t cam_id) {
         const Eigen::Vector2f c = kv.second.translation();
 
         if (show_ids)
-          pangolin::default_font().Text("%d", kv.first).Draw(5 + c[0], 5 + c[1]);
+          pangolin::default_font()
+              .Text("%d", kv.first)
+              .Draw(5 + c[0], 5 + c[1]);
       }
 
       pangolin::default_font()

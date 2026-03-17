@@ -52,10 +52,10 @@ basalt::MocapCalibration<double> mocap_calib;
 
 // Linear time version
 double compute_error(
-    int64_t offset, const std::vector<int64_t> &gyro_timestamps,
-    const Eigen::aligned_vector<Eigen::Vector3d> &gyro_data,
-    const std::vector<int64_t> &mocap_rot_vel_timestamps,
-    const Eigen::aligned_vector<Eigen::Vector3d> &mocap_rot_vel_data) {
+    int64_t offset, const std::vector<int64_t>& gyro_timestamps,
+    const Eigen::aligned_vector<Eigen::Vector3d>& gyro_data,
+    const std::vector<int64_t>& mocap_rot_vel_timestamps,
+    const Eigen::aligned_vector<Eigen::Vector3d>& mocap_rot_vel_data) {
   double error = 0;
   int num_points = 0;
 
@@ -83,7 +83,7 @@ double compute_error(
   return error / num_points;
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   std::string dataset_path;
   std::string calibration_path;
   std::string mocap_calibration_path;
@@ -125,7 +125,7 @@ int main(int argc, char **argv) {
 
   try {
     app.parse(argc, argv);
-  } catch (const CLI::ParseError &e) {
+  } catch (const CLI::ParseError& e) {
     return app.exit(e);
   }
 
@@ -383,11 +383,11 @@ int main(int argc, char **argv) {
 
     pangolin::CreateWindowAndBind("Main", 1280, 800);
 
-    pangolin::Plotter *plotter;
+    pangolin::Plotter* plotter;
 
     pangolin::DataLog data_log, mocap_log;
 
-    pangolin::View &plot_display = pangolin::CreateDisplay().SetBounds(
+    pangolin::View& plot_display = pangolin::CreateDisplay().SetBounds(
         0.0, 1.0, pangolin::Attach::Pix(UI_WIDTH), 1.0);
 
     pangolin::CreatePanel("ui").SetBounds(0.0, 1.0, 0.0,
@@ -397,11 +397,10 @@ int main(int argc, char **argv) {
                                     -10.0, 10.0, 0.01, 0.01);
 
     plot_display.AddDisplay(*plotter);
-    pangolin::Var<bool> show_gyro("ui.show_gyro", true, false, true);
-    pangolin::Var<bool> show_mocap_rot_vel("ui.show_mocap_rot_vel", true, false,
-                                           true);
+    pangolin::Var<bool> show_gyro("ui.show_gyro", true, true);
+    pangolin::Var<bool> show_mocap_rot_vel("ui.show_mocap_rot_vel", true, true);
 
-    pangolin::Var<bool> show_error("ui.show_error", false, false, true);
+    pangolin::Var<bool> show_error("ui.show_error", false, true);
 
     std::string save_button_name = "ui.save_aligned_dataset";
     // Disable save_aligned_dataset button if GT data already exists

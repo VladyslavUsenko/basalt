@@ -39,7 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace basalt {
 
 struct AprilGrid {
-  AprilGrid(const std::string &config_path);
+  AprilGrid(const std::string& config_path);
 
   Eigen::aligned_vector<Eigen::Vector4d> aprilgrid_corner_pos_3d;
   Eigen::aligned_vector<Eigen::Vector4d> aprilgrid_vignette_pos_3d;

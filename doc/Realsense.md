@@ -74,7 +74,7 @@ For the camera calibration we need to record a dataset with a static aprilgrid p
 
 Run the calibration executable:
 ```
-basalt_calibrate --dataset-path ~/t265_calib_data/cam_calib --dataset-type euroc --result-path ~/t265_calib_results/ --aprilgrid /usr/etc/basalt/aprilgrid_6x6.json --cam-types kb4 kb4
+basalt_calibrate --dataset-path ~/t265_calib_data/cam_calib --dataset-type euroc --result-path ~/t265_calib_results/ --aprilgrid ~/.local/etc/basalt/aprilgrid_6x6.json --cam-types kb4 kb4
 ```
 To perform the calibration follow these steps:
 * `load_dataset` load the dataset.
@@ -107,7 +107,7 @@ For the motion capture recording we use [ros_vrpn_client](https://github.com/eth
 
 Run the calibration executable:
 ```
-basalt_calibrate_imu --dataset-path ~/t265_calib_data/imu_calib --dataset-type euroc --result-path ~/t265_calib_results/ --aprilgrid /usr/etc/basalt/aprilgrid_6x6.json --accel-noise-std 0.00818 --gyro-noise-std 0.00226 --accel-bias-std 0.01 --gyro-bias-std 0.0007
+basalt_calibrate_imu --dataset-path ~/t265_calib_data/imu_calib --dataset-type euroc --result-path ~/t265_calib_results/ --aprilgrid ~/.local/etc/basalt/aprilgrid_6x6.json --accel-noise-std 0.00818 --gyro-noise-std 0.00226 --accel-bias-std 0.01 --gyro-bias-std 0.0007
 ```
 
 To perform the calibration follow these steps:
@@ -146,7 +146,7 @@ You can also switch to the error function plot and see that there is a clear min
 ## Running Visual-Inertial Odometry
 Now we can run the visual-inertial odometry on the recorded dataset:
 ```
-basalt_vio --dataset-path ~/t265_calib_data/sequence0 --cam-calib ~/t265_calib_results/calibration.json --dataset-type euroc --config-path /usr/etc/basalt/euroc_config.json --show-gui 1
+basalt_vio --dataset-path ~/t265_calib_data/sequence0 --cam-calib ~/t265_calib_results/calibration.json --dataset-type euroc --config-path ~/.local/etc/basalt/euroc_config.json --show-gui 1
 ```
 After the system processes the whole sequence you can use `align_se3` button to align trajectory to the ground-truth data and compute RMS ATE.
 ![t265_vio](/doc/img/t265_vio.png)
@@ -155,5 +155,5 @@ After the system processes the whole sequence you can use `align_se3` button to 
 ## Running Visual-Inertial Odometry Live
 It is also possible to run the odometry live with the camera. If no calibration files are provided the factory calibration will be used.
 ```
-basalt_rs_t265_vio --cam-calib ~/t265_calib_results/calibration.json --config-path /usr/etc/basalt/euroc_config.json
+basalt_rs_t265_vio --cam-calib ~/t265_calib_results/calibration.json --config-path ~/.local/etc/basalt/euroc_config.json
 ```

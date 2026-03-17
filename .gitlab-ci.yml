@@ -1,360 +1,318 @@
-image: vladyslavusenko/b_image_focal:latest
+image: vladyslavusenko/basalt-ci:ubuntu22
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
-  BUILD_TYPE: Release
-  CXX_MARCH: native
-  CMAKE_INSTALL_PREFIX: /usr/
-  DEB_DIR: deb
+  CI_BASE_IMAGE: "vladyslavusenko/basalt-ci:ubuntu22"
+  VCPKG_ROOT: "${CI_PROJECT_DIR}/thirdparty/vcpkg"
+  VCPKG_DOWNLOADS: "${CI_PROJECT_DIR}/.cache/vcpkg/downloads"
+  VCPKG_ARCHIVES: "${CI_PROJECT_DIR}/.cache/vcpkg/archives"
+  VCPKG_BINARY_SOURCES: "clear;files,${VCPKG_ARCHIVES},readwrite"
+  VCPKG_FEATURE_FLAGS: "binarycaching"
+  LLVM_VERSION: "21"
+  CC: "clang-${LLVM_VERSION}"
+  CXX: "clang++-${LLVM_VERSION}"
+  CCACHE_COMPRESS: "true"
+  CCACHE_COMPRESSLEVEL: "6"
+  CCACHE_MAXSIZE: "2G"
+  CCACHE_NOHASHDIR: "true"
+  CCACHE_SLOPPINESS: "pch_defines,time_macros"
 
 stages:
-  - docker
   - build
-  - test
   - eval
   - results
-  - deploy
-  - repository
+  - release
 
-# template for docker builds with ccache
-.prepare_docker_template: &prepare_docker_definition
+.build_template: &build_template
+  stage: build
   tags:
     - docker
-  before_script:
-    - mkdir -p ccache
-    - export CCACHE_BASEDIR=${PWD}
-    - export CCACHE_DIR=${PWD}/ccache
-    - ccache -s
   cache:
-    paths:
-    - ccache/
-    key: ${CI_JOB_NAME}
-
-# template for build & unit test & make deb configurations
-.compile_test_package_template: &compile_test_package_definition
-  stage: build
+    - key: "${CI_RUNNER_EXECUTABLE_ARCH}-ccache"
+      policy: pull-push
+      paths:
+        - .cache/ccache/
+    - key: "${CI_RUNNER_EXECUTABLE_ARCH}-vcpkg-downloads"
+      policy: pull-push
+      paths:
+        - .cache/vcpkg/downloads/
+    - key: "${CI_RUNNER_EXECUTABLE_ARCH}-vcpkg-archives"
+      policy: pull-push
+      paths:
+        - .cache/vcpkg/archives/
+  before_script:
+    - |
+      case "$(uname -m)" in
+        x86_64)
+          export VCPKG_STATIC_TRIPLET=x64-linux
+          export CXX_MARCH=x86-64-v3
+          export ARCH=amd64
+          ;;
+        aarch64|arm64)
+          export VCPKG_STATIC_TRIPLET=arm64-linux
+          export CXX_MARCH=native
+          export ARCH=arm64
+          ;;
+        *)
+          echo "Unsupported CI architecture: $(uname -m)" >&2
+          exit 1
+          ;;
+      esac
+    - export PATH="/usr/bin:$PATH"
+    - export CMAKE_MAKE_PROGRAM=/usr/bin/ninja
+    - echo "Using static triplet ${VCPKG_STATIC_TRIPLET} with -march=${CXX_MARCH}"
+    - which ninja
+    - ninja --version
+    - mkdir -p "${CI_PROJECT_DIR}/.cache/ccache" "${VCPKG_DOWNLOADS}" "${CI_PROJECT_DIR}/.cache/vcpkg/archives"
+    - git config --global --add safe.directory "${CI_PROJECT_DIR}"
+    - git config --global --add safe.directory "${VCPKG_ROOT}"
+    - git config --global --add safe.directory "${VCPKG_DOWNLOADS}/git-tmp"
+    - export CCACHE_BASEDIR=${PWD}
+    - export CCACHE_DIR=${CI_PROJECT_DIR}/.cache/ccache
+    - export CCACHE_COMPILERCHECK=content
+    - ccache -z
+    - |
+      if git -C "${VCPKG_ROOT}" rev-parse --is-shallow-repository | grep -q true; then
+        git -C "${VCPKG_ROOT}" fetch --unshallow
+      fi
+      if [ ! -x "${VCPKG_ROOT}/vcpkg" ]; then
+        "${VCPKG_ROOT}/bootstrap-vcpkg.sh" -disableMetrics
+      fi
+    - ccache -s
+  after_script:
+    - ccache -s
   script:
-    - pip3 install cmake
-    - mkdir build
-    - cd build
-    - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCXX_MARCH=${CXX_MARCH} -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-    - make -j3
-    - ctest
-    - make package
-    - cd ..
-    - mkdir $DEB_DIR
-    - mv build/*.deb $DEB_DIR/
-    - dpkg -i $DEB_DIR/*.deb
-    # smoke test to see if all executables at least start up
-    - basalt_calibrate --help
-    - basalt_calibrate_imu --help
-    - basalt_mapper --help
-    - basalt_mapper_sim --help
-    - basalt_mapper_sim_naive --help
-    - basalt_opt_flow --help
-    - basalt_vio --help
-    - basalt_vio_sim --help
+    - cmake --version
+    - |
+      for PRESET in ${PRESETS}; do
+        echo "Building preset: ${PRESET}"
+        TARGET_TRIPLET="${VCPKG_STATIC_TRIPLET}"
+        export LD_LIBRARY_PATH="${LD_LIBRARY_PATH:-}"
+        for attempt in 1 2 3; do
+          if cmake --preset ${PRESET} -DCMAKE_C_COMPILER=${CC} -DCMAKE_CXX_COMPILER=${CXX} -DCXX_MARCH=${CXX_MARCH} -DVCPKG_TARGET_TRIPLET=${TARGET_TRIPLET} -DCMAKE_MAKE_PROGRAM=/usr/bin/ninja -DBASALT_BUILD_SHARED_LIB=ON; then
+            break
+          fi
+          if [ "${attempt}" -eq 3 ]; then
+            exit 1
+          fi
+          sleep 10
+        done
+        cmake --build --preset ${PRESET} -j3
+        ctest --preset ${PRESET}
+        ./build/${PRESET}/basalt_calibrate --help
+        ./build/${PRESET}/basalt_calibrate_imu --help
+        ./build/${PRESET}/basalt_mapper --help
+        ./build/${PRESET}/basalt_mapper_sim --help
+        ./build/${PRESET}/basalt_mapper_sim_naive --help
+        ./build/${PRESET}/basalt_opt_flow --help
+        ./build/${PRESET}/basalt_vio --help
+        ./build/${PRESET}/basalt_vio_sim --help
+      done
+    - |
+      ARTIFACT_RELEASE_DIR="${CI_PROJECT_DIR}/artifacts/release/bin"
+      mkdir -p "${ARTIFACT_RELEASE_DIR}"
+      cp -a "${CI_PROJECT_DIR}/data" "${CI_PROJECT_DIR}/artifacts/release/data"
+      RELEASE_BINS=(
+        basalt_calibrate
+        basalt_calibrate_imu
+        basalt_kitti_eval
+        basalt_mapper
+        basalt_mapper_sim
+        basalt_mapper_sim_naive
+        basalt_opt_flow
+        basalt_vio
+        basalt_vio_sim
+      )
+      for bin in "${RELEASE_BINS[@]}"; do
+        bin_path="${CI_PROJECT_DIR}/build/release/${bin}"
+        test -x "${bin_path}"
+        # Skip libbasalt.so check for static binaries
+        if [[ "${bin}" != "basalt_kitti_eval" ]]; then
+          ldd_output="$(ldd "${bin_path}" 2>&1 || true)"
+          if ! echo "${ldd_output}" | grep -q "libbasalt\\.so"; then
+            echo "Expected basalt shared library dependency not found: ${bin_path}" >&2
+            echo "${ldd_output}" >&2
+            exit 1
+          fi
+        fi
+        install -m 0755 "${bin_path}" "${ARTIFACT_RELEASE_DIR}/${bin}"
+      done
+      # Copy shared library
+      mkdir -p "${CI_PROJECT_DIR}/artifacts/release/lib"
+      install -m 0755 "${CI_PROJECT_DIR}/build/release/libbasalt.so" "${CI_PROJECT_DIR}/artifacts/release/lib/"
+      mkdir -p "${CI_PROJECT_DIR}/artifacts"
+      # Use tag name for releases, commit SHA for regular builds
+      if [ -n "${CI_COMMIT_TAG:-}" ]; then
+        ARTIFACT_VERSION="${CI_COMMIT_TAG}"
+      else
+        ARTIFACT_VERSION="${CI_COMMIT_SHORT_SHA}"
+      fi
+      # Map ARCH (amd64/arm64) to standard triplet format
+      case "${ARCH}" in
+        amd64) ARCH_TRIPLET="x86_64" ;;
+        arm64) ARCH_TRIPLET="aarch64" ;;
+        *) ARCH_TRIPLET="${ARCH}" ;;
+      esac
+      # Use CI_SERVER_URL for GitLab instance URL, CI_PROJECT_PATH for project path
+      GITLAB_BASE_URL="${CI_SERVER_URL}"
+      PROJECT_PATH="${CI_PROJECT_PATH}"
+      tar -C "${CI_PROJECT_DIR}/artifacts" -c -z -v -f "${CI_PROJECT_DIR}/artifacts/basalt-${ARTIFACT_VERSION}-${ARCH_TRIPLET}-unknown-linux-gnu.tar.gz" release
 
-# template for build & unit test configurations (no deb)
-.compile_test_template: &compile_test_definition
-  stage: build
-  script:
-    - pip3 install cmake
-    - mkdir build
-    - cd build
-    - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCXX_MARCH=${CXX_MARCH} -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-    - make -j3
-    - ctest
-    # smoke test to see if all executables at least start up
-    - ./basalt_calibrate --help
-    - ./basalt_calibrate_imu --help
-    - ./basalt_mapper --help
-    - ./basalt_mapper_sim --help
-    - ./basalt_mapper_sim_naive --help
-    - ./basalt_opt_flow --help
-    - ./basalt_vio --help
-    - ./basalt_vio_sim --help
-
-# template to test debian
-.test_deb_template: &test_deb_definition
-  stage: test
-  tags:
-    - docker
-  script:
-    - dpkg -i $DEB_DIR/*.deb
-    # smoke test to see if all executables at least start up
-    - basalt_calibrate --help
-    - basalt_calibrate_imu --help
-    - basalt_mapper --help
-    - basalt_mapper_sim --help
-    - basalt_mapper_sim_naive --help
-    - basalt_opt_flow --help
-    - basalt_vio --help
-    - basalt_vio_sim --help
-
-# template to evaluate on EuRoC sequences
+# Template for EuRoC evaluation
 .eval_euroc_template: &eval_euroc_definition
+  image: ubuntu:22.04
   stage: eval
-  parallel: 10
   tags: [docker, dataset-eval]
   variables:
     GIT_STRATEGY: none
+  needs:
+    - job: ubuntu22-build
+      artifacts: true
   artifacts:
     paths:
-    - scripts/eval_full/eval_results/*
+      - scripts/eval_full/eval_results/*
     expire_in: 1 week
+  before_script:
+    - bash scripts/install_basalt.sh
   script:
-    - dpkg -i deb_focal/*.deb
     - cd scripts/eval_full
     - ./run_evaluations.sh
 
-# template to evaluate on TUM-VI sequences
+# Template for TUM-VI evaluation
 .eval_tumvi_template: &eval_tumvi_definition
+  image: ubuntu:22.04
   stage: eval
-  parallel: 4
   tags: [docker, dataset-eval]
   variables:
     GIT_STRATEGY: none
+  needs:
+    - job: ubuntu22-build
+      artifacts: true
   artifacts:
     paths:
-    - scripts/eval_full/eval_results_tumvi/*
+      - scripts/eval_full/eval_results_tumvi/*
     expire_in: 1 week
+  before_script:
+    - bash scripts/install_basalt.sh
   script:
-    - dpkg -i deb_focal/*.deb
     - cd scripts/eval_full
     - ./run_evaluations_tumvi.sh
 
-
+# Template for KITTI evaluation
 .eval_kitti_template: &eval_kitti_definition
+  image: ubuntu:22.04
   stage: eval
-  parallel: 10
   tags: [docker, dataset-eval]
   variables:
     GIT_STRATEGY: none
+  needs:
+    - job: ubuntu22-build
+      artifacts: true
   artifacts:
     paths:
-    - scripts/eval_full/eval_results_kitti/*
+      - scripts/eval_full/eval_results_kitti/*
     expire_in: 1 week
+  before_script:
+    - bash scripts/install_basalt.sh
   script:
-    - dpkg -i deb_focal/*.deb
     - cd scripts/eval_full
     - ./run_evaluations_kitti.sh
 
-focal-release-compile:
-  <<: *prepare_docker_definition
-  <<: *compile_test_package_definition
-  image: vladyslavusenko/b_image_focal:latest
+# Template for release creation
+.release_template: &release_definition
+  image: ubuntu:22.04
+  stage: release
+  tags: [docker]
   variables:
-    CXX_MARCH: 'haswell'
-    DEB_DIR: deb_focal
-  artifacts:
-    paths:
-    - deb_focal/*.deb
-    - scripts/eval_full/*
-    expire_in: 1 week
-
-jammy-release-compile:
-  <<: *prepare_docker_definition
-  <<: *compile_test_package_definition
-  image: vladyslavusenko/b_image_jammy:latest
-  variables:
-    CXX_MARCH: 'haswell'
-    DEB_DIR: deb_jammy
-  artifacts:
-    paths:
-    - deb_jammy/*.deb
-    expire_in: 1 week
-
-focal-debug-compile:
-  <<: *prepare_docker_definition
-  <<: *compile_test_package_definition
-  image: vladyslavusenko/b_image_focal:latest
+    GIT_STRATEGY: none
+  needs:
+    - job: ubuntu22-build
+      artifacts: true
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq curl jq
+    - chmod +x scripts/*.sh
+    - export GITLAB_URL="${CI_SERVER_URL}"
+    - export PROJECT_PATH="${CI_PROJECT_PATH}"
+  script:
+    - bash scripts/generate_checksums.sh
+    - bash scripts/create_gitlab_release.sh
   only:
-    - master
+    - tags
+  when: manual
+
+ubuntu22-build:
+  <<: *build_template
   variables:
-    BUILD_TYPE: CiDebug
+    PRESETS: "debug relwithdebinfo release"
+  artifacts:
+    when: on_success
+    paths:
+      - artifacts/basalt-*.tar.gz
+      - artifacts/checksums.txt
+      - artifacts/*.sha256
+      - scripts/create_gitlab_release.sh
+      - scripts/eval_full/
+      - scripts/generate_checksums.sh
+      - scripts/install_basalt.sh
 
-focal-relwithdebinfo-compile:
-  <<: *prepare_docker_definition
-  <<: *compile_test_package_definition
-  image: vladyslavusenko/b_image_focal:latest
-  variables:
-    BUILD_TYPE: CiRelWithDebInfo
-  only:
-    - master
-
-# focal-gcc10-relwithdebinfo-compile:
-#   <<: *prepare_docker_definition
-#   image: vladyslavusenko/b_image_focal:latest
-#   variables:
-#     BUILD_TYPE: CiRelWithDebInfo
-#     CC: gcc-10
-#     CXX: g++-10
-#   only:
-# #    - master
-#   stage: build
-#   script:
-#     - add-apt-repository ppa:ubuntu-toolchain-r/ppa -y
-#     - apt-get update
-#     - apt-get install -y g++-10
-#     - mkdir build
-#     - cd build
-#     - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCXX_MARCH=${CXX_MARCH} -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-#     - make -j3
-#     - ctest
-#     # smoke test to see if all executables at least start up
-#     - ./basalt_calibrate --help
-#     - ./basalt_calibrate_imu --help
-#     - ./basalt_mapper --help
-#     - ./basalt_mapper_sim --help
-#     - ./basalt_mapper_sim_naive --help
-#     - ./basalt_opt_flow --help
-#     - ./basalt_vio --help
-#     - ./basalt_vio_sim --help
-
-# Compilation with GCC 11 is broken due to a bug that is fixed only in future relases 11.3 and 12
-# See: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=100438
-# See: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=99744#c15
-# focal-gcc11-relwithdebinfo-compile:
-#   <<: *prepare_docker_definition
-#   image: vladyslavusenko/b_image_focal:latest
-#   variables:
-#     BUILD_TYPE: CiRelWithDebInfo
-#     CC: gcc-11
-#     CXX: g++-11
-#   only:
-# #    - master
-#   stage: build
-#   script:
-#     - add-apt-repository ppa:ubuntu-toolchain-r/test -y
-#     - apt-get update
-#     - apt-get install -y g++-11
-#     - mkdir build
-#     - cd build
-#     - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCXX_MARCH=${CXX_MARCH} -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-#     - make -j3
-#     - ctest
-#     # smoke test to see if all executables at least start up
-#     - ./basalt_calibrate --help
-#     - ./basalt_calibrate_imu --help
-#     - ./basalt_mapper --help
-#     - ./basalt_mapper_sim --help
-#     - ./basalt_mapper_sim_naive --help
-#     - ./basalt_opt_flow --help
-#     - ./basalt_vio --help
-#     - ./basalt_vio_sim --help
-
-# monterey-arm-brewclang-relwithdebinfo-compile:
-#   <<: *compile_test_definition
-#   tags: [macos, "12", arm64]
-#   only:
-# #    - master
-#   variables:
-#     BUILD_TYPE: CiRelWithDebInfo
-#     CC: /opt/homebrew/opt/llvm/bin/clang
-#     CXX: /opt/homebrew/opt/llvm/bin/clang++
-
-# monterey-arm-relwithdebinfo-compile:
-#   <<: *compile_test_definition
-#   tags: [macos, "12", arm64]
-#   only:
-# #    - master
-#   variables:
-#     BUILD_TYPE: CiRelWithDebInfo
-
-# pre-commit checks
 pre-commit:
-  tags:
-    - docker
-  image:
-    python:3.10
+  image: python:3.10
   stage: build
   variables:
-    GIT_SUBMODULE_STRATEGY: none
     PRE_COMMIT_HOME: ${CI_PROJECT_DIR}/.cache/pre-commit
   cache:
     paths:
       - ${PRE_COMMIT_HOME}
     key: ${CI_JOB_NAME}
-  script:
+  before_script:
     - pip install pre-commit
+  script:
     - pre-commit install
     - pre-commit run -a
 
-focal-test:
-  <<: *test_deb_definition
-  image: vladyslavusenko/b_image_focal:latest
-  only:
-    - master
-  variables:
-    DEB_DIR: deb_focal
-    GIT_STRATEGY: none
-
-jammy-test:
-  <<: *test_deb_definition
-  image: vladyslavusenko/b_image_jammy:latest
-  only:
-    - master
-  variables:
-    DEB_DIR: deb_jammy
-    GIT_STRATEGY: none
-
-# evaluate on EuRoC sequences
-eval_euroc_master:
-  <<: *eval_euroc_definition
-  only:
-    - master
-
-# evaluate on EuRoC sequences
+# EuRoC evaluation jobs
 eval_euroc:
   <<: *eval_euroc_definition
   when: manual
-  except:
-    - master
   allow_failure: false
 
-# evaluate on TUM-VI sequences
-eval_tumvi_master:
-  <<: *eval_tumvi_definition
-  only:
-    - master
-
-# evaluate on TUM-VI sequences
+# TUM-VI evaluation jobs
 eval_tumvi:
   <<: *eval_tumvi_definition
   when: manual
-  except:
-    - master
   allow_failure: false
 
-# evaluate on KITTI sequences
-eval_kitti_master:
-  <<: *eval_kitti_definition
-  only:
-    - master
-
-# evaluate on KITTI sequences
+# KITTI evaluation jobs
 eval_kitti:
   <<: *eval_kitti_definition
   when: manual
-  except:
-    - master
   allow_failure: false
 
-# aggregate results for all EuRoC sequences
+# Release job
+create_release:
+  <<: *release_definition
+
+# Results aggregation job
 gen_results:
   stage: results
   variables:
     GIT_STRATEGY: none
   tags:
     - docker
-  when: on_success
+  needs:
+    - job: ubuntu22-build
+      artifacts: true
+    - job: eval_euroc
+      artifacts: true
+    - job: eval_tumvi
+      artifacts: true
+    - job: eval_kitti
+      artifacts: true
   artifacts:
     paths:
-    - euroc_results.txt
-    - kitti_results.txt
-    - tumvi_results.txt
-    - scripts/eval_full/eval_results/*
+      - euroc_results.txt
+      - kitti_results.txt
+      - tumvi_results.txt
   script:
     - cd scripts/eval_full
     - ./gen_results.py eval_results > euroc_results.txt
@@ -366,88 +324,3 @@ gen_results:
     - mv euroc_results.txt ../../
     - mv kitti_results.txt ../../
     - mv tumvi_results.txt ../../
-
-# deploy deb packages
-deploy:
-  stage: deploy
-  when: manual
-  variables:
-    GIT_STRATEGY: none
-  tags:
-    - docker
-  only:
-    - master
-  before_script:
-    - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
-    - mkdir -p ~/.ssh
-    - chmod 700 ~/.ssh
-    - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
-    - chmod 644 ~/.ssh/known_hosts
-  script:
-    - scp $SCP_FLAGS deb_focal/*.deb $REPOSITORY_URL/focal/
-    - scp $SCP_FLAGS deb_jammy/*.deb $REPOSITORY_URL/jammy/
-
-
-.docker_build_template: &docker_build_definition
-  image: docker:stable
-  stage: docker
-  when: manual
-  only:
-    - master
-  services:
-    - docker:stable-dind
-  tags:
-    - docker-dind
-  before_script:
-    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
-  script:
-    - cd docker/"$B_IMAGE_NAME"
-    - docker build -t "$CI_REGISTRY_IMAGE"/"$B_IMAGE_NAME" .
-    - docker push "$CI_REGISTRY_IMAGE"/"$B_IMAGE_NAME"
-
-
-docker-build-focal:
-  <<: *docker_build_definition
-  variables:
-    DOCKER_TLS_CERTDIR: '/certs'
-    GIT_SUBMODULE_STRATEGY: none
-    B_IMAGE_NAME: b_image_focal
-
-docker-build-jammy:
-  <<: *docker_build_definition
-  variables:
-    DOCKER_TLS_CERTDIR: '/certs'
-    GIT_SUBMODULE_STRATEGY: none
-    B_IMAGE_NAME: b_image_jammy
-
-
-.repository_check_template: &repository_check_definition
-  stage: repository
-  when: manual
-  tags:
-    - docker
-  only:
-    - master
-  script:
-    - apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y gnupg2 rsync linux-generic
-    - apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0AD9A3000D97B6C9
-    - echo "deb [arch=amd64] http://packages.usenko.net/ubuntu $REPO_NAME $REPO_NAME/main" > /etc/apt/sources.list.d/basalt.list
-    - apt-get update && apt-get dist-upgrade -y
-    - DEBIAN_FRONTEND=noninteractive apt-get install -y basalt
-    - basalt_rs_t265_vio --help
-    - basalt_rs_t265_record --help
-
-focal-repository-check:
-  image: ubuntu:20.04
-  <<: *repository_check_definition
-  variables:
-    GIT_STRATEGY: none
-    REPO_NAME: focal
-
-jammy-repository-check:
-  image: ubuntu:22.04
-  <<: *repository_check_definition
-  variables:
-    GIT_STRATEGY: none
-    REPO_NAME: jammy

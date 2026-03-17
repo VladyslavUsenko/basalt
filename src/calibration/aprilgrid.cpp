@@ -41,7 +41,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace basalt {
 
-AprilGrid::AprilGrid(const std::string &config_path) {
+AprilGrid::AprilGrid(const std::string& config_path) {
   std::ifstream is(config_path);
   if (is.is_open()) {
     cereal::JSONInputArchive ar(is);
@@ -69,7 +69,7 @@ AprilGrid::AprilGrid(const std::string &config_path) {
       for (int i = 0; i < 4; i++) {
         int corner_id = (tag_id << 2) + i;
 
-        Eigen::Vector4d &pos_3d = aprilgrid_corner_pos_3d[corner_id];
+        Eigen::Vector4d& pos_3d = aprilgrid_corner_pos_3d[corner_id];
 
         pos_3d[0] = x_offset + x_corner_offsets[i];
         pos_3d[1] = y_offset + y_corner_offsets[i];

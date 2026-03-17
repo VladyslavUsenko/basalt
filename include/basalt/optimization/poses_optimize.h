@@ -66,7 +66,7 @@ class PosesOptimization {
     return calib->intrinsics[i].getParam().template segment<2>(2);
   }
 
-  void resetCalib(size_t num_cams, const std::vector<std::string> &cam_types) {
+  void resetCalib(size_t num_cams, const std::vector<std::string>& cam_types) {
     BASALT_ASSERT(cam_types.size() == num_cams);
 
     calib.reset(new Calibration<Scalar>);
@@ -83,7 +83,7 @@ class PosesOptimization {
     calib->T_i_c.resize(num_cams);
   }
 
-  void loadCalib(const std::string &p) {
+  void loadCalib(const std::string& p) {
     std::string path = p + "calibration.json";
 
     std::ifstream is(path);
@@ -98,7 +98,7 @@ class PosesOptimization {
     }
   }
 
-  void saveCalib(const std::string &path) const {
+  void saveCalib(const std::string& path) const {
     if (calib) {
       std::ofstream os(path + "calibration.json");
       cereal::JSONOutputArchive archive(os);
@@ -112,7 +112,7 @@ class PosesOptimization {
 
   // Returns true when converged
   bool optimize(bool opt_intrinsics, double huber_thresh, double stop_thresh,
-                double &error, int &num_points, double &reprojection_error) {
+                double& error, int& num_points, double& reprojection_error) {
     error = 0;
     num_points = 0;
 
@@ -154,7 +154,7 @@ class PosesOptimization {
       double max_inc = inc.array().abs().maxCoeff();
       if (max_inc < stop_thresh) converged = true;
 
-      for (auto &kv : timestam_to_pose) {
+      for (auto& kv : timestam_to_pose) {
         kv.second *=
             Sophus::se3_expd(inc.segment<POSE_SIZE>(offset_poses[kv.first]));
       }
@@ -165,7 +165,7 @@ class PosesOptimization {
       }
 
       for (size_t i = 0; i < calib->intrinsics.size(); i++) {
-        auto &c = calib->intrinsics[i];
+        auto& c = calib->intrinsics[i];
         c.applyInc(inc.segment(offset_cam_intrinsics[i], c.getN()));
       }
 
@@ -224,7 +224,7 @@ class PosesOptimization {
 
     size_t curr_offset = 0;
 
-    for (const auto &kv : timestam_to_pose) {
+    for (const auto& kv : timestam_to_pose) {
       offset_poses[kv.first] = curr_offset;
       curr_offset += POSE_SIZE;
     }
@@ -250,7 +250,7 @@ class PosesOptimization {
       return it->second;
   }
 
-  void setAprilgridCorners3d(const Eigen::aligned_vector<Eigen::Vector4d> &v) {
+  void setAprilgridCorners3d(const Eigen::aligned_vector<Eigen::Vector4d>& v) {
     aprilgrid_corner_pos_3d = v;
   }
 
@@ -266,8 +266,8 @@ class PosesOptimization {
 
   void addAprilgridMeasurement(
       int64_t t_ns, int cam_id,
-      const Eigen::aligned_vector<Eigen::Vector2d> &corners_pos,
-      const std::vector<int> &corner_id) {
+      const Eigen::aligned_vector<Eigen::Vector2d>& corners_pos,
+      const std::vector<int>& corner_id) {
     aprilgrid_corners_measurements.emplace_back();
 
     aprilgrid_corners_measurements.back().timestamp_ns = t_ns;
@@ -276,15 +276,15 @@ class PosesOptimization {
     aprilgrid_corners_measurements.back().corner_id = corner_id;
   }
 
-  void addPoseMeasurement(int64_t t_ns, const Sophus::SE3d &pose) {
+  void addPoseMeasurement(int64_t t_ns, const Sophus::SE3d& pose) {
     timestam_to_pose[t_ns] = pose;
   }
 
-  void setVignette(const std::vector<basalt::RdSpline<1, 4>> &vign) {
+  void setVignette(const std::vector<basalt::RdSpline<1, 4>>& vign) {
     calib->vignette = vign;
   }
 
-  void setResolution(const Eigen::aligned_vector<Eigen::Vector2i> &resolution) {
+  void setResolution(const Eigen::aligned_vector<Eigen::Vector2i>& resolution) {
     calib->resolution = resolution;
   }
 

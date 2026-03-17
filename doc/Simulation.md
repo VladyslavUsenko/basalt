@@ -7,7 +7,7 @@ For better evaluation of the system we use the simulated environment where the o
 
 ### Visual-inertial odometry simulator
 ```
-basalt_vio_sim --cam-calib /usr/etc/basalt/euroc_ds_calib.json --marg-data sim_marg_data --show-gui 1
+basalt_vio_sim --cam-calib ~/.local/etc/basalt/euroc_ds_calib.json --marg-data sim_marg_data --show-gui 1
 ```
 
 The command line options have the following meaning:
@@ -34,7 +34,7 @@ The buttons in the GUI have the following meaning:
 
 ### Visual-inertial mapping simulator
 ```
-basalt_mapper_sim --cam-calib /usr/etc/basalt/euroc_ds_calib.json --marg-data sim_marg_data --show-gui 1
+basalt_mapper_sim --cam-calib ~/.local/etc/basalt/euroc_ds_calib.json --marg-data sim_marg_data --show-gui 1
 ```
 The command line arguments are the same as above.
 

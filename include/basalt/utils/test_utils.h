@@ -74,4 +74,12 @@ void test_jacobian_code(const std::string& name,
   }
 }
 
+template <typename Derived1, typename Derived2, typename F>
+void test_jacobian(const std::string& name,
+                   const Eigen::MatrixBase<Derived1>& Ja, F func,
+                   const Eigen::MatrixBase<Derived2>& x0, double eps = 1e-8,
+                   double max_norm = 1e-4) {
+  test_jacobian_code(name, Ja, func, x0, eps, max_norm);
+}
+
 #endif  // BASALT_TEST_UTILS_H

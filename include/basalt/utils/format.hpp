@@ -45,7 +45,7 @@ namespace basalt {
 
 namespace literals {
 
-inline auto operator"" _format(const char* s, size_t n) {
+inline auto operator""_format(const char* s, size_t n) {
   return [=](auto&&... args) {
 #if FMT_VERSION < 50000
     return fmt::format(s, args...);

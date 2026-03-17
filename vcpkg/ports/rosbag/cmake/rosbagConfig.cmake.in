@@ -1,0 +1,11 @@
+@PACKAGE_INIT@
+include(CMakeFindDependencyMacro)
+find_dependency(Boost REQUIRED COMPONENTS date_time filesystem format program_options regex thread)
+find_dependency(BZip2 REQUIRED)
+find_dependency(console_bridge CONFIG REQUIRED)
+find_dependency(lz4 CONFIG REQUIRED)
+include("${CMAKE_CURRENT_LIST_DIR}/rosbagTargets.cmake")
+if(NOT TARGET rosbag)
+  add_library(rosbag INTERFACE IMPORTED)
+  target_link_libraries(rosbag INTERFACE rosbag::rosbag)
+endif()

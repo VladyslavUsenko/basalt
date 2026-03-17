@@ -1,0 +1,26 @@
+{
+  "name": "rosbag",
+  "version-string": "0.0.0",
+  "description": "Lightweight ROS bag storage library used by Basalt",
+  "dependencies": [
+    "boost-date-time",
+    "boost-foreach",
+    "boost-filesystem",
+    "boost-format",
+    "boost-math",
+    "boost-program-options",
+    "boost-regex",
+    "boost-thread",
+    "bzip2",
+    "console-bridge",
+    "lz4",
+    {
+      "name": "vcpkg-cmake",
+      "host": true
+    },
+    {
+      "name": "vcpkg-cmake-config",
+      "host": true
+    }
+  ]
+}

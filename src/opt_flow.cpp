@@ -42,13 +42,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <tbb/concurrent_unordered_map.h>
 
+#include <pangolin/display/default_font.h>
 #include <pangolin/display/image_view.h>
 #include <pangolin/gl/gldraw.h>
 #include <pangolin/image/image.h>
 #include <pangolin/image/image_io.h>
 #include <pangolin/image/typed_image.h>
 #include <pangolin/pangolin.h>
-#include <pangolin/display/default_font.h>
 
 #include <CLI/CLI.hpp>
 
@@ -69,13 +69,13 @@ bool next_step();
 bool prev_step();
 
 pangolin::Var<int> show_frame("ui.show_frame", 0, 0, 1500);
-pangolin::Var<bool> show_obs("ui.show_obs", true, false, true);
-pangolin::Var<bool> show_ids("ui.show_ids", false, false, true);
+pangolin::Var<bool> show_obs("ui.show_obs", true, true);
+pangolin::Var<bool> show_ids("ui.show_ids", false, true);
 
 using Button = pangolin::Var<std::function<void(void)>>;
 Button next_step_btn("ui.next_step", &next_step);
 Button prev_step_btn("ui.prev_step", &prev_step);
-pangolin::Var<bool> continue_btn("ui.continue", true, false, true);
+pangolin::Var<bool> continue_btn("ui.continue", true, true);
 
 // Opt flow variables
 basalt::VioDatasetPtr vio_dataset;
@@ -310,7 +310,9 @@ void draw_image_overlay(pangolin::View& v, size_t cam_id) {
         const Eigen::Vector2f c = kv.second.translation();
 
         if (show_ids)
-          pangolin::default_font().Text("%d", kv.first).Draw(5 + c[0], 5 + c[1]);
+          pangolin::default_font()
+              .Text("%d", kv.first)
+              .Draw(5 + c[0], 5 + c[1]);
       }
 
       pangolin::default_font()

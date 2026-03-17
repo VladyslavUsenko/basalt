@@ -42,13 +42,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <tbb/concurrent_unordered_map.h>
 
+#include <pangolin/display/default_font.h>
 #include <pangolin/display/image_view.h>
 #include <pangolin/gl/gldraw.h>
 #include <pangolin/image/image.h>
 #include <pangolin/image/image_io.h>
 #include <pangolin/image/typed_image.h>
 #include <pangolin/pangolin.h>
-#include <pangolin/display/default_font.h>
 
 #include <CLI/CLI.hpp>
 
@@ -120,8 +120,8 @@ constexpr int UI_WIDTH = 200;
 
 basalt::Calibration<double> calib;
 
-pangolin::Var<bool> show_edges("ui.show_edges", true, false, true);
-pangolin::Var<bool> show_points("ui.show_points", true, false, true);
+pangolin::Var<bool> show_edges("ui.show_edges", true, true);
+pangolin::Var<bool> show_points("ui.show_points", true, true);
 
 using Button = pangolin::Var<std::function<void(void)>>;
 

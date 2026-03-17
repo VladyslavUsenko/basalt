@@ -350,9 +350,9 @@ void MargHelper<Scalar_>::marginalizeHelperSqrtToSqrt(
 // instatiate templates
 
 // Note: double specialization is unconditional, b/c NfrMapper depends on it.
-//#ifdef BASALT_INSTANTIATIONS_DOUBLE
+// #ifdef BASALT_INSTANTIATIONS_DOUBLE
 template class MargHelper<double>;
-//#endif
+// #endif
 
 #ifdef BASALT_INSTANTIATIONS_FLOAT
 template class MargHelper<float>;

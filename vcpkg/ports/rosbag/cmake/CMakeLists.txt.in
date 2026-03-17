@@ -1,0 +1,82 @@
+cmake_minimum_required(VERSION 3.24)
+project(rosbag LANGUAGES C CXX)
+
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+
+find_package(Boost REQUIRED COMPONENTS date_time filesystem format program_options regex thread)
+find_package(BZip2 REQUIRED)
+find_package(console_bridge CONFIG REQUIRED)
+find_package(lz4 CONFIG REQUIRED)
+
+file(GLOB CPP_COMMON_SRCS "@ROSCPP_CORE_SOURCE@/cpp_common/src/*.cpp")
+file(GLOB ROSCPP_SERIALIZATION_SRCS "@ROSCPP_CORE_SOURCE@/roscpp_serialization/src/*.cpp")
+file(GLOB ROSTIME_SRCS "@ROSCPP_CORE_SOURCE@/rostime/src/*.cpp")
+file(GLOB ROSBAG_SRCS "@ROS_COMM_SOURCE@/tools/rosbag_storage/src/*.cpp")
+file(GLOB ROSLZ4_SRCS "@ROS_COMM_SOURCE@/utilities/roslz4/src/[a-z]*.c")
+
+add_library(rosbag STATIC
+  ${ROSBAG_SRCS}
+  ${ROSTIME_SRCS}
+  ${CPP_COMMON_SRCS}
+  ${ROSCPP_SERIALIZATION_SRCS}
+  ${ROSLZ4_SRCS}
+)
+
+target_compile_features(rosbag PUBLIC cxx_std_17)
+target_compile_options(rosbag PRIVATE -Wno-unused-parameter -Wno-deprecated-declarations)
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 9)
+  target_compile_options(rosbag PRIVATE -Wno-catch-value)
+endif()
+
+target_include_directories(rosbag
+  PUBLIC
+    $<BUILD_INTERFACE:@ROS_COMM_SOURCE@/tools/rosbag_storage/include>
+    $<BUILD_INTERFACE:@ROSCPP_CORE_SOURCE@/cpp_common/include>
+    $<BUILD_INTERFACE:@ROSCPP_CORE_SOURCE@/rostime/include>
+    $<BUILD_INTERFACE:@ROSCPP_CORE_SOURCE@/roscpp_serialization/include>
+    $<BUILD_INTERFACE:@ROSCPP_CORE_SOURCE@/roscpp_traits/include>
+    $<BUILD_INTERFACE:@ROS_COMM_SOURCE@/utilities/roslz4/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+
+target_link_libraries(rosbag
+  PUBLIC
+    Boost::date_time
+    Boost::filesystem
+    Boost::format
+    Boost::program_options
+    Boost::regex
+    Boost::thread
+    BZip2::BZip2
+    console_bridge::console_bridge
+    lz4::lz4
+)
+
+install(TARGETS rosbag EXPORT rosbagTargets
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+install(DIRECTORY "@ROS_COMM_SOURCE@/tools/rosbag_storage/include/" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(DIRECTORY "@ROSCPP_CORE_SOURCE@/cpp_common/include/" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(DIRECTORY "@ROSCPP_CORE_SOURCE@/rostime/include/" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(DIRECTORY "@ROSCPP_CORE_SOURCE@/roscpp_serialization/include/" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(DIRECTORY "@ROSCPP_CORE_SOURCE@/roscpp_traits/include/" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(DIRECTORY "@ROS_COMM_SOURCE@/utilities/roslz4/include/" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+install(EXPORT rosbagTargets
+  FILE rosbagTargets.cmake
+  NAMESPACE rosbag::
+  DESTINATION share/rosbag
+)
+
+configure_package_config_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/rosbagConfig.cmake.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/rosbagConfig.cmake"
+  INSTALL_DESTINATION share/rosbag
+)
+
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/rosbagConfig.cmake" DESTINATION share/rosbag)

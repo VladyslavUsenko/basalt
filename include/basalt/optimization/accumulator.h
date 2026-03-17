@@ -122,7 +122,7 @@ class DenseAccumulator {
     std::cerr << "b\n" << b.transpose().format(CleanFmt) << std::endl;
   }
 
-  inline void setup_solver(){};
+  inline void setup_solver() {};
   inline VectorX Hdiagonal() const { return H.diagonal(); }
 
   inline const MatrixX& getH() const { return H; }

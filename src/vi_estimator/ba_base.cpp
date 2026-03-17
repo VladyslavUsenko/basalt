@@ -569,7 +569,7 @@ Scalar_ BundleAdjustmentBase<Scalar_>::computeMargPriorModelCostChange(
 // instatiate templates
 
 // Note: double specialization is unconditional, b/c NfrMapper depends on it.
-//#ifdef BASALT_INSTANTIATIONS_DOUBLE
+// #ifdef BASALT_INSTANTIATIONS_DOUBLE
 template class BundleAdjustmentBase<double>;
 
 template void BundleAdjustmentBase<double>::get_current_points<double>(
@@ -579,7 +579,7 @@ template void BundleAdjustmentBase<double>::get_current_points<double>(
 template void BundleAdjustmentBase<double>::computeProjections<double>(
     std::vector<Eigen::aligned_vector<Eigen::Matrix<double, 4, 1>>>& data,
     FrameId last_state_t_ns) const;
-//#endif
+// #endif
 
 #ifdef BASALT_INSTANTIATIONS_FLOAT
 template class BundleAdjustmentBase<float>;

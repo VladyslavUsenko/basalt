@@ -42,16 +42,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <librealsense2/rs.hpp>
 
+#include <pangolin/display/default_font.h>
 #include <pangolin/display/image_view.h>
 #include <pangolin/gl/gldraw.h>
 #include <pangolin/image/image.h>
 #include <pangolin/image/image_io.h>
 #include <pangolin/image/typed_image.h>
 #include <pangolin/pangolin.h>
-#include <pangolin/display/default_font.h>
 
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/core.hpp>
+#include <opencv2/imgcodecs.hpp>
 
 #include <tbb/concurrent_queue.h>
 
@@ -132,8 +132,8 @@ void image_save_worker() {
 
         cv::Mat image(image_raw->h, image_raw->w, CV_8U);
 
-        uint8_t *dst = image.ptr();
-        const uint16_t *src = image_raw->ptr;
+        uint8_t* dst = image.ptr();
+        const uint16_t* src = image_raw->ptr;
 
         for (size_t i = 0; i < image_raw->size(); i++) {
           dst[i] = (src[i] >> 8);
@@ -205,7 +205,7 @@ void pose_save_worker() {
   }
 }
 
-void save_calibration(const basalt::RsT265Device::Ptr &device) {
+void save_calibration(const basalt::RsT265Device::Ptr& device) {
   auto calib = device->exportCalibration();
 
   if (calib) {
@@ -232,7 +232,7 @@ inline std::string get_date() {
   return std::string(the_date);
 }
 
-void startRecording(const std::string &dir_path) {
+void startRecording(const std::string& dir_path) {
   if (!recording) {
     if (stop_recording_thread.joinable()) stop_recording_thread.join();
 
@@ -310,7 +310,7 @@ void stopRecording() {
   }
 }
 
-void toggleRecording(const std::string &dir_path) {
+void toggleRecording(const std::string& dir_path) {
   if (recording) {
     stopRecording();
   } else {
@@ -318,7 +318,7 @@ void toggleRecording(const std::string &dir_path) {
   }
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   CLI::App app{"Record RealSense T265 Data"};
 
   std::string dataset_path;
@@ -329,7 +329,7 @@ int main(int argc, char *argv[]) {
 
   try {
     app.parse(argc, argv);
-  } catch (const CLI::ParseError &e) {
+  } catch (const CLI::ParseError& e) {
     return app.exit(e);
   }
 
@@ -375,12 +375,12 @@ int main(int argc, char *argv[]) {
 
     glEnable(GL_DEPTH_TEST);
 
-    pangolin::View &img_view_display =
+    pangolin::View& img_view_display =
         pangolin::CreateDisplay()
             .SetBounds(0.4, 1.0, pangolin::Attach::Pix(UI_WIDTH), 1.0)
             .SetLayout(pangolin::LayoutEqual);
 
-    pangolin::View &plot_display = pangolin::CreateDisplay().SetBounds(
+    pangolin::View& plot_display = pangolin::CreateDisplay().SetBounds(
         0.0, 0.4, pangolin::Attach::Pix(UI_WIDTH), 1.0);
 
     pangolin::CreatePanel("ui").SetBounds(0.0, 1.0, 0.0,
@@ -391,7 +391,7 @@ int main(int argc, char *argv[]) {
       int idx = img_view.size();
       std::shared_ptr<pangolin::ImageView> iv(new pangolin::ImageView);
 
-      iv->extern_draw_function = [&, idx](pangolin::View &v) {
+      iv->extern_draw_function = [&, idx](pangolin::View& v) {
         UNUSED(v);
 
         glLineWidth(1.0);
@@ -496,7 +496,7 @@ int main(int argc, char *argv[]) {
   if (recording) stopRecording();
   stop_workers = true;
 
-  for (auto &t : worker_threads) t.join();
+  for (auto& t : worker_threads) t.join();
   imu_worker_thread.join();
   pose_worker_thread.join();
 
