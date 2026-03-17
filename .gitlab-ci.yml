@@ -157,6 +157,7 @@ stages:
       GITLAB_BASE_URL="${CI_SERVER_URL}"
       PROJECT_PATH="${CI_PROJECT_PATH}"
       tar -C "${CI_PROJECT_DIR}/artifacts" -c -z -v -f "${CI_PROJECT_DIR}/artifacts/basalt-${ARTIFACT_VERSION}-${ARCH_TRIPLET}-unknown-linux-gnu.tar.gz" release
+      bash "${CI_PROJECT_DIR}/scripts/generate_checksums.sh"
 
 # Template for EuRoC evaluation
 .eval_euroc_template: &eval_euroc_definition
@@ -234,7 +235,6 @@ stages:
     - export GITLAB_URL="${CI_SERVER_URL}"
     - export PROJECT_PATH="${CI_PROJECT_PATH}"
   script:
-    - bash scripts/generate_checksums.sh
     - bash scripts/create_gitlab_release.sh
   only:
     - tags
