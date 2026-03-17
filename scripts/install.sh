@@ -25,6 +25,7 @@ else
 fi
 
 DOWNLOAD_URL="${BASALT_DOWNLOAD_URL:-}"
+ARTIFACT_JOB_NAME="${BASALT_ARTIFACT_JOB_NAME:-ubuntu22-build}"
 BASE_URL="${GITLAB_URL}/api/v4/projects/${PROJECT}/releases"
 
 log() {
@@ -83,7 +84,22 @@ detect_platform() {
 
 # Get latest version from GitLab API
 get_latest_version() {
-    curl -s "${BASE_URL}/per/latest" 2>/dev/null | grep -o '"tag_name":"[^"]*"' | cut -d'"' -f4
+    _latest="$(curl -s "${BASE_URL}/per/latest" 2>/dev/null | grep -o '"tag_name":"[^"]*"' | cut -d'"' -f4)"
+
+    if [ -n "${_latest}" ]; then
+        echo "${_latest}"
+        return 0
+    fi
+
+    # GitLab's /per/latest endpoint can return 404 even when releases exist.
+    curl -s "${BASE_URL}" 2>/dev/null | grep -o '"tag_name":"[^"]*"' | head -n1 | cut -d'"' -f4
+}
+
+artifact_url() {
+    _version="$1"
+    _artifact="$2"
+
+    echo "${GITLAB_URL}/${PROJECT}/-/jobs/artifacts/${_version}/raw/artifacts/${_artifact}?job=${ARTIFACT_JOB_NAME}"
 }
 
 # Download checksum file
@@ -91,7 +107,7 @@ download_checksum() {
     _version="$1"
     _artifact="$2"
 
-    _checksum_url="${GITLAB_URL}/${PROJECT}/-/releases/${_version}/downloads/${_artifact}.sha256"
+    _checksum_url="$(artifact_url "${_version}" "${_artifact}.sha256")"
 
     log "Downloading checksum from ${_checksum_url}..."
     if ! curl -sSLf "${_checksum_url}" -o "${_artifact}.sha256" 2>/dev/null; then
@@ -164,48 +180,95 @@ get_rc_file() {
     esac
 }
 
-# Check if PATH update is needed
-needs_path_update() {
-    _rc_file="$1"
-
+get_env_script_path() {
     case "$(basename "${SHELL:-/bin/sh}")" in
         fish)
-            if [ -f "$_rc_file" ]; then
-                ! grep -q "fish_user_paths" "$_rc_file" 2>/dev/null || ! grep -q "\$HOME/.local/bin" "$_rc_file" 2>/dev/null
-            else
-                true
-            fi
+            echo "${HOME}/.basalt/env.fish"
             ;;
         *)
-            if [ -f "$_rc_file" ]; then
-                ! grep -q "\$HOME/.local/bin" "$_rc_file" 2>/dev/null
-            else
-                true
-            fi
+            echo "${HOME}/.basalt/env"
             ;;
     esac
 }
 
-# Update PATH in shell rc
-update_path() {
-    _rc_file="$1"
-
-    mkdir -p "$(dirname "$_rc_file")"
+get_env_source_line() {
+    _env_script_path="$1"
 
     case "$(basename "${SHELL:-/bin/sh}")" in
         fish)
-            echo "" >> "$_rc_file"
-            echo "# Basalt installer" >> "$_rc_file"
-            echo "if not contains \$HOME/.local/bin \$fish_user_paths" >> "$_rc_file"
-            echo "    set -a fish_user_paths \$HOME/.local/bin" >> "$_rc_file"
-            echo "end" >> "$_rc_file"
+            echo "source \"${_env_script_path}\""
             ;;
         *)
-            echo "" >> "$_rc_file"
-            echo "# Basalt installer" >> "$_rc_file"
-            echo "export PATH=\"\$HOME/.local/bin:\$PATH\"" >> "$_rc_file"
+            echo ". \"${_env_script_path}\""
             ;;
     esac
+}
+
+has_env_source_line() {
+    _rc_file="$1"
+    _source_line="$2"
+
+    if [ -f "$_rc_file" ]; then
+        grep -F "$_source_line" "$_rc_file" >/dev/null 2>/dev/null
+    else
+        return 1
+    fi
+}
+
+write_env_script() {
+    _env_script_path="$1"
+
+    mkdir -p "$(dirname "$_env_script_path")"
+
+    case "$(basename "${SHELL:-/bin/sh}")" in
+        fish)
+            cat > "$_env_script_path" <<'EOF'
+# Basalt installer
+if not contains $HOME/.local/bin $fish_user_paths
+    set -a fish_user_paths $HOME/.local/bin
+end
+if not set -q LD_LIBRARY_PATH
+    set -gx LD_LIBRARY_PATH $HOME/.local/lib
+else if not contains $HOME/.local/lib $LD_LIBRARY_PATH
+    set -gx LD_LIBRARY_PATH $HOME/.local/lib $LD_LIBRARY_PATH
+end
+EOF
+            ;;
+        *)
+            cat > "$_env_script_path" <<'EOF'
+# Basalt installer
+case ":${PATH}:" in
+    *:"$HOME/.local/bin":*) ;;
+    *) PATH="$HOME/.local/bin:$PATH" ;;
+esac
+export PATH
+
+case ":${LD_LIBRARY_PATH:-}:" in
+    *:"$HOME/.local/lib":*) ;;
+    *)
+        if [ -n "${LD_LIBRARY_PATH:-}" ]; then
+            LD_LIBRARY_PATH="$HOME/.local/lib:$LD_LIBRARY_PATH"
+        else
+            LD_LIBRARY_PATH="$HOME/.local/lib"
+        fi
+        ;;
+esac
+export LD_LIBRARY_PATH
+EOF
+            ;;
+    esac
+
+    chmod +x "$_env_script_path" 2>/dev/null || true
+}
+
+add_env_source_line() {
+    _rc_file="$1"
+    _source_line="$2"
+
+    mkdir -p "$(dirname "$_rc_file")"
+    echo "" >> "$_rc_file"
+    echo "# Basalt installer" >> "$_rc_file"
+    echo "$_source_line" >> "$_rc_file"
 }
 
 # Main installation
@@ -246,11 +309,18 @@ main() {
         _artifact="basalt.tar.gz"
     else
         _artifact="basalt-${_version}-${_arch}.tar.gz"
-        _url="${GITLAB_URL}/${PROJECT}/-/releases/${_version}/downloads/${_artifact}"
+        _url="$(artifact_url "${_version}" "${_artifact}")"
     fi
 
     log "Downloading from $_url ..."
     if ! curl -sSLf "$_url" -o basalt.tar.gz; then
+        case "${_arch}" in
+            *apple-darwin)
+                die "No prebuilt ${APP_NAME} release is available for ${_arch}.
+Current GitLab releases publish Linux artifacts only.
+Build from source on macOS or provide BASALT_DOWNLOAD_URL with a compatible archive."
+                ;;
+        esac
         die "Failed to download ${_artifact}
 Please verify that the version exists for your platform at:
 ${GITLAB_URL}/${PROJECT}/-/releases"
@@ -260,7 +330,7 @@ ${GITLAB_URL}/${PROJECT}/-/releases"
     if [ -z "${DOWNLOAD_URL}" ]; then
         download_checksum "${_version}" "${_artifact}" || true
         if [ -f "basalt.tar.gz.sha256" ]; then
-            _expected_checksum="$(tr -d '[:space:]' < basalt.tar.gz.sha256)"
+            _expected_checksum="$(awk '{print $1}' < basalt.tar.gz.sha256)"
             verify_checksum "basalt.tar.gz" "${_expected_checksum}"
         fi
     fi
@@ -317,12 +387,32 @@ EOF
     rm -rf "$_tmp_dir"
     _tmp_dir=""
 
-    # Update PATH if needed
+    # Update shell environment if needed
     _rc_file="$(get_rc_file)"
-    if needs_path_update "$_rc_file"; then
+    _env_script_path="$(get_env_script_path)"
+    _source_line="$(get_env_source_line "$_env_script_path")"
+    write_env_script "$_env_script_path"
+
+    _rc_updated="false"
+    if ! has_env_source_line "$_rc_file" "$_source_line"; then
         echo ""
-        log "Adding $_install_dir to PATH in $_rc_file ..."
-        update_path "$_rc_file"
+        log "Adding $_install_dir to PATH and $_lib_dir to LD_LIBRARY_PATH in $_rc_file ..."
+        add_env_source_line "$_rc_file" "$_source_line"
+        _rc_updated="true"
+    fi
+
+    _sourced_rc="false"
+    case "$(basename "${SHELL:-/bin/sh}")" in
+        bash|zsh)
+            # shellcheck disable=SC1090
+            . "$_env_script_path"
+            _sourced_rc="true"
+            ;;
+    esac
+
+    _manual_source_cmd="source $_env_script_path"
+    if [ "$(basename "${SHELL:-/bin/sh}")" != "fish" ]; then
+        _manual_source_cmd=". $_env_script_path"
     fi
 
     echo ""
@@ -333,9 +423,15 @@ EOF
     echo "Data:      $_data_dir"
     echo "Receipt:   $_receipt_file"
     echo ""
-    if needs_path_update "$_rc_file"; then
+    if [ "${_sourced_rc}" = "true" ]; then
+        echo "Updated environment loaded from $_env_script_path for this shell session."
+        echo ""
+        echo "If needed later, either:"
+        echo "  1. Run: $_manual_source_cmd"
+        echo "  2. Or restart your shell"
+    elif [ "${_rc_updated}" = "true" ]; then
         echo "To complete the installation, either:"
-        echo "  1. Run: source $_rc_file"
+        echo "  1. Run: $_manual_source_cmd"
         echo "  2. Or restart your shell"
     else
         echo "You can now run basalt binaries from your shell."
