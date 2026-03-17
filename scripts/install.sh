@@ -84,7 +84,15 @@ detect_platform() {
 
 # Get latest version from GitLab API
 get_latest_version() {
-    curl -s "${BASE_URL}/per/latest" 2>/dev/null | grep -o '"tag_name":"[^"]*"' | cut -d'"' -f4
+    _latest="$(curl -s "${BASE_URL}/per/latest" 2>/dev/null | grep -o '"tag_name":"[^"]*"' | cut -d'"' -f4)"
+
+    if [ -n "${_latest}" ]; then
+        echo "${_latest}"
+        return 0
+    fi
+
+    # GitLab's /per/latest endpoint can return 404 even when releases exist.
+    curl -s "${BASE_URL}" 2>/dev/null | grep -o '"tag_name":"[^"]*"' | head -n1 | cut -d'"' -f4
 }
 
 artifact_url() {
@@ -259,6 +267,13 @@ main() {
 
     log "Downloading from $_url ..."
     if ! curl -sSLf "$_url" -o basalt.tar.gz; then
+        case "${_arch}" in
+            *apple-darwin)
+                die "No prebuilt ${APP_NAME} release is available for ${_arch}.
+Current GitLab releases publish Linux artifacts only.
+Build from source on macOS or provide BASALT_DOWNLOAD_URL with a compatible archive."
+                ;;
+        esac
         die "Failed to download ${_artifact}
 Please verify that the version exists for your platform at:
 ${GITLAB_URL}/${PROJECT}/-/releases"
