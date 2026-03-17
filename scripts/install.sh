@@ -26,7 +26,8 @@ fi
 
 DOWNLOAD_URL="${BASALT_DOWNLOAD_URL:-}"
 ARTIFACT_JOB_NAME="${BASALT_ARTIFACT_JOB_NAME:-ubuntu22-build}"
-BASE_URL="${GITLAB_URL}/api/v4/projects/${PROJECT}/releases"
+PROJECT_API_PATH="$(printf '%s' "${PROJECT}" | sed 's/\//%2F/g')"
+BASE_URL="${GITLAB_URL}/api/v4/projects/${PROJECT_API_PATH}/releases"
 
 log() {
     echo "$*"
