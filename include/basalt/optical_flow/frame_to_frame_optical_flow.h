@@ -197,8 +197,11 @@ class FrameToFrameOpticalFlow : public OpticalFlowBase {
       init_vec.push_back(kv.second);
     }
 
-    tbb::concurrent_unordered_map<KeypointId, Eigen::AffineCompact2f,
-                                  std::hash<KeypointId>>
+    tbb::concurrent_unordered_map<
+        KeypointId, Eigen::AffineCompact2f, std::hash<KeypointId>,
+        std::equal_to<KeypointId>,
+        Eigen::aligned_allocator<
+            std::pair<const KeypointId, Eigen::AffineCompact2f>>>
         result;
 
     auto compute_func = [&](const tbb::blocked_range<size_t>& range) {

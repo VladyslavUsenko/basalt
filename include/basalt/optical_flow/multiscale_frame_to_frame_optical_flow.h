@@ -217,8 +217,11 @@ class MultiscaleFrameToFrameOpticalFlow : public OpticalFlowBase {
       pyramid_level.push_back(pyramid_levels_1.at(kv.first));
     }
 
-    tbb::concurrent_unordered_map<KeypointId, Eigen::AffineCompact2f,
-                                  std::hash<KeypointId>>
+    tbb::concurrent_unordered_map<
+        KeypointId, Eigen::AffineCompact2f, std::hash<KeypointId>,
+        std::equal_to<KeypointId>,
+        Eigen::aligned_allocator<
+            std::pair<const KeypointId, Eigen::AffineCompact2f>>>
         result_transforms;
     tbb::concurrent_unordered_map<KeypointId, size_t, std::hash<KeypointId>>
         result_pyramid_level;

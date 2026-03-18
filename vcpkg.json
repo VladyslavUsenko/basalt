@@ -1,6 +1,6 @@
 {
   "name": "basalt",
-  "version-string": "0.1.4",
+  "version-string": "0.1.5",
   "dependencies": [
     "boost-date-time",
     "boost-filesystem",

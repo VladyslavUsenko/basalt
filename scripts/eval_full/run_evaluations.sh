@@ -22,20 +22,23 @@ mkdir $folder_name
 
 
 
+PREFIX="${HOME}/.local"
+DATA_DIR="${PREFIX}/etc/basalt"
+
 for d in "${DATASETS[@]}"; do
-   basalt_vio --dataset-path  $DATASET_PATH/$d --cam-calib /usr/etc/basalt/euroc_eucm_calib.json \
-        --dataset-type euroc --show-gui 0 --config-path /usr/etc/basalt/euroc_config.json \
+   basalt_vio --dataset-path  $DATASET_PATH/$d --cam-calib "${DATA_DIR}/euroc_eucm_calib.json" \
+        --dataset-type euroc --show-gui 0 --config-path "${DATA_DIR}/euroc_config.json" \
         --result-path $folder_name/vio_$d --marg-data eval_tmp_marg_data --save-trajectory tum
 
    mv trajectory.txt $folder_name/traj_vio_$d.txt
 
-    basalt_mapper --show-gui 0 --cam-calib /usr/etc/basalt/euroc_eucm_calib.json --config-path /usr/etc/basalt/euroc_config.json --marg-data eval_tmp_marg_data \
+    basalt_mapper --show-gui 0 --cam-calib "${DATA_DIR}/euroc_eucm_calib.json" --config-path "${DATA_DIR}/euroc_config.json" --marg-data eval_tmp_marg_data \
         --result-path $folder_name/mapper_$d
 
-    basalt_mapper --show-gui 0 --cam-calib /usr/etc/basalt/euroc_eucm_calib.json --config-path /usr/etc/basalt/euroc_config_no_weights.json --marg-data eval_tmp_marg_data \
+    basalt_mapper --show-gui 0 --cam-calib "${DATA_DIR}/euroc_eucm_calib.json" --config-path "${DATA_DIR}/euroc_config_no_weights.json" --marg-data eval_tmp_marg_data \
         --result-path $folder_name/mapper_no_weights_$d
 
-        basalt_mapper --show-gui 0 --cam-calib /usr/etc/basalt/euroc_eucm_calib.json --config-path /usr/etc/basalt/euroc_config_no_factors.json --marg-data eval_tmp_marg_data \
+        basalt_mapper --show-gui 0 --cam-calib "${DATA_DIR}/euroc_eucm_calib.json" --config-path "${DATA_DIR}/euroc_config_no_factors.json" --marg-data eval_tmp_marg_data \
         --result-path $folder_name/mapper_no_factors_$d
 
     rm -rf eval_tmp_marg_data

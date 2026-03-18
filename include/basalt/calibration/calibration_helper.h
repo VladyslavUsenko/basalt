@@ -71,9 +71,10 @@ struct CalibInitPoseData {
 using CalibCornerMap = tbb::concurrent_unordered_map<TimeCamId, CalibCornerData,
                                                      std::hash<TimeCamId>>;
 
-using CalibInitPoseMap =
-    tbb::concurrent_unordered_map<TimeCamId, CalibInitPoseData,
-                                  std::hash<TimeCamId>>;
+using CalibInitPoseMap = tbb::concurrent_unordered_map<
+    TimeCamId, CalibInitPoseData, std::hash<TimeCamId>,
+    std::equal_to<TimeCamId>,
+    Eigen::aligned_allocator<std::pair<const TimeCamId, CalibInitPoseData>>>;
 
 class CalibHelper {
  public:

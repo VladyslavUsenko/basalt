@@ -46,6 +46,7 @@ int main(int argc, char** argv) {
   std::string result_path;
   std::string cache_dataset_name = "calib-cam-imu";
   int skip_images = 1;
+  bool no_gui = false;
 
   double accel_noise_std = 0.016;
   double gyro_noise_std = 0.000282;
@@ -77,6 +78,7 @@ int main(int argc, char** argv) {
                  "Name to save cached files");
 
   app.add_option("--skip-images", skip_images, "Number of images to skip");
+  app.add_flag("--no-gui", no_gui, "Run calibration without opening the GUI");
 
   try {
     app.parse(argc, argv);
@@ -87,7 +89,29 @@ int main(int argc, char** argv) {
   basalt::CamImuCalib cv(
       dataset_path, dataset_type, aprilgrid_path, result_path,
       cache_dataset_name, skip_images,
-      {accel_noise_std, gyro_noise_std, accel_bias_std, gyro_bias_std});
+      {accel_noise_std, gyro_noise_std, accel_bias_std, gyro_bias_std},
+      !no_gui);
+
+  if (no_gui) {
+    cv.loadDataset();
+    cv.detectCorners();
+    cv.initCamPoses();
+    cv.initCamImuTransform();
+    cv.initOptimization();
+    while (!cv.optimizeWithParam(true)) {
+    }
+    cv.setOptCamTimeOffset(true);
+    cv.setOptImuScale(true);
+    while (!cv.optimizeWithParam(true)) {
+    }
+    cv.initMocap();
+    cv.setOptMocap(true);
+    while (!cv.optimizeWithParam(true)) {
+    }
+    cv.saveCalib();
+    cv.saveMocapCalib();
+    return 0;
+  }
 
   cv.renderingLoop();
 

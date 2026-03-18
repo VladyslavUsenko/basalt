@@ -32,17 +32,11 @@ Optimization (describes square-root optimization and marginalization used in VIO
 
 
 ## Installation
-### Binary installation from GitLab releases
+### Binary installation from GitLab releases (Ubuntu 22.04+ amd64)
 Install the latest published release into `~/.local`:
 ```
 curl -LsSf https://gitlab.com/VladyslavUsenko/basalt/-/raw/master/scripts/install.sh | sh
 ```
-
-Install a specific release:
-```
-curl -LsSf https://gitlab.com/VladyslavUsenko/basalt/-/raw/master/scripts/install.sh | sh -s -- <tag>
-```
-
 The installer places binaries in `~/.local/bin`, libraries in `~/.local/lib`, and data files in `~/.local/etc/basalt`.
 
 ### Source installation (CMake presets + vcpkg)

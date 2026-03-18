@@ -20,10 +20,13 @@ DATASETS=(00 02 03 04 05 06 07 08 09 10)
 folder_name=eval_results_kitti
 mkdir $folder_name
 
+PREFIX="${HOME}/.local"
+DATA_DIR="${PREFIX}/etc/basalt"
+
 for d in "${DATASETS[@]}"; do
 echo $d
    basalt_vio --dataset-path  $DATASET_PATH/$d --cam-calib $DATASET_PATH/$d/basalt_calib.json \
-        --dataset-type kitti --show-gui 0 --config-path /usr/etc/basalt/kitti_config.json --result-path $folder_name/vo_$d --save-trajectory kitti --use-imu 0
+        --dataset-type kitti --show-gui 0 --config-path "${DATA_DIR}/kitti_config.json" --result-path $folder_name/vo_$d --save-trajectory kitti --use-imu 0
 
    mv trajectory_kitti.txt $folder_name/kitti_$d.txt
 

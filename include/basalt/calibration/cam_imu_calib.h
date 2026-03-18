@@ -104,6 +104,9 @@ class CamImuCalib {
   bool hasCorners() const;
 
   void setOptIntrinsics(bool opt) { opt_intr = opt; }
+  void setOptCamTimeOffset(bool opt) { opt_cam_time_offset = opt; }
+  void setOptImuScale(bool opt) { opt_imu_scale = opt; }
+  void setOptMocap(bool opt) { opt_mocap = opt; }
 
  private:
   static constexpr int UI_WIDTH = 300;

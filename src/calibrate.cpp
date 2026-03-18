@@ -45,6 +45,7 @@ int main(int argc, char** argv) {
   std::vector<std::string> cam_types;
   std::string cache_dataset_name = "calib-cam";
   int skip_images = 1;
+  bool no_gui = false;
 
   CLI::App app{"Calibrate IMU"};
 
@@ -65,6 +66,7 @@ int main(int argc, char** argv) {
   app.add_option("--cam-types", cam_types,
                  "Type of cameras (eucm, ds, kb4, pinhole)")
       ->required();
+  app.add_flag("--no-gui", no_gui, "Run calibration without opening the GUI");
 
   try {
     app.parse(argc, argv);
@@ -73,7 +75,21 @@ int main(int argc, char** argv) {
   }
 
   basalt::CamCalib cv(dataset_path, dataset_type, aprilgrid_path, result_path,
-                      cache_dataset_name, skip_images, cam_types);
+                      cache_dataset_name, skip_images, cam_types, !no_gui);
+
+  if (no_gui) {
+    cv.loadDataset();
+    cv.detectCorners();
+    cv.initCamIntrinsics();
+    cv.initCamPoses();
+    cv.initCamExtrinsics();
+    cv.initOptimization();
+    while (!cv.optimizeWithParam(true)) {
+    }
+    cv.computeVign();
+    cv.saveCalib();
+    return 0;
+  }
 
   cv.renderingLoop();
 
