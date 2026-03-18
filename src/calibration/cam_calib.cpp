@@ -211,10 +211,10 @@ void CamCalib::computeVign() {
 
   std::vector<std::vector<float>> vign_data;
   ve.compute_data_log(vign_data);
-  vign_data_log.Clear();
-  for (const auto& v : vign_data) vign_data_log.Log(v);
+  if (show_gui) {
+    vign_data_log.Clear();
+    for (const auto& v : vign_data) vign_data_log.Log(v);
 
-  {
     vign_plotter->ClearSeries();
     vign_plotter->ClearMarkers();
 
@@ -362,49 +362,51 @@ void CamCalib::computeProjections() {
     }
   }
 
-  while (polar_data_log.size() < calib_opt->calib->intrinsics.size()) {
-    polar_data_log.emplace_back(new pangolin::DataLog);
-  }
-
-  while (azimuth_data_log.size() < calib_opt->calib->intrinsics.size()) {
-    azimuth_data_log.emplace_back(new pangolin::DataLog);
-  }
-
-  constexpr int MIN_POINTS_HIST = 3;
-  polar_plotter->ClearSeries();
-  azimuth_plotter->ClearSeries();
-
-  for (size_t c = 0; c < calib_opt->calib->intrinsics.size(); c++) {
-    polar_data_log[c]->Clear();
-    azimuth_data_log[c]->Clear();
-
-    for (int i = 0; i < polar_sum[c].rows(); i++) {
-      if (polar_num[c][i] > MIN_POINTS_HIST) {
-        double x_coord = ANGLE_BIN_SIZE * i + ANGLE_BIN_SIZE / 2.0;
-        double mean_reproj = polar_sum[c][i] / polar_num[c][i];
-
-        polar_data_log[c]->Log(x_coord, mean_reproj);
-      }
+  if (show_gui) {
+    while (polar_data_log.size() < calib_opt->calib->intrinsics.size()) {
+      polar_data_log.emplace_back(new pangolin::DataLog);
     }
 
-    polar_plotter->AddSeries(
-        "$0", "$1", pangolin::DrawingModeLine, cam_colors[c],
-        "mean error(pix) vs polar angle(deg) for cam" + std::to_string(c),
-        polar_data_log[c].get());
-
-    for (int i = 0; i < azimuth_sum[c].rows(); i++) {
-      if (azimuth_num[c][i] > MIN_POINTS_HIST) {
-        double x_coord = ANGLE_BIN_SIZE * i + ANGLE_BIN_SIZE / 2.0 - 180.0;
-        double mean_reproj = azimuth_sum[c][i] / azimuth_num[c][i];
-
-        azimuth_data_log[c]->Log(x_coord, mean_reproj);
-      }
+    while (azimuth_data_log.size() < calib_opt->calib->intrinsics.size()) {
+      azimuth_data_log.emplace_back(new pangolin::DataLog);
     }
 
-    azimuth_plotter->AddSeries(
-        "$0", "$1", pangolin::DrawingModeLine, cam_colors[c],
-        "mean error(pix) vs azimuth angle(deg) for cam" + std::to_string(c),
-        azimuth_data_log[c].get());
+    constexpr int MIN_POINTS_HIST = 3;
+    polar_plotter->ClearSeries();
+    azimuth_plotter->ClearSeries();
+
+    for (size_t c = 0; c < calib_opt->calib->intrinsics.size(); c++) {
+      polar_data_log[c]->Clear();
+      azimuth_data_log[c]->Clear();
+
+      for (int i = 0; i < polar_sum[c].rows(); i++) {
+        if (polar_num[c][i] > MIN_POINTS_HIST) {
+          double x_coord = ANGLE_BIN_SIZE * i + ANGLE_BIN_SIZE / 2.0;
+          double mean_reproj = polar_sum[c][i] / polar_num[c][i];
+
+          polar_data_log[c]->Log(x_coord, mean_reproj);
+        }
+      }
+
+      polar_plotter->AddSeries(
+          "$0", "$1", pangolin::DrawingModeLine, cam_colors[c],
+          "mean error(pix) vs polar angle(deg) for cam" + std::to_string(c),
+          polar_data_log[c].get());
+
+      for (int i = 0; i < azimuth_sum[c].rows(); i++) {
+        if (azimuth_num[c][i] > MIN_POINTS_HIST) {
+          double x_coord = ANGLE_BIN_SIZE * i + ANGLE_BIN_SIZE / 2.0 - 180.0;
+          double mean_reproj = azimuth_sum[c][i] / azimuth_num[c][i];
+
+          azimuth_data_log[c]->Log(x_coord, mean_reproj);
+        }
+      }
+
+      azimuth_plotter->AddSeries(
+          "$0", "$1", pangolin::DrawingModeLine, cam_colors[c],
+          "mean error(pix) vs azimuth angle(deg) for cam" + std::to_string(c),
+          azimuth_data_log[c].get());
+    }
   }
 }
 

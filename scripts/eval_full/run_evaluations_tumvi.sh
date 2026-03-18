@@ -27,9 +27,12 @@ mkdir $folder_name
 
 
 
+PREFIX="${HOME}/.local"
+DATA_DIR="${PREFIX}/etc/basalt"
+
 for d in "${DATASETS[@]}"; do
-   basalt_vio --dataset-path  $DATASET_PATH/$d --cam-calib /usr/etc/basalt/tumvi_512_eucm_calib.json \
-        --dataset-type euroc --show-gui 0 --config-path /usr/etc/basalt/tumvi_512_config.json \
+   basalt_vio --dataset-path  $DATASET_PATH/$d --cam-calib "${DATA_DIR}/tumvi_512_eucm_calib.json" \
+        --dataset-type euroc --show-gui 0 --config-path "${DATA_DIR}/tumvi_512_config.json" \
         --result-path $folder_name/vio_$d --save-trajectory tum
 
    mv trajectory.txt $folder_name/${d}_basalt_poses.txt

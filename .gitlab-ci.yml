@@ -174,7 +174,8 @@ stages:
       - scripts/eval_full/eval_results/*
     expire_in: 1 week
   before_script:
-    - bash scripts/install_basalt.sh
+    - bash scripts/install.sh --from-artifacts
+    - . "${HOME}/.basalt/env"
   script:
     - cd scripts/eval_full
     - ./run_evaluations.sh
@@ -194,7 +195,8 @@ stages:
       - scripts/eval_full/eval_results_tumvi/*
     expire_in: 1 week
   before_script:
-    - bash scripts/install_basalt.sh
+    - bash scripts/install.sh --from-artifacts
+    - . "${HOME}/.basalt/env"
   script:
     - cd scripts/eval_full
     - ./run_evaluations_tumvi.sh
@@ -214,10 +216,51 @@ stages:
       - scripts/eval_full/eval_results_kitti/*
     expire_in: 1 week
   before_script:
-    - bash scripts/install_basalt.sh
+    - bash scripts/install.sh --from-artifacts
+    - . "${HOME}/.basalt/env"
   script:
     - cd scripts/eval_full
     - ./run_evaluations_kitti.sh
+
+.eval_calib_template: &eval_calib_definition
+  image: ubuntu:22.04
+  stage: eval
+  tags: [docker, dataset-eval]
+  variables:
+    GIT_STRATEGY: none
+  needs:
+    - job: ubuntu22-build
+      artifacts: true
+  artifacts:
+    paths:
+      - calib_eval_results/
+    expire_in: 1 week
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq python3
+    - bash scripts/install.sh --from-artifacts
+    - . "${HOME}/.basalt/env"
+  script:
+    - bash scripts/eval_calib.sh
+
+.eval_sim_template: &eval_sim_definition
+  image: ubuntu:22.04
+  stage: eval
+  tags: [docker, dataset-eval]
+  variables:
+    GIT_STRATEGY: none
+  needs:
+    - job: ubuntu22-build
+      artifacts: true
+  artifacts:
+    paths:
+      - sim_eval_results/
+    expire_in: 1 week
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq python3
+    - bash scripts/install.sh --from-artifacts
+    - . "${HOME}/.basalt/env"
+  script:
+    - bash scripts/eval_sim.sh
 
 # Template for release creation
 .release_template: &release_definition
@@ -253,7 +296,10 @@ ubuntu22-build:
       - scripts/create_gitlab_release.sh
       - scripts/eval_full/
       - scripts/generate_checksums.sh
-      - scripts/install_basalt.sh
+      - scripts/install.sh
+      - scripts/eval_calib.sh
+      - scripts/eval_sim.sh
+      - scripts/check_calibration.py
 
 pre-commit:
   image: python:3.10
@@ -285,6 +331,16 @@ eval_tumvi:
 # KITTI evaluation jobs
 eval_kitti:
   <<: *eval_kitti_definition
+  when: manual
+  allow_failure: false
+
+eval_calib:
+  <<: *eval_calib_definition
+  when: manual
+  allow_failure: false
+
+eval_sim:
+  <<: *eval_sim_definition
   when: manual
   allow_failure: false
 
