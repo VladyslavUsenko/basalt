@@ -1,6 +1,12 @@
 {
   "name": "basalt",
   "version-string": "0.1.5",
+  "overrides": [
+    {
+      "name": "realsense2",
+      "version": "2.51.1"
+    }
+  ],
   "dependencies": [
     "boost-date-time",
     "boost-filesystem",
@@ -32,7 +38,13 @@
         "png"
       ]
     },
-    "realsense2",
+    {
+      "name": "realsense2",
+      "features": [
+        "rs-usb-backend",
+        "tm2"
+      ]
+    },
     "tbb",
     "basalt-headers",
     "opengv",

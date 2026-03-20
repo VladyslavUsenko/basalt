@@ -114,9 +114,21 @@ def compare_calibration(
     gyro_bias = vec_norm(
         g - r for g, r in zip(generated["calib_gyro_bias"][:3], reference["calib_gyro_bias"][:3])
     )
-    accel_scale = vec_norm(generated["calib_accel_bias"][3:9])
-    gyro_scale = vec_norm(generated["calib_gyro_bias"][3:12])
-    cam_time_offset = abs(int(generated["cam_time_offset_ns"]))
+    accel_scale = vec_norm(
+        g - r
+        for g, r in zip(
+            generated["calib_accel_bias"][3:9], reference["calib_accel_bias"][3:9]
+        )
+    )
+    gyro_scale = vec_norm(
+        g - r
+        for g, r in zip(
+            generated["calib_gyro_bias"][3:12], reference["calib_gyro_bias"][3:12]
+        )
+    )
+    cam_time_offset = abs(
+        int(generated["cam_time_offset_ns"]) - int(reference["cam_time_offset_ns"])
+    )
     accel_bias_limit = (
         EUROC_ACCEL_BIAS_LIMIT if label.startswith("euroc_") else ACCEL_BIAS_LIMIT
     )

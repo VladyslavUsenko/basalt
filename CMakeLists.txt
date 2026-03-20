@@ -22,7 +22,7 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
-option(BASALT_BUILD_SHARED_LIB "Build basalt core library as shared" OFF)
+option(BASALT_BUILD_SHARED_LIB "Build basalt core library as shared" ON)
 option(BASALT_FULLY_STATIC_BINARIES "Link executables fully static" ON)
 
 if(NOT CXX_MARCH)
@@ -163,7 +163,13 @@ set(CMAKE_CXX_FLAGS "${BASALT_CXX_FLAGS} ${BASALT_MARCH_FLAGS} ${BASALT_PASSED_C
 find_package(Eigen3 CONFIG REQUIRED)
 find_package(TBB CONFIG REQUIRED)
 find_package(OpenCV CONFIG REQUIRED COMPONENTS core imgproc calib3d features2d imgcodecs)
-find_package(Boost REQUIRED COMPONENTS date_time filesystem format program_options regex thread)
+file(GLOB BASALT_VCPKG_BOOST_CONFIG "${CMAKE_BINARY_DIR}/vcpkg_installed/*/share/boost/BoostConfig.cmake")
+if(BASALT_VCPKG_BOOST_CONFIG)
+  list(GET BASALT_VCPKG_BOOST_CONFIG 0 BASALT_VCPKG_BOOST_CONFIG)
+  get_filename_component(BASALT_VCPKG_BOOST_DIR "${BASALT_VCPKG_BOOST_CONFIG}" DIRECTORY)
+  set(Boost_DIR "${BASALT_VCPKG_BOOST_DIR}" CACHE PATH "Boost config directory" FORCE)
+endif()
+find_package(Boost CONFIG REQUIRED COMPONENTS date_time filesystem format program_options regex thread)
 find_package(lz4 CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 find_package(CLI11 CONFIG REQUIRED)
@@ -388,7 +394,7 @@ target_link_libraries(basalt_kitti_eval basalt::basalt-headers basalt::cli11)
 basalt_add_static_link_options(basalt_kitti_eval)
 
 find_package(realsense2 QUIET)
-if(realsense2_FOUND AND NOT APPLE)
+if(realsense2_FOUND)
   add_executable(basalt_rs_t265_record src/rs_t265_record.cpp src/device/rs_t265.cpp)
   target_link_libraries(basalt_rs_t265_record basalt realsense2::realsense2 ${BASALT_PANGO_TARGETS} basalt::cli11)
   basalt_add_gui_link_options(basalt_rs_t265_record)
@@ -400,11 +406,20 @@ if(realsense2_FOUND AND NOT APPLE)
   # librealsense-file and rosbag both provide overlapping rosbag symbols.
   # Keep this relaxation local to the two T265 tools.
   if(UNIX AND NOT APPLE)
+    find_library(UDEV_LIB udev REQUIRED)
+    target_link_libraries(basalt_rs_t265_record "${UDEV_LIB}")
+    target_link_libraries(basalt_rs_t265_vio "${UDEV_LIB}")
     target_link_options(basalt_rs_t265_record PRIVATE "LINKER:--allow-multiple-definition")
     target_link_options(basalt_rs_t265_vio PRIVATE "LINKER:--allow-multiple-definition")
+  elseif(APPLE)
+    find_library(SECURITY_FRAMEWORK Security REQUIRED)
+    target_link_libraries(basalt_rs_t265_record "${SECURITY_FRAMEWORK}")
+    target_link_libraries(basalt_rs_t265_vio "${SECURITY_FRAMEWORK}")
+    target_link_options(basalt_rs_t265_record PRIVATE "LINKER:-ld_classic")
+    target_link_options(basalt_rs_t265_vio PRIVATE "LINKER:-ld_classic")
+    target_link_options(basalt_rs_t265_record PRIVATE "LINKER:-multiply_defined,suppress")
+    target_link_options(basalt_rs_t265_vio PRIVATE "LINKER:-multiply_defined,suppress")
   endif()
-elseif(realsense2_FOUND AND APPLE)
-  message(STATUS "Skipping T265 executables on macOS due to librealsense/rosbag static link conflicts.")
 endif()
 
 
@@ -423,7 +438,7 @@ if(BASALT_INSTANTIATIONS_DOUBLE)
     ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 endif()
 
-if(realsense2_FOUND AND NOT APPLE)
+if(realsense2_FOUND)
     install(TARGETS basalt_rs_t265_record basalt_rs_t265_vio
       EXPORT BasaltTargets
       RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
@@ -436,6 +451,8 @@ install(PROGRAMS ${SCRIPTS_TO_INSTALL} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 
 file(GLOB CONFIG_FILES "${CMAKE_CURRENT_SOURCE_DIR}/data/*.json")
 install(FILES ${CONFIG_FILES}
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/etc/basalt)
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/data/udev"
   DESTINATION ${CMAKE_INSTALL_PREFIX}/etc/basalt)
 
 

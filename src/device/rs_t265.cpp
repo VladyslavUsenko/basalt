@@ -35,9 +35,42 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <basalt/device/rs_t265.h>
 
+#include <fstream>
+
 std::string get_date();
 
 namespace basalt {
+
+namespace {
+
+constexpr const char* kBasaltInstalledUdevRule =
+    "~/.local/etc/basalt/udev/99-realsense-libusb.rules";
+
+bool osReleaseContains(const char* expected) {
+  std::ifstream os_release("/etc/os-release");
+  if (!os_release.is_open()) return false;
+
+  std::string line;
+  while (std::getline(os_release, line)) {
+    if (line.rfind("ID=", 0) == 0 || line.rfind("ID_LIKE=", 0) == 0) {
+      if (line.find(expected) != std::string::npos) return true;
+    }
+  }
+
+  return false;
+}
+
+}  // namespace
+
+bool isUbuntu() { return osReleaseContains("ubuntu"); }
+
+void printUbuntuUdevSetupInstructions(std::ostream& os) {
+  os << "Ubuntu udev setup may be missing for the RealSense T265.\n"
+     << "Install the bundled Basalt rules file with:\n"
+     << "  sudo cp " << kBasaltInstalledUdevRule << " /etc/udev/rules.d/\n"
+     << "  sudo udevadm control --reload-rules && sudo udevadm trigger\n"
+     << "Then unplug and reconnect the T265 and retry.\n";
+}
 
 RsT265Device::RsT265Device(bool manual_exposure, int skip_frames,
                            int webp_quality, double exposure_value)
@@ -57,6 +90,9 @@ RsT265Device::RsT265Device(bool manual_exposure, int skip_frames,
 
   if (context.query_devices().size() == 0) {
     std::cout << "Waiting for device to be connected" << std::endl;
+    if (isUbuntu()) {
+      printUbuntuUdevSetupInstructions(std::cerr);
+    }
     rs2::device_hub hub(context);
     hub.wait_for_device();
   }
@@ -223,6 +259,15 @@ void RsT265Device::start() {
                             data.translation.z);
       Eigen::Quaterniond quat(data.rotation.w, data.rotation.x, data.rotation.y,
                               data.rotation.z);
+
+      if (!trans.array().isFinite().all() ||
+          !quat.coeffs().array().isFinite().all() ||
+          quat.squaredNorm() < 1e-12) {
+        std::cerr << "Skipping invalid T265 pose frame" << std::endl;
+        return;
+      }
+
+      quat.normalize();
 
       pdata.data = Sophus::SE3d(quat, trans);
 

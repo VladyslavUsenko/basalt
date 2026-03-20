@@ -356,10 +356,24 @@ int main(int argc, char* argv[]) {
   pose_data_queue.set_capacity(10000);
 
   // realsense
-  t265_device.reset(new basalt::RsT265Device(manual_exposure, skip_frames,
-                                             webp_quality, exposure));
+  try {
+    t265_device.reset(new basalt::RsT265Device(manual_exposure, skip_frames,
+                                               webp_quality, exposure));
+    t265_device->start();
+  } catch (const rs2::error& e) {
+    std::cerr << "Failed to start RealSense T265: " << e.what() << std::endl;
+    if (basalt::isUbuntu()) {
+      basalt::printUbuntuUdevSetupInstructions(std::cerr);
+    }
+    return 1;
+  } catch (const std::exception& e) {
+    std::cerr << "Failed to start RealSense T265: " << e.what() << std::endl;
+    if (basalt::isUbuntu()) {
+      basalt::printUbuntuUdevSetupInstructions(std::cerr);
+    }
+    return 1;
+  }
 
-  t265_device->start();
   imu_log.reset(new pangolin::DataLog);
 
   if (show_gui) {

@@ -105,13 +105,24 @@ stages:
         ./build/${PRESET}/basalt_mapper_sim --help
         ./build/${PRESET}/basalt_mapper_sim_naive --help
         ./build/${PRESET}/basalt_opt_flow --help
+        ./build/${PRESET}/basalt_time_alignment --help
         ./build/${PRESET}/basalt_vio --help
         ./build/${PRESET}/basalt_vio_sim --help
+        if [ -x "./build/${PRESET}/basalt_rs_t265_record" ]; then
+          ./build/${PRESET}/basalt_rs_t265_record --help
+          ./build/${PRESET}/basalt_rs_t265_vio --help
+        fi
       done
     - |
       ARTIFACT_RELEASE_DIR="${CI_PROJECT_DIR}/artifacts/release/bin"
       mkdir -p "${ARTIFACT_RELEASE_DIR}"
       cp -a "${CI_PROJECT_DIR}/data" "${CI_PROJECT_DIR}/artifacts/release/data"
+      STRIP_BIN=""
+      if command -v llvm-strip >/dev/null 2>&1; then
+        STRIP_BIN="llvm-strip"
+      elif command -v strip >/dev/null 2>&1; then
+        STRIP_BIN="strip"
+      fi
       RELEASE_BINS=(
         basalt_calibrate
         basalt_calibrate_imu
@@ -120,6 +131,9 @@ stages:
         basalt_mapper_sim
         basalt_mapper_sim_naive
         basalt_opt_flow
+        basalt_rs_t265_record
+        basalt_rs_t265_vio
+        basalt_time_alignment
         basalt_vio
         basalt_vio_sim
       )
@@ -136,10 +150,19 @@ stages:
           fi
         fi
         install -m 0755 "${bin_path}" "${ARTIFACT_RELEASE_DIR}/${bin}"
+        if [ -n "${STRIP_BIN}" ]; then
+          "${STRIP_BIN}" "${ARTIFACT_RELEASE_DIR}/${bin}" || true
+        fi
+      done
+      for script in "${CI_PROJECT_DIR}"/scripts/basalt_*.py; do
+        install -m 0755 "${script}" "${ARTIFACT_RELEASE_DIR}/$(basename "${script}")"
       done
       # Copy shared library
       mkdir -p "${CI_PROJECT_DIR}/artifacts/release/lib"
       install -m 0755 "${CI_PROJECT_DIR}/build/release/libbasalt.so" "${CI_PROJECT_DIR}/artifacts/release/lib/"
+      if [ -n "${STRIP_BIN}" ]; then
+        "${STRIP_BIN}" "${CI_PROJECT_DIR}/artifacts/release/lib/libbasalt.so" || true
+      fi
       mkdir -p "${CI_PROJECT_DIR}/artifacts"
       # Use tag name for releases, commit SHA for regular builds
       if [ -n "${CI_COMMIT_TAG:-}" ]; then
@@ -262,6 +285,26 @@ stages:
   script:
     - bash scripts/eval_sim.sh
 
+.eval_realsense_template: &eval_realsense_definition
+  image: ubuntu:22.04
+  stage: eval
+  tags: [docker, dataset-eval]
+  variables:
+    GIT_STRATEGY: none
+  needs:
+    - job: ubuntu22-build
+      artifacts: true
+  artifacts:
+    paths:
+      - realsense_eval_results/
+    expire_in: 1 week
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq python3 python3-matplotlib python3-opencv python3-numpy
+    - bash scripts/install.sh --from-artifacts
+    - . "${HOME}/.basalt/env"
+  script:
+    - bash scripts/eval_realsense.sh
+
 # Template for release creation
 .release_template: &release_definition
   image: ubuntu:22.04
@@ -298,6 +341,7 @@ ubuntu22-build:
       - scripts/generate_checksums.sh
       - scripts/install.sh
       - scripts/eval_calib.sh
+      - scripts/eval_realsense.sh
       - scripts/eval_sim.sh
       - scripts/check_calibration.py
 
@@ -341,6 +385,11 @@ eval_calib:
 
 eval_sim:
   <<: *eval_sim_definition
+  when: manual
+  allow_failure: false
+
+eval_realsense:
+  <<: *eval_realsense_definition
   when: manual
   allow_failure: false
 
