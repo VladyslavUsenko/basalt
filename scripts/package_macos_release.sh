@@ -36,6 +36,9 @@ RELEASE_BINS=(
   basalt_mapper_sim
   basalt_mapper_sim_naive
   basalt_opt_flow
+  basalt_rs_t265_record
+  basalt_rs_t265_vio
+  basalt_time_alignment
   basalt_vio
   basalt_vio_sim
 )
@@ -49,6 +52,15 @@ for bin in "${RELEASE_BINS[@]}"; do
   cp "${bin_path}" "${RELEASE_DIR}/bin/"
   chmod +x "${RELEASE_DIR}/bin/${bin}"
   echo "  ${bin}"
+done
+
+for script in scripts/basalt_*.py; do
+  if [ ! -f "${script}" ]; then
+    continue
+  fi
+  cp "${script}" "${RELEASE_DIR}/bin/"
+  chmod +x "${RELEASE_DIR}/bin/$(basename "${script}")"
+  echo "  $(basename "${script}")"
 done
 
 # Copy shared library

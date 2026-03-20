@@ -161,11 +161,26 @@ int main(int argc, char** argv) {
   }
 
   // realsense
-  t265_device.reset(
-      new basalt::RsT265Device(false, 1, 90, 10.0));  // TODO: add options?
+  try {
+    t265_device.reset(
+        new basalt::RsT265Device(false, 1, 90, 10.0));  // TODO: add options?
 
-  // startup device and load calibration
-  t265_device->start();
+    // startup device and load calibration
+    t265_device->start();
+  } catch (const rs2::error& e) {
+    std::cerr << "Failed to start RealSense T265: " << e.what() << std::endl;
+    if (basalt::isUbuntu()) {
+      basalt::printUbuntuUdevSetupInstructions(std::cerr);
+    }
+    return 1;
+  } catch (const std::exception& e) {
+    std::cerr << "Failed to start RealSense T265: " << e.what() << std::endl;
+    if (basalt::isUbuntu()) {
+      basalt::printUbuntuUdevSetupInstructions(std::cerr);
+    }
+    return 1;
+  }
+
   if (cam_calib_path.empty()) {
     calib = *t265_device->exportCalibration();
   } else {

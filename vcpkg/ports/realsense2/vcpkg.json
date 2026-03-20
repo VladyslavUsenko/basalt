@@ -1,0 +1,43 @@
+{
+  "name": "realsense2",
+  "version": "2.51.1",
+  "description": "Intel(R) RealSense(TM) SDK 2.0 is a cross-platform library for Intel(R) RealSense(TM) depth cameras and tracking devices.",
+  "homepage": "https://github.com/IntelRealSense/librealsense",
+  "dependencies": [
+    {
+      "name": "libusb",
+      "platform": "!windows"
+    },
+    {
+      "name": "vcpkg-cmake",
+      "host": true
+    },
+    {
+      "name": "vcpkg-cmake-config",
+      "host": true
+    }
+  ],
+  "features": {
+    "openni2": {
+      "description": "Build Intel RealSense OpenNI2 driver",
+      "dependencies": [
+        "openni2"
+      ]
+    },
+    "rs-usb-backend": {
+      "description": "Use the RSUSB backend for Intel RealSense devices",
+      "dependencies": [
+        {
+          "name": "libusb",
+          "platform": "!windows"
+        }
+      ]
+    },
+    "tm2": {
+      "description": "Build Intel RealSense T265 / TM2 device support"
+    },
+    "tools": {
+      "description": "Build Intel RealSense tools"
+    }
+  }
+}

@@ -40,6 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstring>
 #include <fstream>
 #include <iomanip>
+#include <iosfwd>
 #include <mutex>
 #include <thread>
 
@@ -111,5 +112,8 @@ class RsT265Device {
 
   rs2::pipeline_profile profile;
 };
+
+bool isUbuntu();
+void printUbuntuUdevSetupInstructions(std::ostream& os);
 
 }  // namespace basalt

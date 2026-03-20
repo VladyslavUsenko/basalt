@@ -50,21 +50,60 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 basalt::Calibration<double> calib;
 basalt::MocapCalibration<double> mocap_calib;
 
+void write_aligned_dataset(const std::string& output_gt_path,
+                           const basalt::VioDatasetPtr& vio_dataset,
+                           int64_t best_offset_refined_ns, bool use_calib) {
+  Sophus::SE3d T_mark_i;
+  if (use_calib) T_mark_i = mocap_calib.T_i_mark.inverse();
+
+  const basalt::fs::path output_path(output_gt_path);
+  const auto parent_path = output_path.parent_path();
+  if (!parent_path.empty()) {
+    basalt::fs::create_directories(parent_path);
+  }
+
+  std::ofstream gt_out_stream(output_gt_path);
+  gt_out_stream << "#timestamp [ns], p_RS_R_x [m], p_RS_R_y [m], p_RS_R_z [m], "
+                   "q_RS_w [], q_RS_x [], q_RS_y [], q_RS_z []\n";
+
+  for (size_t i = 0; i < vio_dataset->get_gt_timestamps().size(); i++) {
+    gt_out_stream << vio_dataset->get_gt_timestamps()[i] +
+                         best_offset_refined_ns
+                  << ",";
+    Sophus::SE3d pose_corrected = vio_dataset->get_gt_pose_data()[i] * T_mark_i;
+    gt_out_stream << pose_corrected.translation().x() << ","
+                  << pose_corrected.translation().y() << ","
+                  << pose_corrected.translation().z() << ","
+                  << pose_corrected.unit_quaternion().w() << ","
+                  << pose_corrected.unit_quaternion().x() << ","
+                  << pose_corrected.unit_quaternion().y() << ","
+                  << pose_corrected.unit_quaternion().z() << std::endl;
+  }
+}
+
 // Linear time version
 double compute_error(
     int64_t offset, const std::vector<int64_t>& gyro_timestamps,
     const Eigen::aligned_vector<Eigen::Vector3d>& gyro_data,
     const std::vector<int64_t>& mocap_rot_vel_timestamps,
     const Eigen::aligned_vector<Eigen::Vector3d>& mocap_rot_vel_data) {
+  if (gyro_timestamps.size() < 2 || gyro_data.size() < 2 ||
+      mocap_rot_vel_timestamps.empty() || mocap_rot_vel_data.empty()) {
+    return std::numeric_limits<double>::infinity();
+  }
+
   double error = 0;
   int num_points = 0;
 
-  size_t j = 0;
+  size_t j = 1;
 
   for (size_t i = 0; i < mocap_rot_vel_timestamps.size(); i++) {
     int64_t corrected_time = mocap_rot_vel_timestamps[i] + offset;
 
-    while (gyro_timestamps[j] < corrected_time) j++;
+    if (corrected_time <= gyro_timestamps.front()) continue;
+
+    while (j < gyro_timestamps.size() && gyro_timestamps[j] < corrected_time)
+      j++;
     if (j >= gyro_timestamps.size()) break;
 
     int64_t dist_j = gyro_timestamps[j] - corrected_time;
@@ -80,6 +119,10 @@ double compute_error(
     error += (gyro_data[idx] - mocap_rot_vel_data[i]).norm();
     num_points++;
   }
+  if (num_points == 0) {
+    return std::numeric_limits<double>::infinity();
+  }
+
   return error / num_points;
 }
 
@@ -92,10 +135,12 @@ int main(int argc, char** argv) {
   std::string output_error_path;
   std::string output_gyro_path;
   std::string output_mocap_path;
+  std::string output_gt_path;
 
   double max_offset_s = 10.0;
 
   bool show_gui = true;
+  bool no_gui = false;
 
   CLI::App app{"Calibrate time offset"};
 
@@ -117,16 +162,24 @@ int main(int argc, char** argv) {
   app.add_option(
       "--output-mocap", output_mocap_path,
       "Path to output file with mocap rotational velocities for plotting");
+  app.add_option("--output-gt", output_gt_path,
+                 "Path to aligned ground-truth output file");
 
   app.add_option("--max-offset", max_offset_s,
                  "Maximum offset for a grid search in seconds.");
 
   app.add_flag("--show-gui", show_gui, "Show GUI for debugging");
+  app.add_flag("--no-gui", no_gui,
+               "Disable GUI and only write requested outputs");
 
   try {
     app.parse(argc, argv);
   } catch (const CLI::ParseError& e) {
     return app.exit(e);
+  }
+
+  if (no_gui) {
+    show_gui = false;
   }
 
   basalt::VioDatasetPtr vio_dataset;
@@ -378,6 +431,13 @@ int main(int argc, char** argv) {
     }
   }
 
+  if (output_gt_path != "") {
+    std::cout << "Writing aligned ground-truth to '" << output_gt_path << "'"
+              << std::endl;
+    write_aligned_dataset(output_gt_path, vio_dataset, best_offset_refined_ns,
+                          use_calib);
+  }
+
   if (show_gui) {
     static constexpr int UI_WIDTH = 280;
 
@@ -420,31 +480,8 @@ int main(int argc, char** argv) {
           }
           std::cout << "Saving aligned dataset in "
                     << dataset_path + "mav0/gt/data.csv" << std::endl;
-          // output corrected mocap data
-          Sophus::SE3d T_mark_i;
-          if (use_calib) T_mark_i = mocap_calib.T_i_mark.inverse();
-          basalt::fs::create_directory(dataset_path + "mav0/gt/");
-          std::ofstream gt_out_stream;
-          gt_out_stream.open(dataset_path + "mav0/gt/data.csv");
-          gt_out_stream
-              << "#timestamp [ns], p_RS_R_x [m], p_RS_R_y [m], p_RS_R_z [m], "
-                 "q_RS_w [], q_RS_x [], q_RS_y [], q_RS_z []\n";
-
-          for (size_t i = 0; i < vio_dataset->get_gt_timestamps().size(); i++) {
-            gt_out_stream << vio_dataset->get_gt_timestamps()[i] +
-                                 best_offset_refined_ns
-                          << ",";
-            Sophus::SE3d pose_corrected =
-                vio_dataset->get_gt_pose_data()[i] * T_mark_i;
-            gt_out_stream << pose_corrected.translation().x() << ","
-                          << pose_corrected.translation().y() << ","
-                          << pose_corrected.translation().z() << ","
-                          << pose_corrected.unit_quaternion().w() << ","
-                          << pose_corrected.unit_quaternion().x() << ","
-                          << pose_corrected.unit_quaternion().y() << ","
-                          << pose_corrected.unit_quaternion().z() << std::endl;
-          }
-          gt_out_stream.close();
+          write_aligned_dataset(dataset_path + "mav0/gt/data.csv", vio_dataset,
+                                best_offset_refined_ns, use_calib);
         });
 
     auto recompute_logs = [&]() {

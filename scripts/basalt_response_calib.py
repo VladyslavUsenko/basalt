@@ -16,11 +16,18 @@ import cv2
 import argparse
 
 import numpy as np
-from matplotlib import pyplot as plt
+import matplotlib
 
 parser = argparse.ArgumentParser(description='Response calibration.')
 parser.add_argument('-d', '--dataset-path', required=True, help="Path to the dataset in Euroc format")
+parser.add_argument('--save-plot', help="Optional output path for the generated plot")
+parser.add_argument('--no-gui', action='store_true', help="Do not open an interactive plot window")
 args = parser.parse_args()
+
+if args.no_gui:
+    matplotlib.use("Agg")
+
+from matplotlib import pyplot as plt
 
 
 dataset_path = args.dataset_path
@@ -108,4 +115,8 @@ ax1.set_title('Inverse Response Function')
 
 ax2.imshow(irradiance)
 ax2.set_title('Irradiance Image')
-plt.show()
+if args.save_plot:
+    plt.savefig(args.save_plot)
+
+if not args.no_gui:
+    plt.show()
