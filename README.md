@@ -77,9 +77,6 @@ cmake --build --preset release -j8
 ## Device support
 * [Tutorial on Camera-IMU and Motion capture calibration with Realsense T265.](doc/Realsense.md)
 
-## Development
-* [Development environment setup.](doc/DevSetup.md)
-
 ## Licence
 The code is provided under a BSD 3-clause license. See the LICENSE file for details.
 Note also the different licenses of thirdparty code.
