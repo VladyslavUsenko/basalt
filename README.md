@@ -32,7 +32,7 @@ Optimization (describes square-root optimization and marginalization used in VIO
 
 
 ## Installation
-### Binary installation from GitLab releases (Ubuntu 22.04+ amd64)
+### Binary installation from GitLab releases (Ubuntu 22.04+ amd64, MacOS 26+ arm64)
 Install the latest published release into `~/.local`:
 ```
 curl -LsSf https://gitlab.com/VladyslavUsenko/basalt/-/raw/master/scripts/install.sh | sh
@@ -58,9 +58,12 @@ ctest --preset relwithdebinfo
 By default presets use:
 `thirdparty/vcpkg/scripts/buildsystems/vcpkg.cmake`
 
-On macOS, the repository also includes helper scripts for local development and packaging:
+On macOS, build the release preset and then package the release artifact:
 ```
-./scripts/build_macos.sh
+cmake --preset release
+cmake --build --preset release -j8
+./scripts/package_macos_release.sh <tag>
+# Optional: upload the generated tarball and checksums to the GitLab release for <tag>
 ./scripts/package_macos_release.sh <tag>
 ```
 
