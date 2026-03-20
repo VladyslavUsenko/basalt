@@ -77,26 +77,29 @@ class RsT265Device {
 
   RsT265Device(bool manual_exposure, int skip_frames, int webp_quality,
                double exposure_value = 10.0);
+  ~RsT265Device();
 
   void start();
   void stop();
+
+  void setOutputQueues(
+      tbb::concurrent_bounded_queue<OpticalFlowInput::Ptr>* image_queue,
+      tbb::concurrent_bounded_queue<ImuData<double>::Ptr>* imu_queue,
+      tbb::concurrent_bounded_queue<RsPoseData>* pose_queue);
+  void detachOutputQueues();
 
   bool setExposure(double exposure);  // in milliseconds
   void setSkipFrames(int skip);
   void setWebpQuality(int quality);
 
   std::shared_ptr<basalt::Calibration<double>> exportCalibration();
-
-  OpticalFlowInput::Ptr last_img_data;
-  tbb::concurrent_bounded_queue<OpticalFlowInput::Ptr>* image_data_queue =
-      nullptr;
-  tbb::concurrent_bounded_queue<ImuData<double>::Ptr>* imu_data_queue = nullptr;
-  tbb::concurrent_bounded_queue<RsPoseData>* pose_data_queue = nullptr;
+  OpticalFlowInput::Ptr getLastImageData() const;
 
  private:
   bool manual_exposure;
-  int skip_frames;
-  int webp_quality;
+  std::atomic<int> skip_frames;
+  std::atomic<int> webp_quality;
+  std::atomic<bool> running{false};
 
   int frame_counter = 0;
 
@@ -104,6 +107,19 @@ class RsT265Device {
   std::shared_ptr<RsIMUData> prev_accel_data;
 
   std::shared_ptr<basalt::Calibration<double>> calib;
+  mutable std::mutex last_img_data_mutex;
+  OpticalFlowInput::Ptr last_img_data;
+
+  struct OutputQueues {
+    tbb::concurrent_bounded_queue<OpticalFlowInput::Ptr>* image_data_queue =
+        nullptr;
+    tbb::concurrent_bounded_queue<ImuData<double>::Ptr>* imu_data_queue =
+        nullptr;
+    tbb::concurrent_bounded_queue<RsPoseData>* pose_data_queue = nullptr;
+  };
+
+  mutable std::mutex output_queues_mutex;
+  OutputQueues output_queues;
 
   rs2::context context;
   rs2::config config;

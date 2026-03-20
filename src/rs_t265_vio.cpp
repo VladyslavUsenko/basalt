@@ -38,6 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <condition_variable>
 #include <iostream>
 #include <memory>
+#include <mutex>
 #include <thread>
 
 #include <sophus/se3.hpp>
@@ -71,6 +72,8 @@ void draw_image_overlay(pangolin::View& v, size_t cam_id);
 void draw_scene();
 void load_data(const std::string& calib_path);
 void draw_plots();
+void drain_vio_plot_queue();
+basalt::VioVisualizationData::Ptr get_curr_vis_data_snapshot();
 
 // Pangolin variables
 constexpr int UI_WIDTH = 200;
@@ -96,6 +99,7 @@ pangolin::Var<bool> follow("ui.follow", true, true);
 
 // Visualization variables
 basalt::VioVisualizationData::Ptr curr_vis_data;
+std::mutex curr_vis_data_mutex;
 
 tbb::concurrent_bounded_queue<basalt::VioVisualizationData::Ptr> out_vis_queue;
 tbb::concurrent_bounded_queue<basalt::PoseVelBiasState<double>::Ptr>
@@ -109,6 +113,8 @@ std::string marg_data_path;
 std::mutex m;
 bool step_by_step = false;
 int64_t curr_t_ns = -1;
+std::mutex vio_state_mutex;
+tbb::concurrent_bounded_queue<std::vector<float>> vio_plot_queue;
 
 // VIO variables
 basalt::Calibration<double> calib;
@@ -188,12 +194,13 @@ int main(int argc, char** argv) {
   }
 
   opt_flow_ptr = basalt::OpticalFlowFactory::getOpticalFlow(vio_config, calib);
-  t265_device->image_data_queue = &opt_flow_ptr->input_queue;
+  t265_device->setOutputQueues(&opt_flow_ptr->input_queue, nullptr, nullptr);
 
   vio = basalt::VioEstimatorFactory::getVioEstimator(
       vio_config, calib, basalt::constants::g, true, use_double);
   vio->initialize(Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero());
-  t265_device->imu_data_queue = &vio->imu_data_queue;
+  t265_device->setOutputQueues(&opt_flow_ptr->input_queue, &vio->imu_data_queue,
+                               nullptr);
 
   opt_flow_ptr->output_queue = &vio->vision_data_queue;
   if (show_gui) vio->out_vis_queue = &out_vis_queue;
@@ -207,15 +214,20 @@ int main(int argc, char** argv) {
   }
 
   vio_data_log.Clear();
+  vio_plot_queue.set_capacity(10000);
 
   std::shared_ptr<std::thread> t3;
 
   if (show_gui)
     t3.reset(new std::thread([&]() {
+      basalt::VioVisualizationData::Ptr data;
       while (true) {
-        out_vis_queue.pop(curr_vis_data);
+        out_vis_queue.pop(data);
 
-        if (!curr_vis_data.get()) break;
+        if (!data.get()) break;
+
+        std::lock_guard<std::mutex> lock(curr_vis_data_mutex);
+        curr_vis_data = data;
       }
 
       std::cout << "Finished t3" << std::endl;
@@ -231,7 +243,10 @@ int main(int argc, char** argv) {
 
       int64_t t_ns = data->t_ns;
 
-      if (curr_t_ns < 0) curr_t_ns = t_ns;
+      {
+        std::lock_guard<std::mutex> lock(vio_state_mutex);
+        if (curr_t_ns < 0) curr_t_ns = t_ns;
+      }
 
       // std::cerr << "t_ns " << t_ns << std::endl;
       Sophus::SE3d T_w_i = data->T_w_i;
@@ -239,19 +254,25 @@ int main(int argc, char** argv) {
       Eigen::Vector3d bg = data->bias_gyro;
       Eigen::Vector3d ba = data->bias_accel;
 
-      vio_t_ns.emplace_back(data->t_ns);
-      vio_t_w_i.emplace_back(T_w_i.translation());
+      {
+        std::lock_guard<std::mutex> lock(vio_state_mutex);
+        vio_t_ns.emplace_back(data->t_ns);
+        vio_t_w_i.emplace_back(T_w_i.translation());
+      }
 
       if (show_gui) {
         std::vector<float> vals;
-        vals.push_back((t_ns - curr_t_ns) * 1e-9);
+        {
+          std::lock_guard<std::mutex> lock(vio_state_mutex);
+          vals.push_back((t_ns - curr_t_ns) * 1e-9);
+        }
 
         for (int i = 0; i < 3; i++) vals.push_back(vel_w_i[i]);
         for (int i = 0; i < 3; i++) vals.push_back(T_w_i.translation()[i]);
         for (int i = 0; i < 3; i++) vals.push_back(bg[i]);
         for (int i = 0; i < 3; i++) vals.push_back(ba[i]);
 
-        vio_data_log.Log(vals);
+        vio_plot_queue.try_push(vals);
       }
     }
 
@@ -321,11 +342,14 @@ int main(int argc, char** argv) {
             .SetHandler(new pangolin::Handler3D(camera));
 
     while (!pangolin::ShouldQuit()) {
+      drain_vio_plot_queue();
+
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
       if (follow) {
-        if (curr_vis_data.get()) {
-          auto T_w_i = curr_vis_data->states.back();
+        auto vis_data = get_curr_vis_data_snapshot();
+        if (vis_data.get()) {
+          auto T_w_i = vis_data->states.back();
           T_w_i.so3() = Sophus::SO3d();
 
           camera.Follow(T_w_i.matrix());
@@ -345,9 +369,10 @@ int main(int argc, char** argv) {
         fmt.gltype = GL_UNSIGNED_SHORT;
         fmt.scalable_internal_format = GL_LUMINANCE16;
 
-        if (curr_vis_data.get() && curr_vis_data->opt_flow_res.get() &&
-            curr_vis_data->opt_flow_res->input_images.get()) {
-          auto& img_data = curr_vis_data->opt_flow_res->input_images->img_data;
+        auto vis_data = get_curr_vis_data_snapshot();
+        if (vis_data.get() && vis_data->opt_flow_res.get() &&
+            vis_data->opt_flow_res->input_images.get()) {
+          auto& img_data = vis_data->opt_flow_res->input_images->img_data;
 
           for (size_t cam_id = 0; cam_id < basalt::RsT265Device::NUM_CAMS;
                cam_id++) {
@@ -371,6 +396,7 @@ int main(int argc, char** argv) {
   }
 
   t265_device->stop();
+  vio->maybe_join();
   terminate = true;
 
   if (t3.get()) t3->join();
@@ -382,6 +408,7 @@ int main(int argc, char** argv) {
 
 void draw_image_overlay(pangolin::View& v, size_t cam_id) {
   UNUSED(v);
+  auto vis_data = get_curr_vis_data_snapshot();
 
   if (show_obs) {
     glLineWidth(1.0);
@@ -389,13 +416,13 @@ void draw_image_overlay(pangolin::View& v, size_t cam_id) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    if (curr_vis_data.get() && cam_id < curr_vis_data->projections.size()) {
-      const auto& points = curr_vis_data->projections[cam_id];
+    if (vis_data.get() && cam_id < vis_data->projections.size()) {
+      const auto& points = vis_data->projections[cam_id];
 
       if (!points.empty()) {
         double min_id = points[0][2], max_id = points[0][2];
 
-        for (const auto& points2 : curr_vis_data->projections)
+        for (const auto& points2 : vis_data->projections)
           for (const auto& p : points2) {
             min_id = std::min(min_id, p[2]);
             max_id = std::max(max_id, p[2]);
@@ -430,25 +457,29 @@ void draw_scene() {
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   glColor3ubv(cam_color);
-  Eigen::aligned_vector<Eigen::Vector3d> sub_gt(vio_t_w_i.begin(),
-                                                vio_t_w_i.end());
+  Eigen::aligned_vector<Eigen::Vector3d> sub_gt;
+  {
+    std::lock_guard<std::mutex> lock(vio_state_mutex);
+    sub_gt = vio_t_w_i;
+  }
   pangolin::glDrawLineStrip(sub_gt);
 
-  if (curr_vis_data.get()) {
-    for (const auto& p : curr_vis_data->states)
+  auto vis_data = get_curr_vis_data_snapshot();
+  if (vis_data.get()) {
+    for (const auto& p : vis_data->states)
       for (const auto& t_i_c : calib.T_i_c)
         render_camera((p * t_i_c).matrix(), 2.0f, state_color, 0.1f);
 
-    for (const auto& p : curr_vis_data->frames)
+    for (const auto& p : vis_data->frames)
       for (const auto& t_i_c : calib.T_i_c)
         render_camera((p * t_i_c).matrix(), 2.0f, pose_color, 0.1f);
 
     for (const auto& t_i_c : calib.T_i_c)
-      render_camera((curr_vis_data->states.back() * t_i_c).matrix(), 2.0f,
-                    cam_color, 0.1f);
+      render_camera((vis_data->states.back() * t_i_c).matrix(), 2.0f, cam_color,
+                    0.1f);
 
     glColor3ubv(pose_color);
-    pangolin::glDrawPoints(curr_vis_data->points);
+    pangolin::glDrawPoints(vis_data->points);
   }
 
   pangolin::glDrawAxis(Sophus::SE3d().matrix(), 1.0);
@@ -468,6 +499,11 @@ void load_data(const std::string& calib_path) {
               << std::endl;
     std::abort();
   }
+}
+
+basalt::VioVisualizationData::Ptr get_curr_vis_data_snapshot() {
+  std::lock_guard<std::mutex> lock(curr_vis_data_mutex);
+  return curr_vis_data;
 }
 
 void draw_plots() {
@@ -511,9 +547,17 @@ void draw_plots() {
                        pangolin::Colour::Blue(), "accel bias z", &vio_data_log);
   }
 
-  if (t265_device->last_img_data.get()) {
-    double t = t265_device->last_img_data->t_ns * 1e-9;
+  auto last_img_data = t265_device->getLastImageData();
+  if (last_img_data.get()) {
+    double t = last_img_data->t_ns * 1e-9;
     plotter->AddMarker(pangolin::Marker::Vertical, t, pangolin::Marker::Equal,
                        pangolin::Colour::White());
+  }
+}
+
+void drain_vio_plot_queue() {
+  std::vector<float> vals;
+  while (vio_plot_queue.try_pop(vals)) {
+    vio_data_log.Log(vals);
   }
 }
