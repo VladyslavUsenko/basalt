@@ -36,6 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <basalt/device/rs_t265.h>
 
 #include <fstream>
+#include <utility>
 
 std::string get_date();
 
@@ -120,9 +121,21 @@ RsT265Device::RsT265Device(bool manual_exposure, int skip_frames,
   }
 }
 
+RsT265Device::~RsT265Device() { stop(); }
+
 void RsT265Device::start() {
-  auto callback = [&](const rs2::frame& frame) {
+  if (running.exchange(true)) return;
+
+  auto callback = [this](const rs2::frame& frame) {
+    if (!running.load()) return;
+
     exportCalibration();
+
+    OutputQueues queues;
+    {
+      std::lock_guard<std::mutex> lock(output_queues_mutex);
+      queues = output_queues;
+    }
 
     if (auto fp = frame.as<rs2::motion_frame>()) {
       auto motion = frame.as<rs2::motion_frame>();
@@ -175,7 +188,7 @@ void RsT265Device::start() {
             data->accel = accel_interpolated;
             data->gyro = gyro_data.data;
 
-            if (imu_data_queue) imu_data_queue->push(data);
+            if (queues.imu_data_queue) queues.imu_data_queue->push(data);
           }
 
           prev_accel_data.reset(new RsIMUData(d));
@@ -204,8 +217,10 @@ void RsT265Device::start() {
         }
       }
 
+      const int skip = std::max(1, skip_frames.load());
+
       // skip frames if configured
-      if (frame_counter++ % skip_frames != 0) {
+      if (frame_counter++ % skip != 0) {
         return;
       }
 
@@ -246,8 +261,11 @@ void RsT265Device::start() {
         //                  std::endl;
       }
 
-      last_img_data = data;
-      if (image_data_queue) image_data_queue->push(data);
+      {
+        std::lock_guard<std::mutex> lock(last_img_data_mutex);
+        last_img_data = data;
+      }
+      if (queues.image_data_queue) queues.image_data_queue->push(data);
 
     } else if (auto pf = frame.as<rs2::pose_frame>()) {
       auto data = pf.get_pose_data();
@@ -271,7 +289,7 @@ void RsT265Device::start() {
 
       pdata.data = Sophus::SE3d(quat, trans);
 
-      if (pose_data_queue) pose_data_queue->push(pdata);
+      if (queues.pose_data_queue) queues.pose_data_queue->push(pdata);
     }
   };
 
@@ -279,8 +297,36 @@ void RsT265Device::start() {
 }
 
 void RsT265Device::stop() {
-  if (image_data_queue) image_data_queue->push(nullptr);
-  if (imu_data_queue) imu_data_queue->push(nullptr);
+  if (!running.exchange(false)) return;
+
+  OutputQueues queues;
+  {
+    std::lock_guard<std::mutex> lock(output_queues_mutex);
+    queues = output_queues;
+  }
+
+  try {
+    pipe.stop();
+  } catch (const rs2::error&) {
+  }
+
+  if (queues.image_data_queue) queues.image_data_queue->push(nullptr);
+  if (queues.imu_data_queue) queues.imu_data_queue->push(nullptr);
+}
+
+void RsT265Device::setOutputQueues(
+    tbb::concurrent_bounded_queue<OpticalFlowInput::Ptr>* image_queue,
+    tbb::concurrent_bounded_queue<ImuData<double>::Ptr>* imu_queue,
+    tbb::concurrent_bounded_queue<RsPoseData>* pose_queue) {
+  std::lock_guard<std::mutex> lock(output_queues_mutex);
+  output_queues.image_data_queue = image_queue;
+  output_queues.imu_data_queue = imu_queue;
+  output_queues.pose_data_queue = pose_queue;
+}
+
+void RsT265Device::detachOutputQueues() {
+  std::lock_guard<std::mutex> lock(output_queues_mutex);
+  output_queues = {};
 }
 
 bool RsT265Device::setExposure(double exposure) {
@@ -293,6 +339,11 @@ bool RsT265Device::setExposure(double exposure) {
 void RsT265Device::setSkipFrames(int skip) { skip_frames = skip; }
 
 void RsT265Device::setWebpQuality(int quality) { webp_quality = quality; }
+
+OpticalFlowInput::Ptr RsT265Device::getLastImageData() const {
+  std::lock_guard<std::mutex> lock(last_img_data_mutex);
+  return last_img_data;
+}
 
 std::shared_ptr<basalt::Calibration<double>> RsT265Device::exportCalibration() {
   using Scalar = double;

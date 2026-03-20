@@ -79,6 +79,8 @@ void load_data(const std::string& calib_path);
 bool next_step();
 bool prev_step();
 void draw_plots();
+void drain_vio_plot_queue();
+basalt::VioVisualizationData::Ptr get_vis_data_snapshot(int64_t t_ns);
 void alignButton();
 void alignDeviceButton();
 void saveTrajectoryButton();
@@ -125,7 +127,8 @@ pangolin::Var<bool> follow("ui.follow", true, true);
 pangolin::OpenGlRenderState camera;
 
 // Visualization variables
-std::unordered_map<int64_t, basalt::VioVisualizationData::Ptr> vis_map;
+tbb::concurrent_unordered_map<int64_t, basalt::VioVisualizationData::Ptr>
+    vis_map;
 
 tbb::concurrent_bounded_queue<basalt::VioVisualizationData::Ptr> out_vis_queue;
 tbb::concurrent_bounded_queue<basalt::PoseVelBiasState<double>::Ptr>
@@ -147,6 +150,8 @@ std::mutex m;
 std::condition_variable cv;
 bool step_by_step = false;
 size_t max_frames = 0;
+std::mutex vio_state_mutex;
+tbb::concurrent_bounded_queue<std::vector<float>> vio_plot_queue;
 
 std::atomic<bool> terminate = false;
 
@@ -170,7 +175,7 @@ void feed_images() {
 
     if (step_by_step) {
       std::unique_lock<std::mutex> lk(m);
-      cv.wait(lk);
+      cv.wait(lk, [&]() { return !step_by_step || show_frame >= int(i); });
     }
 
     basalt::OpticalFlowInput::Ptr data(new basalt::OpticalFlowInput);
@@ -334,6 +339,7 @@ int main(int argc, char** argv) {
   }
 
   vio_data_log.Clear();
+  vio_plot_queue.set_capacity(10000);
 
   std::thread t1(&feed_images);
   std::thread t2(&feed_imu);
@@ -373,9 +379,12 @@ int main(int argc, char** argv) {
       Eigen::Vector3d bg = data->bias_gyro;
       Eigen::Vector3d ba = data->bias_accel;
 
-      vio_t_ns.emplace_back(data->t_ns);
-      vio_t_w_i.emplace_back(T_w_i.translation());
-      vio_T_w_i.emplace_back(T_w_i);
+      {
+        std::lock_guard<std::mutex> lock(vio_state_mutex);
+        vio_t_ns.emplace_back(data->t_ns);
+        vio_t_w_i.emplace_back(T_w_i.translation());
+        vio_T_w_i.emplace_back(T_w_i);
+      }
 
       if (show_gui) {
         std::vector<float> vals;
@@ -386,7 +395,7 @@ int main(int argc, char** argv) {
         for (int i = 0; i < 3; i++) vals.push_back(bg[i]);
         for (int i = 0; i < 3; i++) vals.push_back(ba[i]);
 
-        vio_data_log.Log(vals);
+        vio_plot_queue.try_push(vals);
       }
     }
 
@@ -472,19 +481,21 @@ int main(int argc, char** argv) {
     main_display.AddDisplay(display3D);
 
     while (!pangolin::ShouldQuit()) {
+      drain_vio_plot_queue();
+
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
       if (follow) {
         size_t frame_id = show_frame;
         int64_t t_ns = vio_dataset->get_image_timestamps()[frame_id];
-        auto it = vis_map.find(t_ns);
+        auto vis_data = get_vis_data_snapshot(t_ns);
 
-        if (it != vis_map.end()) {
+        if (vis_data) {
           Sophus::SE3d T_w_i;
-          if (!it->second->states.empty()) {
-            T_w_i = it->second->states.back();
-          } else if (!it->second->frames.empty()) {
-            T_w_i = it->second->frames.back();
+          if (!vis_data->states.empty()) {
+            T_w_i = vis_data->states.back();
+          } else if (!vis_data->frames.empty()) {
+            T_w_i = vis_data->frames.back();
           }
           T_w_i.so3() = Sophus::SO3d();
 
@@ -686,7 +697,8 @@ void draw_image_overlay(pangolin::View& v, size_t cam_id) {
   //      cam_id);
 
   size_t frame_id = show_frame;
-  auto it = vis_map.find(vio_dataset->get_image_timestamps()[frame_id]);
+  auto vis_data =
+      get_vis_data_snapshot(vio_dataset->get_image_timestamps()[frame_id]);
 
   if (show_obs) {
     glLineWidth(1.0);
@@ -694,13 +706,13 @@ void draw_image_overlay(pangolin::View& v, size_t cam_id) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    if (it != vis_map.end() && cam_id < it->second->projections.size()) {
-      const auto& points = it->second->projections[cam_id];
+    if (vis_data && cam_id < vis_data->projections.size()) {
+      const auto& points = vis_data->projections[cam_id];
 
       if (points.size() > 0) {
         double min_id = points[0][2], max_id = points[0][2];
 
-        for (const auto& points2 : it->second->projections)
+        for (const auto& points2 : vis_data->projections)
           for (const auto& p : points2) {
             min_id = std::min(min_id, p[2]);
             max_id = std::max(max_id, p[2]);
@@ -733,9 +745,9 @@ void draw_image_overlay(pangolin::View& v, size_t cam_id) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    if (it != vis_map.end()) {
+    if (vis_data) {
       const Eigen::aligned_map<basalt::KeypointId, Eigen::AffineCompact2f>&
-          kp_map = it->second->opt_flow_res->observations[cam_id];
+          kp_map = vis_data->opt_flow_res->observations[cam_id];
 
       for (const auto& kv : kp_map) {
         Eigen::MatrixXf transformed_patch =
@@ -773,10 +785,16 @@ void draw_scene(pangolin::View& view) {
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   glColor3ubv(cam_color);
-  if (!vio_t_w_i.empty()) {
-    size_t end = std::min(vio_t_w_i.size(), size_t(show_frame + 1));
-    Eigen::aligned_vector<Eigen::Vector3d> sub_gt(vio_t_w_i.begin(),
-                                                  vio_t_w_i.begin() + end);
+  Eigen::aligned_vector<Eigen::Vector3d> local_vio_t_w_i;
+  {
+    std::lock_guard<std::mutex> lock(vio_state_mutex);
+    local_vio_t_w_i = vio_t_w_i;
+  }
+
+  if (!local_vio_t_w_i.empty()) {
+    size_t end = std::min(local_vio_t_w_i.size(), size_t(show_frame + 1));
+    Eigen::aligned_vector<Eigen::Vector3d> sub_gt(
+        local_vio_t_w_i.begin(), local_vio_t_w_i.begin() + end);
     pangolin::glDrawLineStrip(sub_gt);
   }
 
@@ -785,28 +803,28 @@ void draw_scene(pangolin::View& view) {
 
   size_t frame_id = show_frame;
   int64_t t_ns = vio_dataset->get_image_timestamps()[frame_id];
-  auto it = vis_map.find(t_ns);
+  auto vis_data = get_vis_data_snapshot(t_ns);
 
-  if (it != vis_map.end()) {
+  if (vis_data) {
     for (size_t i = 0; i < calib.T_i_c.size(); i++)
-      if (!it->second->states.empty()) {
-        render_camera((it->second->states.back() * calib.T_i_c[i]).matrix(),
-                      2.0f, cam_color, 0.1f);
-      } else if (!it->second->frames.empty()) {
-        render_camera((it->second->frames.back() * calib.T_i_c[i]).matrix(),
-                      2.0f, cam_color, 0.1f);
+      if (!vis_data->states.empty()) {
+        render_camera((vis_data->states.back() * calib.T_i_c[i]).matrix(), 2.0f,
+                      cam_color, 0.1f);
+      } else if (!vis_data->frames.empty()) {
+        render_camera((vis_data->frames.back() * calib.T_i_c[i]).matrix(), 2.0f,
+                      cam_color, 0.1f);
       }
 
-    for (const auto& p : it->second->states)
+    for (const auto& p : vis_data->states)
       for (size_t i = 0; i < calib.T_i_c.size(); i++)
         render_camera((p * calib.T_i_c[i]).matrix(), 2.0f, state_color, 0.1f);
 
-    for (const auto& p : it->second->frames)
+    for (const auto& p : vis_data->frames)
       for (size_t i = 0; i < calib.T_i_c.size(); i++)
         render_camera((p * calib.T_i_c[i]).matrix(), 2.0f, pose_color, 0.1f);
 
     glColor3ubv(pose_color);
-    pangolin::glDrawPoints(it->second->points);
+    pangolin::glDrawPoints(vis_data->points);
   }
 
   pangolin::glDrawAxis(Sophus::SE3d().matrix(), 1.0);
@@ -826,6 +844,12 @@ void load_data(const std::string& calib_path) {
               << std::endl;
     std::abort();
   }
+}
+
+basalt::VioVisualizationData::Ptr get_vis_data_snapshot(int64_t t_ns) {
+  auto it = vis_map.find(t_ns);
+  if (it == vis_map.end()) return nullptr;
+  return it->second;
 }
 
 bool next_step() {
@@ -895,23 +919,47 @@ void draw_plots() {
                      pangolin::Colour::White());
 }
 
-void alignButton() { basalt::alignSVD(vio_t_ns, vio_t_w_i, gt_t_ns, gt_t_w_i); }
+void drain_vio_plot_queue() {
+  std::vector<float> vals;
+  while (vio_plot_queue.try_pop(vals)) {
+    vio_data_log.Log(vals);
+  }
+}
+
+void alignButton() {
+  std::vector<int64_t> local_vio_t_ns;
+  Eigen::aligned_vector<Eigen::Vector3d> local_vio_t_w_i;
+  {
+    std::lock_guard<std::mutex> lock(vio_state_mutex);
+    local_vio_t_ns = vio_t_ns;
+    local_vio_t_w_i = vio_t_w_i;
+  }
+  basalt::alignSVD(local_vio_t_ns, local_vio_t_w_i, gt_t_ns, gt_t_w_i);
+}
 
 void saveTrajectoryButton() {
+  std::vector<int64_t> local_vio_t_ns;
+  Eigen::aligned_vector<Sophus::SE3d> local_vio_T_w_i;
+  {
+    std::lock_guard<std::mutex> lock(vio_state_mutex);
+    local_vio_t_ns = vio_t_ns;
+    local_vio_T_w_i = vio_T_w_i;
+  }
+
   if (tum_rgbd_fmt) {
     {
       std::ofstream os("trajectory.txt");
 
       os << "# timestamp tx ty tz qx qy qz qw" << std::endl;
 
-      for (size_t i = 0; i < vio_t_ns.size(); i++) {
-        const Sophus::SE3d& pose = vio_T_w_i[i];
-        os << std::scientific << std::setprecision(18) << vio_t_ns[i] * 1e-9
-           << " " << pose.translation().x() << " " << pose.translation().y()
-           << " " << pose.translation().z() << " " << pose.unit_quaternion().x()
-           << " " << pose.unit_quaternion().y() << " "
-           << pose.unit_quaternion().z() << " " << pose.unit_quaternion().w()
-           << std::endl;
+      for (size_t i = 0; i < local_vio_t_ns.size(); i++) {
+        const Sophus::SE3d& pose = local_vio_T_w_i[i];
+        os << std::scientific << std::setprecision(18)
+           << local_vio_t_ns[i] * 1e-9 << " " << pose.translation().x() << " "
+           << pose.translation().y() << " " << pose.translation().z() << " "
+           << pose.unit_quaternion().x() << " " << pose.unit_quaternion().y()
+           << " " << pose.unit_quaternion().z() << " "
+           << pose.unit_quaternion().w() << std::endl;
       }
 
       os.close();
@@ -942,9 +990,9 @@ void saveTrajectoryButton() {
           "[],q_RS_x [],q_RS_y [],q_RS_z []"
        << std::endl;
 
-    for (size_t i = 0; i < vio_t_ns.size(); i++) {
-      const Sophus::SE3d& pose = vio_T_w_i[i];
-      os << std::scientific << std::setprecision(18) << vio_t_ns[i] << ","
+    for (size_t i = 0; i < local_vio_t_ns.size(); i++) {
+      const Sophus::SE3d& pose = local_vio_T_w_i[i];
+      os << std::scientific << std::setprecision(18) << local_vio_t_ns[i] << ","
          << pose.translation().x() << "," << pose.translation().y() << ","
          << pose.translation().z() << "," << pose.unit_quaternion().w() << ","
          << pose.unit_quaternion().x() << "," << pose.unit_quaternion().y()
@@ -956,8 +1004,8 @@ void saveTrajectoryButton() {
   } else {
     std::ofstream os("trajectory_kitti.txt");
 
-    for (size_t i = 0; i < vio_t_ns.size(); i++) {
-      Eigen::Matrix<double, 3, 4> mat = vio_T_w_i[i].matrix3x4();
+    for (size_t i = 0; i < local_vio_t_ns.size(); i++) {
+      Eigen::Matrix<double, 3, 4> mat = local_vio_T_w_i[i].matrix3x4();
       os << std::scientific << std::setprecision(12) << mat.row(0) << " "
          << mat.row(1) << " " << mat.row(2) << " " << std::endl;
     }
