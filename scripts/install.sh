@@ -21,7 +21,6 @@ else
 fi
 
 DOWNLOAD_URL="${BASALT_DOWNLOAD_URL:-}"
-ARTIFACT_JOB_NAME="${BASALT_ARTIFACT_JOB_NAME:-ubuntu22-build}"
 ARTIFACTS_DIR="${BASALT_ARTIFACTS_DIR:-${SCRIPT_DIR%/scripts}/artifacts}"
 PROJECT_API_PATH="$(printf '%s' "${PROJECT}" | sed 's/\//%2F/g')"
 BASE_URL="${GITLAB_URL}/api/v4/projects/${PROJECT_API_PATH}/releases"
@@ -170,7 +169,7 @@ artifact_url() {
     _version="$1"
     _artifact="$2"
 
-    echo "${GITLAB_URL}/${PROJECT}/-/jobs/artifacts/${_version}/raw/artifacts/${_artifact}?job=${ARTIFACT_JOB_NAME}"
+    echo "${GITLAB_URL}/${PROJECT}/-/releases/${_version}/downloads/${_artifact}"
 }
 
 download_checksum() {
@@ -321,7 +320,6 @@ resolve_archive_source() {
         case "$(detect_platform)" in
             *apple-darwin)
                 die "No prebuilt ${APP_NAME} release is available for $(detect_platform).
-Current GitLab releases publish Linux artifacts only.
 Build from source on macOS or provide BASALT_DOWNLOAD_URL with a compatible archive."
                 ;;
         esac
