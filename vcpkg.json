@@ -1,6 +1,6 @@
 {
   "name": "basalt",
-  "version-string": "0.1.6",
+  "version-string": "0.1.7",
   "overrides": [
     {
       "name": "realsense2",

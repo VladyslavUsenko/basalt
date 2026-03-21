@@ -61,6 +61,13 @@ function(basalt_add_gui_link_options target)
   endif()
 endfunction()
 
+function(basalt_add_macos_runtime_paths target)
+  if(APPLE)
+    set_property(TARGET ${target} APPEND PROPERTY BUILD_RPATH "@executable_path/../lib")
+    set_property(TARGET ${target} PROPERTY INSTALL_RPATH "@executable_path/../lib")
+  endif()
+endfunction()
+
 set(CMAKE_REQUIRED_FLAGS "-Wno-error")
 
 # save flags passed by user
@@ -351,57 +358,69 @@ target_compile_definitions(basalt PUBLIC ${BASALT_COMPILE_DEFINITIONS})
 add_executable(basalt_calibrate src/calibrate.cpp src/calibration/cam_calib.cpp)
 target_link_libraries(basalt_calibrate basalt ${BASALT_PANGO_TARGETS} basalt::cli11)
 basalt_add_gui_link_options(basalt_calibrate)
+basalt_add_macos_runtime_paths(basalt_calibrate)
 
 add_executable(basalt_calibrate_imu src/calibrate_imu.cpp src/calibration/cam_imu_calib.cpp)
 target_link_libraries(basalt_calibrate_imu basalt ${BASALT_PANGO_TARGETS} basalt::cli11)
 basalt_add_gui_link_options(basalt_calibrate_imu)
+basalt_add_macos_runtime_paths(basalt_calibrate_imu)
 
 
 add_executable(basalt_vio_sim src/vio_sim.cpp)
 target_link_libraries(basalt_vio_sim basalt ${BASALT_PANGO_TARGETS} basalt::cli11)
 basalt_add_gui_link_options(basalt_vio_sim)
+basalt_add_macos_runtime_paths(basalt_vio_sim)
 
 add_executable(basalt_mapper_sim src/mapper_sim.cpp)
 target_link_libraries(basalt_mapper_sim basalt ${BASALT_PANGO_TARGETS} basalt::cli11)
 basalt_add_gui_link_options(basalt_mapper_sim)
+basalt_add_macos_runtime_paths(basalt_mapper_sim)
 
 # mapper sim native doesn't use template free interface
 if(BASALT_INSTANTIATIONS_DOUBLE)
   add_executable(basalt_mapper_sim_naive src/mapper_sim_naive.cpp)
   target_link_libraries(basalt_mapper_sim_naive basalt ${BASALT_PANGO_TARGETS} basalt::cli11)
   basalt_add_gui_link_options(basalt_mapper_sim_naive)
+  basalt_add_macos_runtime_paths(basalt_mapper_sim_naive)
 endif()
 
 add_executable(basalt_mapper src/mapper.cpp)
 target_link_libraries(basalt_mapper basalt ${BASALT_PANGO_TARGETS} basalt::cli11)
 basalt_add_gui_link_options(basalt_mapper)
+basalt_add_macos_runtime_paths(basalt_mapper)
 
 
 add_executable(basalt_opt_flow src/opt_flow.cpp)
 target_link_libraries(basalt_opt_flow basalt ${BASALT_PANGO_TARGETS} basalt::cli11)
 basalt_add_gui_link_options(basalt_opt_flow)
+basalt_add_macos_runtime_paths(basalt_opt_flow)
 
 add_executable(basalt_vio src/vio.cpp)
 target_link_libraries(basalt_vio basalt ${BASALT_PANGO_TARGETS} basalt::cli11 fmt::fmt)
 basalt_add_gui_link_options(basalt_vio)
+basalt_add_macos_runtime_paths(basalt_vio)
 
 add_executable(basalt_time_alignment src/time_alignment.cpp)
 target_link_libraries(basalt_time_alignment basalt ${BASALT_PANGO_TARGETS} basalt::cli11)
 basalt_add_gui_link_options(basalt_time_alignment)
+basalt_add_macos_runtime_paths(basalt_time_alignment)
 
 add_executable(basalt_kitti_eval src/kitti_eval.cpp)
 target_link_libraries(basalt_kitti_eval basalt::basalt-headers basalt::cli11)
 basalt_add_static_link_options(basalt_kitti_eval)
+basalt_add_macos_runtime_paths(basalt_kitti_eval)
 
 find_package(realsense2 QUIET)
 if(realsense2_FOUND)
   add_executable(basalt_rs_t265_record src/rs_t265_record.cpp src/device/rs_t265.cpp)
   target_link_libraries(basalt_rs_t265_record basalt realsense2::realsense2 ${BASALT_PANGO_TARGETS} basalt::cli11)
   basalt_add_gui_link_options(basalt_rs_t265_record)
+  basalt_add_macos_runtime_paths(basalt_rs_t265_record)
 
   add_executable(basalt_rs_t265_vio src/rs_t265_vio.cpp src/device/rs_t265.cpp)
   target_link_libraries(basalt_rs_t265_vio basalt realsense2::realsense2 ${BASALT_PANGO_TARGETS} basalt::cli11)
   basalt_add_gui_link_options(basalt_rs_t265_vio)
+  basalt_add_macos_runtime_paths(basalt_rs_t265_vio)
 
   # librealsense-file and rosbag both provide overlapping rosbag symbols.
   # Keep this relaxation local to the two T265 tools.

@@ -420,10 +420,18 @@ write_env_script() {
 if not contains $HOME/.local/bin $fish_user_paths
     set -a fish_user_paths $HOME/.local/bin
 end
-if not set -q LD_LIBRARY_PATH
-    set -gx LD_LIBRARY_PATH $HOME/.local/lib
-else if not contains $HOME/.local/lib $LD_LIBRARY_PATH
-    set -gx LD_LIBRARY_PATH $HOME/.local/lib $LD_LIBRARY_PATH
+if test (uname) = Darwin
+    if not set -q DYLD_LIBRARY_PATH
+        set -gx DYLD_LIBRARY_PATH $HOME/.local/lib
+    else if not contains $HOME/.local/lib $DYLD_LIBRARY_PATH
+        set -gx DYLD_LIBRARY_PATH $HOME/.local/lib $DYLD_LIBRARY_PATH
+    end
+else
+    if not set -q LD_LIBRARY_PATH
+        set -gx LD_LIBRARY_PATH $HOME/.local/lib
+    else if not contains $HOME/.local/lib $LD_LIBRARY_PATH
+        set -gx LD_LIBRARY_PATH $HOME/.local/lib $LD_LIBRARY_PATH
+    end
 end
 EOF
             ;;
@@ -436,17 +444,31 @@ case ":${PATH}:" in
 esac
 export PATH
 
-case ":${LD_LIBRARY_PATH:-}:" in
-    *:"$HOME/.local/lib":*) ;;
-    *)
-        if [ -n "${LD_LIBRARY_PATH:-}" ]; then
-            LD_LIBRARY_PATH="$HOME/.local/lib:$LD_LIBRARY_PATH"
-        else
-            LD_LIBRARY_PATH="$HOME/.local/lib"
-        fi
-        ;;
-esac
-export LD_LIBRARY_PATH
+if [ "$(uname)" = "Darwin" ]; then
+    case ":${DYLD_LIBRARY_PATH:-}:" in
+        *:"$HOME/.local/lib":*) ;;
+        *)
+            if [ -n "${DYLD_LIBRARY_PATH:-}" ]; then
+                DYLD_LIBRARY_PATH="$HOME/.local/lib:$DYLD_LIBRARY_PATH"
+            else
+                DYLD_LIBRARY_PATH="$HOME/.local/lib"
+            fi
+            ;;
+    esac
+    export DYLD_LIBRARY_PATH
+else
+    case ":${LD_LIBRARY_PATH:-}:" in
+        *:"$HOME/.local/lib":*) ;;
+        *)
+            if [ -n "${LD_LIBRARY_PATH:-}" ]; then
+                LD_LIBRARY_PATH="$HOME/.local/lib:$LD_LIBRARY_PATH"
+            else
+                LD_LIBRARY_PATH="$HOME/.local/lib"
+            fi
+            ;;
+    esac
+    export LD_LIBRARY_PATH
+fi
 EOF
             ;;
     esac
@@ -518,13 +540,18 @@ update_shell_environment() {
     _rc_file="$(get_rc_file)"
     _env_script_path="$(get_env_script_path)"
     _source_line="$(get_env_source_line "${_env_script_path}")"
+    _library_env_var="LD_LIBRARY_PATH"
+
+    if [ "$(uname)" = "Darwin" ]; then
+        _library_env_var="DYLD_LIBRARY_PATH"
+    fi
 
     write_env_script "${_env_script_path}"
 
     _rc_updated="false"
     if ! has_env_source_line "${_rc_file}" "${_source_line}"; then
         echo ""
-        log "Adding ${_install_dir} to PATH and ${_lib_dir} to LD_LIBRARY_PATH in ${_rc_file} ..."
+        log "Adding ${_install_dir} to PATH and ${_lib_dir} to ${_library_env_var} in ${_rc_file} ..."
         add_env_source_line "${_rc_file}" "${_source_line}"
         _rc_updated="true"
     fi
