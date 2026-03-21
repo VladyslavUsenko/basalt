@@ -63,8 +63,6 @@ On macOS, build the release preset and then package the release artifact:
 cmake --preset release
 cmake --build --preset release -j8
 ./scripts/package_macos_release.sh <tag>
-# Optional: upload the generated tarball and checksums to the GitLab release for <tag>
-./scripts/package_macos_release.sh <tag>
 ```
 
 ## Usage
