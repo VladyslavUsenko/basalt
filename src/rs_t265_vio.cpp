@@ -221,7 +221,7 @@ int main(int argc, char** argv) {
   if (show_gui)
     t3.reset(new std::thread([&]() {
       basalt::VioVisualizationData::Ptr data;
-      while (true) {
+      while (!terminate) {
         out_vis_queue.pop(data);
 
         if (!data.get()) break;
@@ -236,7 +236,7 @@ int main(int argc, char** argv) {
   std::thread t4([&]() {
     basalt::PoseVelBiasState<double>::Ptr data;
 
-    while (true) {
+    while (!terminate) {
       out_state_queue.pop(data);
 
       if (!data.get()) break;
@@ -398,6 +398,10 @@ int main(int argc, char** argv) {
   t265_device->stop();
   vio->maybe_join();
   terminate = true;
+
+  // Push nullptr to output queues to unblock waiting threads
+  out_vis_queue.push(nullptr);
+  out_state_queue.push(nullptr);
 
   if (t3.get()) t3->join();
   t4.join();

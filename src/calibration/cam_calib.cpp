@@ -469,7 +469,8 @@ void CamCalib::initCamIntrinsics() {
 
       TimeCamId tcid(timestamp_ns, j);
 
-      if (calib_corners.find(tcid) != calib_corners.end()) {
+      if (calib_corners.find(tcid) != calib_corners.end() &&
+          img_vec[j].img.get()) {
         CalibCornerData cid = calib_corners.at(tcid);
 
         Eigen::Vector4d init_intr;
@@ -509,8 +510,10 @@ void CamCalib::initCamIntrinsics() {
           }
         }
 
-        w = img_vec[j].img->w;
-        h = img_vec[j].img->h;
+        if (img_vec[j].img.get()) {
+          w = img_vec[j].img->w;
+          h = img_vec[j].img->h;
+        }
       }
 
       BASALT_ASSERT(w > 0 && h > 0);

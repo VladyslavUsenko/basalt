@@ -350,7 +350,7 @@ int main(int argc, char** argv) {
     t3.reset(new std::thread([&]() {
       basalt::VioVisualizationData::Ptr data;
 
-      while (true) {
+      while (!terminate) {
         out_vis_queue.pop(data);
 
         if (data.get()) {
@@ -366,7 +366,7 @@ int main(int argc, char** argv) {
   std::thread t4([&]() {
     basalt::PoseVelBiasState<double>::Ptr data;
 
-    while (true) {
+    while (!terminate) {
       out_state_queue.pop(data);
 
       if (!data.get()) break;
@@ -589,6 +589,10 @@ int main(int argc, char** argv) {
       print_queue_fn();  // print queue size at time of aborting
       terminate = true;
       aborted = true;
+
+      // Push nullptr to output queues to unblock waiting threads
+      out_vis_queue.push(nullptr);
+      out_state_queue.push(nullptr);
     }
   }
 
@@ -853,6 +857,7 @@ basalt::VioVisualizationData::Ptr get_vis_data_snapshot(int64_t t_ns) {
 }
 
 bool next_step() {
+  std::lock_guard<std::mutex> lock(m);
   if (show_frame < int(vio_dataset->get_image_timestamps().size()) - 1) {
     show_frame = show_frame + 1;
     show_frame.Meta().gui_changed = true;
@@ -864,6 +869,7 @@ bool next_step() {
 }
 
 bool prev_step() {
+  std::lock_guard<std::mutex> lock(m);
   if (show_frame > 1) {
     show_frame = show_frame - 1;
     show_frame.Meta().gui_changed = true;
