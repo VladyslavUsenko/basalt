@@ -92,6 +92,12 @@ double alignSVD(const std::vector<int64_t>& filter_t_ns,
     for (j = 0; j < gt_t_ns.size(); j++) {
       if (gt_t_ns.at(j) > t_ns) break;
     }
+
+    // Handle edge case: if j == 0, all gt timestamps are >= t_ns
+    // (no earlier gt point to interpolate from)
+    if (j == 0) {
+      continue;
+    }
     j--;
 
     if (j >= gt_t_ns.size() - 1) {
