@@ -583,7 +583,6 @@ Eigen::VectorXd ScBundleAdjustmentBase<Scalar_>::checkNullspace(
 
   // Compute mean translation
   for (const auto& kv : order.abs_order_map) {
-    Vec3d trans;
     if (kv.second.second == POSE_SIZE) {
       mean_trans += frame_poses.at(kv.first)
                         .getPoseLin()

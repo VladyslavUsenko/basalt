@@ -204,7 +204,6 @@ class EurocIO : public DatasetIoInterface {
 
       char tmp;
       int64_t timestamp, exposure_int;
-      Eigen::Vector3d gyro, accel;
 
       ss >> timestamp >> tmp >> exposure_int;
 
