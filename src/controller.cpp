@@ -41,6 +41,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "basalt/vi_estimator/vio_estimator.h"
 
+// ABI guard, library side. NRT_EIGEN_ABI_PIN is injected by the parent
+// (ros_ws/src/slam/CMakeLists.txt) and is absent in a standalone basalt build,
+// so this is inert upstream and only binds inside NRT_WS.
+#ifdef NRT_EIGEN_ABI_PIN
+static_assert(
+    EIGEN_MAX_ALIGN_BYTES == NRT_EIGEN_ABI_PIN,
+    "EIGEN_MAX_ALIGN_BYTES disagrees with the pin set by the NRT parent "
+    "package. This is NRT specific and relevant for standalone usage ");
+#endif
+
 namespace basalt {
 
 Controller::Controller(const std::string& config_path,
@@ -135,6 +145,7 @@ void Controller::initialize(int64_t t_ns, const Sophus::SE3d& T_w_i,
     std::cout << "Initialising SLAM with mpUseProducerConsumerArchitecture: "
               << useProducerConsumerArchitecture << std::endl;
     mpUseProducerConsumerArchitecture = useProducerConsumerArchitecture;
+    std::cout << "enable visualisation: " << enableVisualisation << std::endl;
     mpEnableVisualisation = enableVisualisation;
     // 1. Create Optical Flow Frontend
     std::cout << "Setting up Optical Flow and VIO" << std::endl;
