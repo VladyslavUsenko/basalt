@@ -3,11 +3,10 @@
 #include <pangolin/pangolin.h>
 // pangolin.h does not pull in the display widgets, so ImageView (a member type
 // below) must be included explicitly to keep this header self-sufficient.
-#include <pangolin/display/image_view.h>
-
 #include <basalt/controller.h>
 #include <basalt/vi_estimator/vio_estimator.h>  // VioVisualizationData
 #include <basalt/visualisation/utils.h>  // LocalMapperVisualizationData, GtPose
+#include <pangolin/display/image_view.h>
 
 #include <atomic>
 #include <memory>
@@ -25,8 +24,9 @@ namespace basalt {
 // here so the core basalt library remains Pangolin-free.
 class SlamVisualiser {
 public:
-    // Captures references to the Controller's VIO, local mapper and calibration.
-    // No GL work happens in the constructor so it may run off the main thread.
+    // Captures references to the Controller's VIO, local mapper and
+    // calibration. No GL work happens in the constructor so it may run off the
+    // main thread.
     explicit SlamVisualiser(basalt::Controller& controller);
     ~SlamVisualiser();
 
@@ -75,9 +75,12 @@ private:
     std::mutex mpMtxVioVis;    // guards mpLatestVio
     std::mutex mpMtxVioState;  // guards mvpVioTrajectory
     std::mutex mpMtxLocalMap;  // guards mpLatestLocalMap
+    std::mutex mpMtxQuitVisualiser;
+
+    bool mpQuitVisualiser = false;
 
     // ── trajectories: positions only, cheap to retain ────────────────
-    Eigen::aligned_vector<Eigen::Vector3d> mvpVioTrajectory;  // consumer-written
+    Eigen::aligned_vector<Eigen::Vector3d> mvpVioTrajectory;
     Eigen::aligned_vector<Eigen::Vector3d>
         mvpGroundTruthTrajectory;  // main-thread only
 
@@ -95,8 +98,8 @@ private:
 
     // ── toggles (registered into the "ui." panel) ─────────────────────
     std::unique_ptr<pangolin::Var<bool>> mpShowObs, mpShowFlow, mpShowIds,
-        mpShowGt, mpShowEstPos, mpShowEstVel, mpShowEstBg, mpShowEstBa, mpFollow,
-        mpShowLocalMapPoints, mpShowLocalMapKfs;
+        mpShowGt, mpShowEstPos, mpShowEstVel, mpShowEstBg, mpShowEstBa,
+        mpFollow, mpShowLocalMapPoints, mpShowLocalMapKfs;
 
     // ── consumer threads + lifecycle flags ────────────────────────────
     std::thread mpVioVisConsumerThread, mpVioStateConsumerThread,

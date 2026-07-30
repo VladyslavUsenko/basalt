@@ -40,6 +40,10 @@ void SlamVisualiser::Start() {
     mvpVioStateQueue.set_capacity(100);
     mvpLocalMapVisQueue.set_capacity(4);
     mvpGroundTruthQueue.set_capacity(200);
+    {
+        std::lock_guard<std::mutex> lock(mpMtxQuitVisualiser);
+        mpQuitVisualiser = false;
+    }
 
     pangolin::CreateWindowAndBind("Basalt SLAM", 1800, 1000);
     glEnable(GL_DEPTH_TEST);  // per-context state; must follow window creation
@@ -62,6 +66,11 @@ void SlamVisualiser::Start() {
 }
 
 void SlamVisualiser::Stop() {
+    {
+        std::lock_guard<std::mutex> lock(mpMtxQuitVisualiser);
+        mpQuitVisualiser = true;
+    }
+
     if (!mpRunning.exchange(false)) return;  // idempotent
 
     // Release the blocking pop()s with the cascade nullptr sentinel (P3).
@@ -228,7 +237,19 @@ void SlamVisualiser::Run() {
 
         pangolin::FinishFrame();  // renders the view tree, fires callbacks,
                                   // swaps
+        {
+            std::lock_guard<std::mutex> lock(mpMtxQuitVisualiser);
+            if (mpQuitVisualiser) break;
+        }
     }
+
+    pangolin::Quit();
+
+    mpImgViews.clear();
+    delete mpPlotter;
+    mpPlotter = nullptr;
+
+    pangolin::DestroyWindow("Basalt SLAM");
 }
 
 // ═══════════════════════════════════════════════════════════════════

@@ -127,17 +127,19 @@ void LocalMapper::MapLocally() {
                          1e-6
                   << "s" << std::endl;
 
-        tStep = std::chrono::high_resolution_clock::now();
-        match_stereo();  // inherited — writes to feature_matches
-        tEnd = std::chrono::high_resolution_clock::now();
-        std::cout << "[Local Mapper] match_stereo time taken: "
-                  << std::chrono::duration_cast<std::chrono::microseconds>(
-                         tEnd - tStep)
-                             .count() *
-                         1e-6
-                  << "s" << std::endl;
+        if (calib.T_i_c.size() > 1) {
+            tStep = std::chrono::high_resolution_clock::now();
+            match_stereo();  // inherited — writes to feature_matches
+            tEnd = std::chrono::high_resolution_clock::now();
+            std::cout << "[Local Mapper] match_stereo time taken: "
+                      << std::chrono::duration_cast<std::chrono::microseconds>(
+                             tEnd - tStep)
+                                 .count() *
+                             1e-6
+                      << "s" << std::endl;
 
-        tStep = std::chrono::high_resolution_clock::now();
+            tStep = std::chrono::high_resolution_clock::now();
+        }
         MatchLocal();  // BoW cross-frame matching for new KFs
         tEnd = std::chrono::high_resolution_clock::now();
         std::cout << "[Local Mapper] MatchLocal time taken: "

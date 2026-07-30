@@ -72,6 +72,15 @@ if( NOT CMAKE_BUILD_TYPE )
   set( CMAKE_BUILD_TYPE Release)
 endif()
 
+# WARNING: -march is an ABI switch here, not just an optimisation knob. Eigen
+# derives EIGEN_MAX_ALIGN_BYTES from the SIMD macros the arch flag defines (16
+# with no -march, 32 under AVX/AVX2, 64 under the full AVX-512 set), which
+# changes sizeof/alignof of every fixed-size vectorizable Eigen type and of
+# every struct embedding one by value.
+# The set() below is directory-scoped, so a parent project that calls
+# add_subdirectory() on this tree does NOT inherit the flag and will disagree
+# with libbasalt.so about object layout. Callers must either pass -DCXX_MARCH
+# explicitly and match it, or pin EIGEN_MAX_ALIGN_BYTES on both sides.
 if(NOT CXX_MARCH)
   set(CXX_MARCH native)
 endif()
@@ -398,6 +407,13 @@ target_compile_definitions(basalt PUBLIC ${BASALT_COMPILE_DEFINITIONS})
 #target_compile_definitions(basalt PUBLIC BASALT_DISABLE_ASSERTS)
 
 
+add_library(basalt_visualisation STATIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/visualisation/visualiser.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/visualisation/utils.cpp
+)
+target_link_libraries(basalt_visualisation PUBLIC basalt pangolin)
+
+
 add_executable(basalt_calibrate src/calibrate.cpp src/calibration/cam_calib.cpp)
 target_link_libraries(basalt_calibrate basalt pangolin basalt::cli11)
 
@@ -427,10 +443,8 @@ target_link_libraries(basalt_opt_flow basalt pangolin basalt::cli11)
 add_executable(basalt_vio src/vio.cpp)
 target_link_libraries(basalt_vio basalt pangolin basalt::cli11)
 
-add_executable(basalt_slam src/basalt_slam.cpp
-  src/visualisation/visualiser.cpp
-  src/visualisation/utils.cpp)
-target_link_libraries(basalt_slam basalt pangolin basalt::cli11)
+add_executable(basalt_slam src/basalt_slam.cpp)
+target_link_libraries(basalt_slam basalt basalt_visualisation basalt::cli11)
 
 add_executable(basalt_time_alignment src/time_alignment.cpp)
 target_link_libraries(basalt_time_alignment basalt pangolin basalt::cli11)
@@ -479,14 +493,19 @@ install(FILES ${CONFIG_FILES}
   DESTINATION ${CMAKE_INSTALL_PREFIX}/etc/basalt)
 
 
-# Replace install() to do-nothing macro.
-macro(install)
-endmacro()
-# Include subproject (or any other CMake code) with "disabled" install().
-enable_testing()
-add_subdirectory(thirdparty/basalt-headers/test)
-add_subdirectory(test)
-# Restore original install() behavior.
-# macro(install)
-#   _install(${ARGN})
-# endmacro()
+# Basalt's bundled unit tests. These are only needed for standalone Basalt
+# development and are OFF by default so the library can be embedded via
+# add_subdirectory() from a parent project (e.g. the ROS 2 `slam` package).
+# Keeping this behind an option that defaults OFF ensures a parent 
+# project's install() and packaging (ament_package(), launch/index 
+# installation) keep working.
+option(BASALT_BUILD_TESTS "Build Basalt's bundled unit tests" OFF)
+if(BASALT_BUILD_TESTS)
+  # Replace install() to do-nothing macro.
+  macro(install)
+  endmacro()
+  # Include subproject (or any other CMake code) with "disabled" install().
+  enable_testing()
+  add_subdirectory(thirdparty/basalt-headers/test)
+  add_subdirectory(test)
+endif()
