@@ -106,7 +106,7 @@
           0.0,
           0.0
       ],
-        "imu_update_rate": 200.0,
+        "imu_update_rate": 167,
         "accel_noise_std": [
             0.020,
             0.020,
