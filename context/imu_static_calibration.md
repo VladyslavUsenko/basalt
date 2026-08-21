@@ -190,7 +190,7 @@ Observations:
 
 ## 6. SITL Simulator Values
 
-For a simulated IMU (CosysAirSim), all parameters must be **zero**:
+For a simulated IMU (Project AirSim), all parameters must be **zero**, because `turn-on-bias` is configured to zero and the sensor model contains no scale-factor or misalignment term at all:
 
 ```json
 "calib_accel_bias": [0.0, 0.0, 0.0,  0.0, 0.0, 0.0,  0.0, 0.0, 0.0],
@@ -200,8 +200,10 @@ For a simulated IMU (CosysAirSim), all parameters must be **zero**:
 Reasons:
 1. The simulator generates measurements directly from ground truth — there are no
    manufacturing offsets to correct.
-2. Bias drift is simulated stochastically by the FOGM model (when `GenerateNoise: true`),
-   but this is a dynamic bias handled by the VIO, not a static offset.
+2. Bias drift is simulated stochastically as a pure Wiener random walk, always on since
+   Project AirSim has no flag that disables the noise model, but this is a dynamic bias
+   handled by the VIO, not a static offset. See [`imu_noise_parameters.md`](imu_noise_parameters.md)
+   section 2.1b.
 3. Non-zero static calibration would **over-correct** the simulator output, introducing
    artificial systematic error.
 
@@ -269,8 +271,8 @@ The flat arrays map to the parameter vectors as described in Section 2:
 
 | Scenario | calib_accel_bias | calib_gyro_bias |
 |---|---|---|
-| **SITL (CosysAirSim, ideal IMU)** | All zeros ✓ | All zeros ✓ |
-| **SITL with GenerateNoise=true** | All zeros (dynamic bias handles drift) | All zeros |
+| **SITL (Project AirSim, ideal IMU)** | All zeros ✓ | All zeros ✓ |
+| **SITL with stochastic noise live** | All zeros (dynamic bias handles drift) | All zeros |
 | **Real IMU, first bring-up** | All zeros (VIO will converge from cold start) | All zeros |
 | **Real IMU, after calibration** | Output from `basalt_calibrate_imu` | Output from same |
 | **Copying from another sensor** | **Do NOT** — sensor-specific, not portable | **Do NOT** |
