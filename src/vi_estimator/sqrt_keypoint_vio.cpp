@@ -210,6 +210,8 @@ template <class Scalar>
 typename PoseVelBiasState<Scalar>::Ptr
 SqrtKeypointVioEstimator<Scalar>::ProcessFrame(
     OpticalFlowResult::Ptr& curr_frame) {
+    if (config.vio_debug)
+        std::cout << "[VIO] processing new frame" << std::endl;
     if (!curr_frame.get() || this->finished) {
         std::cout << "received nullptr data from optical flow" << std::endl;
         if (this->out_vis_queue) this->out_vis_queue->push(nullptr);
@@ -321,12 +323,16 @@ template <class Scalar_>
 void SqrtKeypointVioEstimator<Scalar_>::addIMUToQueue(
     const ImuData<double>::Ptr& data) {
     this->imu_data_queue.emplace(data);
+    std::cout << "[VIO] IMU Data Queue Size: " << this->imu_data_queue.size()
+              << std::endl;
 }
 
 template <class Scalar_>
 void SqrtKeypointVioEstimator<Scalar_>::addVisionToQueue(
     const OpticalFlowResult::Ptr& data) {
     this->vision_data_queue.push(data);
+    std::cout << "[VIO] Frame Data Queue Size "
+              << this->vision_data_queue.size() << std::endl;
 }
 
 template <class Scalar_>
@@ -380,8 +386,10 @@ SqrtKeypointVioEstimator<Scalar_>::measure(
                         // Large correction — skip to preserve FEJ
                         // consistency. The entry stays so the mapper
                         // can send a refined (smaller) update next time.
-                        std::cout << "too large update in pose, not updating"
-                                  << std::endl;
+                        if (config.vio_debug)
+                            std::cout
+                                << "too large update in pose, not updating"
+                                << std::endl;
                     } else {
                         // Small correction — apply and preserve the
                         // linearised flag to avoid tripping the
@@ -891,6 +899,8 @@ void SqrtKeypointVioEstimator<Scalar_>::marginalize(
                 }
 
                 this->out_marg_queue->push(m);
+                std::cout << "Marginalisation Queue Size: "
+                          << this->out_marg_queue->size() << std::endl;
             }
         }
 

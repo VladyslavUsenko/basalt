@@ -221,5 +221,7 @@ public:
     VioConfig config;
 
     double lambda, min_lambda, max_lambda, lambda_vee;
+
+    bool mpVioDebugMode;
 };
 }  // namespace basalt

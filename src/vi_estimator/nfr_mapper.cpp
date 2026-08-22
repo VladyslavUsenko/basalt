@@ -48,7 +48,8 @@ NfrMapper::NfrMapper(const Calibration<double>& calib, const VioConfig& config)
       lambda(config.mapper_lm_lambda_min),
       min_lambda(config.mapper_lm_lambda_min),
       max_lambda(config.mapper_lm_lambda_max),
-      lambda_vee(2) {
+      lambda_vee(2),
+      mpVioDebugMode(config.vio_debug) {
     this->calib = calib;
     this->obs_std_dev = config.mapper_obs_std_dev;
     this->huber_thresh = config.mapper_obs_huber_thresh;
@@ -57,6 +58,8 @@ NfrMapper::NfrMapper(const Calibration<double>& calib, const VioConfig& config)
 }
 
 void NfrMapper::addMargData(MargData::Ptr& data) {
+    std::cout << "[Mapper] Processing New Marginalisation Data Packet"
+              << std::endl;
     processMargData(*data);
     bool valid = extractNonlinearFactors(*data);
 
@@ -293,7 +296,7 @@ void NfrMapper::optimize(int num_iterations) {
 
         double error_total = rld_error + lopt.rel_error + lopt.roll_pitch_error;
 
-        if (config.vio_debug) {
+        if (mpVioDebugMode) {
             std::cout << "[LINEARIZE] iter " << iter
                       << " before_update_error: vision: " << rld_error
                       << " rel_error: " << lopt.rel_error
@@ -359,7 +362,7 @@ void NfrMapper::optimize(int num_iterations) {
                 double f_diff = (error_total - after_error_total);
 
                 if (f_diff < 0) {
-                    if (config.vio_debug) {
+                    if (mpVioDebugMode) {
                         std::cout
                             << "\t[REJECTED] lambda:" << lambda
                             << " f_diff: " << f_diff << " max_inc: " << max_inc
@@ -373,7 +376,7 @@ void NfrMapper::optimize(int num_iterations) {
 
                     restore();
                 } else {
-                    if (config.vio_debug) {
+                    if (mpVioDebugMode) {
                         std::cout
                             << "\t[ACCEPTED] lambda:" << lambda
                             << " f_diff: " << f_diff << " max_inc: " << max_inc
@@ -392,7 +395,8 @@ void NfrMapper::optimize(int num_iterations) {
                 max_iter--;
 
                 if (after_error_total > error_total) {
-                    std::cout << "increased error after update!!!" << std::endl;
+                    std::cout << "[Mapper] increased error after update!!!"
+                              << std::endl;
                 }
             }
         } else {  // Use Gauss-Newton
@@ -426,7 +430,7 @@ void NfrMapper::optimize(int num_iterations) {
         auto elapsed =
             std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
 
-        if (config.vio_debug) {
+        if (mpVioDebugMode) {
             std::cout << "iter " << iter << " time : " << elapsed.count()
                       << "(us),  num_states " << frame_states.size()
                       << " num_poses " << frame_poses.size() << std::endl;
@@ -525,11 +529,13 @@ void NfrMapper::detect_keypoints() {
     auto elapsed1 =
         std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
 
-    std::cout << "Processed " << feature_corners.size() << " frames."
-              << std::endl;
+    if (mpVioDebugMode) {
+        std::cout << "Processed " << feature_corners.size() << " frames."
+                  << std::endl;
 
-    std::cout << "Detection time: " << elapsed1.count() * 1e-6 << "s."
-              << std::endl;
+        std::cout << "Detection time: " << elapsed1.count() * 1e-6 << "s."
+                  << std::endl;
+    }
 }
 
 void NfrMapper::match_stereo() {
