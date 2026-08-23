@@ -103,7 +103,7 @@ gyro_scale.col(2) = gyro_bias_full_.segment<3>(9);   // params 9-11
 
 ### 3.1 Applied to every raw IMU sample — static preprocessing
 
-In `sqrt_keypoint_vio.cpp:170-173` (and repeated for every IMU pop):
+In `sqrt_keypoint_vio.cpp:226-230`, and repeated after every IMU pop in `ProcessFrame`. Corrected 2026-08-23. This previously cited `sqrt_keypoint_vio.cpp:170-173`, the copy inside the producer consumer `proc_func` lambda, which was removed as redundant on that date because `ProcessFrame` acquires and calibrates the first sample itself under the identical guard.
 ```cpp
 imuData->accel = this->calib.calib_accel_bias.getCalibrated(imuData->accel);
 imuData->gyro  = this->calib.calib_gyro_bias.getCalibrated(imuData->gyro);

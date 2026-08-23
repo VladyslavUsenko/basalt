@@ -34,23 +34,20 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
 
-#include <mutex>
-#include <thread>
-
 #include <basalt/imu/preintegration.h>
-#include <basalt/utils/time_utils.hpp>
-
 #include <basalt/vi_estimator/sqrt_ba_base.h>
 #include <basalt/vi_estimator/vio_estimator.h>
 
-#include <basalt/imu/preintegration.h>
+#include <basalt/utils/time_utils.hpp>
+#include <mutex>
+#include <thread>
 
 namespace basalt {
 
 template <class Scalar_>
 class SqrtKeypointVioEstimator : public VioEstimatorBase<Scalar_>,
                                  public SqrtBundleAdjustmentBase<Scalar_> {
-  public:
+public:
     using Scalar = Scalar_;
 
     typedef std::shared_ptr<SqrtKeypointVioEstimator> Ptr;
@@ -90,17 +87,17 @@ class SqrtKeypointVioEstimator : public VioEstimatorBase<Scalar_>,
     using SqrtBundleAdjustmentBase<Scalar>::checkNullspace;
     using SqrtBundleAdjustmentBase<Scalar>::checkEigenvalues;
 
-    SqrtKeypointVioEstimator(const Eigen::Vector3d &g,
-                             const basalt::Calibration<double> &calib_,
-                             const VioConfig &config,
+    SqrtKeypointVioEstimator(const Eigen::Vector3d& g,
+                             const basalt::Calibration<double>& calib_,
+                             const VioConfig& config,
                              bool useProducerConsumerArchitecure);
 
-    void initialize(int64_t t_ns, const Sophus::SE3d &T_w_i,
-                    const Eigen::Vector3d &vel_w_i, const Eigen::Vector3d &bg,
-                    const Eigen::Vector3d &ba) override;
+    void initialize(int64_t t_ns, const Sophus::SE3d& T_w_i,
+                    const Eigen::Vector3d& vel_w_i, const Eigen::Vector3d& bg,
+                    const Eigen::Vector3d& ba) override;
 
-    void initialize(const Eigen::Vector3d &bg,
-                    const Eigen::Vector3d &ba) override;
+    void initialize(const Eigen::Vector3d& bg,
+                    const Eigen::Vector3d& ba) override;
 
     virtual ~SqrtKeypointVioEstimator() { maybe_join(); }
 
@@ -111,26 +108,27 @@ class SqrtKeypointVioEstimator : public VioEstimatorBase<Scalar_>,
         }
     }
 
-    void addIMUToQueue(const ImuData<double>::Ptr &data) override;
-    void addVisionToQueue(const OpticalFlowResult::Ptr &data) override;
+    void addIMUToQueue(const ImuData<double>::Ptr& data) override;
+    void addVisionToQueue(const OpticalFlowResult::Ptr& data) override;
 
     typename ImuData<Scalar>::Ptr popFromImuDataQueue();
+    bool popFromImuDataQueueNonBlocking(typename ImuData<Scalar>::Ptr& data);
 
-    typename PoseVelBiasState<Scalar>::Ptr
-    measure(const OpticalFlowResult::Ptr &opt_flow_meas,
-            const typename IntegratedImuMeasurement<Scalar>::Ptr &meas);
+    typename PoseVelBiasState<Scalar>::Ptr measure(
+        const OpticalFlowResult::Ptr& opt_flow_meas,
+        const typename IntegratedImuMeasurement<Scalar>::Ptr& meas);
 
-    typename PoseVelBiasState<Scalar>::Ptr
-    ProcessFrame(OpticalFlowResult::Ptr &curr_frame);
+    typename PoseVelBiasState<Scalar>::Ptr ProcessFrame(
+        OpticalFlowResult::Ptr& curr_frame);
 
     // int64_t propagate();
     // void addNewState(int64_t data_t_ns);
 
-    void optimize_and_marg(const std::map<int64_t, int> &num_points_connected,
-                           const std::unordered_set<KeypointId> &lost_landmaks);
+    void optimize_and_marg(const std::map<int64_t, int>& num_points_connected,
+                           const std::unordered_set<KeypointId>& lost_landmaks);
 
-    void marginalize(const std::map<int64_t, int> &num_points_connected,
-                     const std::unordered_set<KeypointId> &lost_landmaks);
+    void marginalize(const std::map<int64_t, int>& num_points_connected,
+                     const std::unordered_set<KeypointId>& lost_landmaks);
     void optimize();
 
     void debug_finalize() override;
@@ -142,14 +140,14 @@ class SqrtKeypointVioEstimator : public VioEstimatorBase<Scalar_>,
     int64_t get_t_ns() const {
         return frame_states.at(last_state_t_ns).getState().t_ns;
     }
-    const SE3 &get_T_w_i() const {
+    const SE3& get_T_w_i() const {
         return frame_states.at(last_state_t_ns).getState().T_w_i;
     }
-    const Vec3 &get_vel_w_i() const {
+    const Vec3& get_vel_w_i() const {
         return frame_states.at(last_state_t_ns).getState().vel_w_i;
     }
 
-    const PoseVelBiasState<Scalar> &get_state() const {
+    const PoseVelBiasState<Scalar>& get_state() const {
         return frame_states.at(last_state_t_ns).getState();
     }
     PoseVelBiasState<Scalar> get_state(int64_t t_ns) const {
@@ -175,7 +173,7 @@ class SqrtKeypointVioEstimator : public VioEstimatorBase<Scalar_>,
     Eigen::aligned_vector<SE3> getFrameStates() const {
         Eigen::aligned_vector<SE3> res;
 
-        for (const auto &kv : frame_states) {
+        for (const auto& kv : frame_states) {
             res.push_back(kv.second.getState().T_w_i);
         }
 
@@ -185,7 +183,7 @@ class SqrtKeypointVioEstimator : public VioEstimatorBase<Scalar_>,
     Eigen::aligned_vector<SE3> getFramePoses() const {
         Eigen::aligned_vector<SE3> res;
 
-        for (const auto &kv : frame_poses) {
+        for (const auto& kv : frame_poses) {
             res.push_back(kv.second.getPose());
         }
 
@@ -195,11 +193,11 @@ class SqrtKeypointVioEstimator : public VioEstimatorBase<Scalar_>,
     Eigen::aligned_map<int64_t, SE3> getAllPosesMap() const {
         Eigen::aligned_map<int64_t, SE3> res;
 
-        for (const auto &kv : frame_poses) {
+        for (const auto& kv : frame_poses) {
             res[kv.first] = kv.second.getPose();
         }
 
-        for (const auto &kv : frame_states) {
+        for (const auto& kv : frame_states) {
             res[kv.first] = kv.second.getState().T_w_i;
         }
 
@@ -221,7 +219,7 @@ class SqrtKeypointVioEstimator : public VioEstimatorBase<Scalar_>,
 
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  private:
+private:
     using BundleAdjustmentBase<Scalar>::frame_poses;
     using BundleAdjustmentBase<Scalar>::frame_states;
     using BundleAdjustmentBase<Scalar>::lmdb;
@@ -229,7 +227,7 @@ class SqrtKeypointVioEstimator : public VioEstimatorBase<Scalar_>,
     using BundleAdjustmentBase<Scalar>::huber_thresh;
     using BundleAdjustmentBase<Scalar>::calib;
 
-  private:
+private:
     bool take_kf;
     int frames_after_kf;
     std::set<int64_t> kf_ids;
@@ -274,6 +272,10 @@ class SqrtKeypointVioEstimator : public VioEstimatorBase<Scalar_>,
     ExecutionStats stats_sums_;
     bool mpUseProducerConsumerArchitecture = false;
     typename ImuData<Scalar>::Ptr imuData;
+    // Deadline for the blocking pop, so a stack brought up without an inertial
+    // publisher fails visibly instead of hanging.
+    int64_t mpImuPopTimeoutMs = 5000;
+    static constexpr int64_t mpImuPopRetryMs = 1;
     Vec3 mpBg, mpBa;
     Vec3 mpAccelCov, mpGyroCov;
 
@@ -290,4 +292,4 @@ class SqrtKeypointVioEstimator : public VioEstimatorBase<Scalar_>,
     static constexpr Scalar kRelinThresholdTrans = Scalar(0.10);
     static constexpr Scalar kRelinThresholdRot = Scalar(0.05);
 };
-} // namespace basalt
+}  // namespace basalt

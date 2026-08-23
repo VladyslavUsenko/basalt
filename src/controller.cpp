@@ -195,18 +195,22 @@ void Controller::initialize(int64_t t_ns, const Sophus::SE3d& T_w_i,
     std::cout << "SLAM initialisation done" << std::endl;
 }
 
-void Controller::TrackMonocular(OpticalFlowInput::Ptr& frame, Sophus::SE3f& tcw,
+bool Controller::TrackMonocular(OpticalFlowInput::Ptr& frame, Sophus::SE3f& tcw,
                                 std::optional<Sophus::SE3d> gtcw) {
     OpticalFlowResult::Ptr res =
         opt_flow_ptr_->processFrame(frame->t_ns, frame);
     mpCurrentFrameTime = frame->t_ns;
     current_latest_pose_ = vio_estimator_->ProcessFrame(res);
-    tcw = current_latest_pose_->T_w_i.cast<float>();
-
     // Forward the ground-truth pose to the GUI only when asked to (G1/G4).
     if (mpEnableVisualisation && mvpGroundTruthQueue && gtcw) {
         mvpGroundTruthQueue->try_push(basalt::GtPose{frame->t_ns, *gtcw});
     }
+    if (current_latest_pose_) {
+        tcw = current_latest_pose_->T_w_i.cast<float>();
+    } else {
+        return false;
+    }
+    return true;
 }
 
 void Controller::GrabImage(basalt::OpticalFlowInput::Ptr data) {

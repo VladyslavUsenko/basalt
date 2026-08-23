@@ -51,7 +51,7 @@ public:
 
     // gtcw is forwarded to the GUI only when visualisation is enabled and a
     // ground-truth queue has been registered; existing callers are unaffected.
-    void TrackMonocular(OpticalFlowInput::Ptr& frame, Sophus::SE3f& tcw,
+    bool TrackMonocular(OpticalFlowInput::Ptr& frame, Sophus::SE3f& tcw,
                         std::optional<Sophus::SE3d> gtcw = std::nullopt);
 
     std::shared_ptr<basalt::LocalMapper> GetLocalMapper() const;

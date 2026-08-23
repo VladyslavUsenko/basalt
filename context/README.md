@@ -16,7 +16,7 @@ When a recorded fact turns out to be wrong, rewrite it in place so that the docu
 | `gt_slam_alignment.md` | GT vs SLAM alignment analysis, gravity-alignment explanation, frame geometry, two-part fix — EuRoC + TUM-VI | 2026-07-09/11 |
 | `euroc_coordinate_frames.md` | EuRoC dataset coordinate frame reference, GT column decoding | 2026-07-09 |
 | `tumvi_coordinate_frames.md` | TUM-VI dataset coordinate frame reference, GT column decoding | 2026-07-11 |
-| `vio_localmapper_correction_loop.md` | VIO drift vs local BA correction loop; why live trajectory is never corrected; gauge freedom in NfrMapper BA; path to fix | 2026-07-11 |
+| `vio_localmapper_correction_loop.md` | VIO drift vs local BA correction loop; why live trajectory is never corrected; gauge freedom in NfrMapper BA; path to fix; the 2026-08-23 conversion of the `out_state_queue` and `out_vis_queue` taps to `try_push` | 2026-07-11/2026-08-23 |
 | `airsim_camera_extrinsics.md` | Project AirSim → Basalt T_imu_cam derivation; `origin`/`rpy-deg` z-y-x convention and pitch clamp; NED↔CV axis permutation; SE3 composition and inversion; front_center numerical result and quaternion check; proof the IMU sits at the parent-link origin; intrinsics; measured 7.42 Hz frame rate against a 19.6 Hz ceiling; the FLU extrinsic the bridge IMU topic would need | — |
 | `imu_noise_parameters.md` | Project AirSim IMU noise params → Basalt, read directly in SI with no conversion; ARW/VRW theory and the external-source conversions; pure Wiener bias process and the σ_b/√τ mapping; current values, discrepancy table, and Part 7 on ArduPilot's added noise, 50 Hz filter and gyro drift | — |
 | `ap_dds_imu_stream.md` | Live `/ap/imu/experimental/data` capture; NED frame confirmation; Basalt gravity auto-alignment path; the two ArduPilot stamp sources and why duplicate stamps are impossible at 167 Hz; the node's de-duplication filter; the inertial/visual epoch mismatch; outstanding measurements | — |
@@ -90,6 +90,6 @@ Basalt subscribes to ArduPilot, not to the simulator. Three effects are added on
 ### IMU Static Calibration Key Facts
 - `calib_accel_bias`: 9 params `[b_x, b_y, b_z, s1–s6 (lower-triangular scale/misalignment)]`
 - `calib_gyro_bias`: 12 params `[b_x, b_y, b_z, s1–s9 (full 3×3 scale/misalignment)]`
-- Model: `x_calibrated = (I + S) · x_raw − b`  (applied per sample, `sqrt_keypoint_vio.cpp:171-173`)
+- Model: `x_calibrated = (I + S) · x_raw − b`  (applied per sample, `sqrt_keypoint_vio.cpp:226-230`
 - Bias vector (first 3) seeds VIO initial dynamic bias: `basalt_slam.cpp:213-214`
 - For SITL: all zero. For real hardware: run `basalt_calibrate_imu`

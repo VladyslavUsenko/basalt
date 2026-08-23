@@ -153,3 +153,11 @@ To make local mapper corrections propagate to the live VIO trajectory:
 | `src/controller.cpp:167-168` | Wires the callback: `LocalMapper → QueuePoseUpdates` |
 | `src/vi_estimator/nfr_mapper.cpp:249-390` | BA implementation (no absolute position prior) |
 | `src/visualisation/visualiser.cpp:260-300` | DrawScene: trajectory + KF frusta rendering |
+
+## The `out_state_queue` tap became non-blocking, 2026-08-23
+
+The push at `src/vi_estimator/sqrt_keypoint_vio.cpp:594` that feeds `mvpVioTrajectory` is now `try_push` rather than `push`, honouring the contract stated at `src/visualisation/visualiser.cpp:36-37`. The queue holds one hundred states and the consumer appends rather than replaces, so a drop is a permanent gap in the red trajectory line and a missing row in the plotter log rather than a stale value. The cost is cosmetic, since neither structure feeds the estimate, and it buys the guarantee that a stalled Pangolin thread can no longer block the estimator. The first state cannot be dropped, because the queue is necessarily empty when it is pushed, which matters since `ConsumeVioStateQueue` captures `mpSlamFirstPose` from it for ground truth alignment.
+
+The companion tap at `:621` feeding `mvpVioVisQueue` is also `try_push` now. That queue is already latest wins, since `ConsumeVioVisQueue` stores into `mpLatestVio` and `Run` reads only that pointer, so a drop there is invisible beyond a frame of staleness.
+
+Full analysis in `/ws/ros_ws/src/slam/plans/basalt-local-mapper-deadlock.md` section 4.6.

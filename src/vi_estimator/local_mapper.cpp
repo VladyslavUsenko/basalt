@@ -104,10 +104,18 @@ void LocalMapper::MapLocally() {
         if (mpVioDebugMode)
             std::cout << "[Local Mapper] Procesing " << vecData.size()
                       << " marginalisation data packets" << std::endl;
-        while (!vecData.empty()) {
-            MargData::Ptr data = vecData.back();
-            vecData.pop_back();
-            IngestMargData(data);
+        mpNewKeyframesForTracking.clear();
+        mpLatestKeyframesMatches.clear();
+        for (MargData::Ptr& packet : vecData) {
+            IngestMargData(packet);
+        }
+        vecData.clear();
+
+        for (auto it = img_data.begin(); it != img_data.end();) {
+            if (mpNewKeyframesForTracking.count(it->first) == 0) {
+                it = img_data.erase(it);
+            } else
+                ++it;
         }
         auto tEnd = std::chrono::high_resolution_clock::now();
         if (mpVioDebugMode)
@@ -292,9 +300,6 @@ void LocalMapper::MapLocally() {
 // ═══════════════════════════════════════════════════════════════════
 
 void LocalMapper::IngestMargData(MargData::Ptr& data) {
-    mpNewKeyframesForTracking.clear();
-    mpLatestKeyframesMatches.clear();
-
     // Step 1 — detect new KFs (those in kfs_all but not yet in frame_poses).
     for (const int64_t id : data->kfs_all) {
         if (frame_poses.count(id) == 0) {
@@ -337,14 +342,6 @@ void LocalMapper::IngestMargData(MargData::Ptr& data) {
                 }
             }
         }
-    }
-
-    // Step 4 — filter img_data to keep only new KF images.
-    for (auto it = img_data.begin(); it != img_data.end();) {
-        if (mpNewKeyframesForTracking.count(it->first) == 0) {
-            it = img_data.erase(it);
-        } else
-            ++it;
     }
 }
 
@@ -617,7 +614,6 @@ size_t LocalMapper::ComputeCovisibility(int64_t tid_a, int64_t tid_b,
 bool LocalMapper::SelectKeyframesToCull(std::vector<int64_t>& keyframesToCull) {
     // if (frame_poses.size() <= 5) return false;  // keep minimum map
 
-    // Order KFs by timestamp; the most recent ones are untouchable.
     std::vector<int64_t> ordered;
     ordered.reserve(frame_poses.size());
     for (const auto& kv : frame_poses) {
@@ -660,8 +656,10 @@ bool LocalMapper::SelectKeyframesToCull(std::vector<int64_t>& keyframesToCull) {
             //                  static_cast<double>(total_a)
             //           << std::endl;
             if (static_cast<double>(covis) / static_cast<double>(total_a) >=
-                mpCullCovisibilityThresh)
+                mpCullCovisibilityThresh) {
                 keyframesToCull.push_back(a);
+                break;
+            }
         }
     }
 
